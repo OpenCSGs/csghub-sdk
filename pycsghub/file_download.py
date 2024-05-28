@@ -5,9 +5,9 @@ from http.cookiejar import CookieJar
 import requests
 from requests.adapters import Retry
 from tqdm import tqdm
-from utils import build_csg_headers
-from constants import API_FILE_DOWNLOAD_RETRY_TIMES, API_FILE_DOWNLOAD_TIMEOUT, API_FILE_DOWNLOAD_CHUNK_SIZE
-from errors import FileDownloadError
+from pycsghub.utils import build_csg_headers
+from pycsghub.constants import API_FILE_DOWNLOAD_RETRY_TIMES, API_FILE_DOWNLOAD_TIMEOUT, API_FILE_DOWNLOAD_CHUNK_SIZE
+from pycsghub.errors import FileDownloadError
 import os
 
 
@@ -77,7 +77,7 @@ def http_get(*,
                     unit_divisor=1024,
                     total=total,
                     initial=downloaded_size,
-                    desc='Downloading',
+                    desc="Downloading {}".format(file_name),
                 )
                 for chunk in r.iter_content(
                         chunk_size=API_FILE_DOWNLOAD_CHUNK_SIZE):

@@ -19,7 +19,7 @@ csghub 是一款opencsg公司，csghub_server的python client旨在方便用户�
 
 ```python
 
-from csg_hub.file_download import http_get
+from pycsghub.file_download import http_get
 token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9" + \
         "b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
 
@@ -40,7 +40,7 @@ http_get(url=url,
 ### 库下载
 
 ```python
-from csg_hub.snapshot_download import snapshot_download
+from pycsghub.snapshot_download import snapshot_download
 token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9" + \
         "b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
 endpoint = "https://hub-stg.opencsg.com"
@@ -51,4 +51,19 @@ result = snapshot_download(repo_id,
                            endpoint=endpoint,
                            token=token)
 ```
+
+### 库安装
+
+```shell
+git clone ..../pycsg_hub
+
+cd pycsh_hub
+
+python setup.py sdist
+
+cd dist
+
+pip install pycsghub-xxx(生成的包)
+```
+
 
