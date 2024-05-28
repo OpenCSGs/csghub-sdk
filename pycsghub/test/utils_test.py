@@ -1,5 +1,5 @@
 import unittest
-from utils import model_info
+from pycsghub.utils import model_info
 
 class MyTestCase(unittest.TestCase):
     token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9" + \

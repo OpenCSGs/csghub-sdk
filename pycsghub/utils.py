@@ -1,14 +1,14 @@
-from typing import List, Optional, Union, Dict
+from typing import Optional, Union, Dict
 
 from pathlib import Path
 import os
-from constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, CSG_URL_SCHEME, DEFAULT_CSG_DOMAIN
+from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, CSG_URL_SCHEME, DEFAULT_CSG_DOMAIN
 import requests
 from huggingface_hub.hf_api import ModelInfo
 import urllib
 import hashlib
-from errors import FileIntegrityError
-from _token import _get_token_from_file, _get_token_from_environment
+from pycsghub.errors import FileIntegrityError
+from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote
 
 

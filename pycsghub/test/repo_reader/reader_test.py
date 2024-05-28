@@ -1,5 +1,5 @@
 import unittest
-from repo_reader.model.huggingface.model_auto import AutoModel
+from pycsghub.repo_reader import AutoModel
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):

@@ -1,23 +1,18 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 
 import os
-import re
 import tempfile
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-
-# from modelscope.hub.api import HubApi, ModelScopeConfig
-
-import utils
-from utils import get_file_download_url, model_id_to_group_owner_name
-from cache import ModelFileSystemCache
-from utils import (file_integrity_validation,
-                   get_cache_dir,
+from pycsghub.utils import get_file_download_url, model_id_to_group_owner_name
+from pycsghub.cache import ModelFileSystemCache
+from pycsghub.utils import (get_cache_dir,
                    pack_model_file_info)
 from huggingface_hub.utils import filter_repo_objects
-from file_download import http_get
-from constants import DEFAULT_REVISION, FILE_HASH
+from pycsghub.file_download import http_get
+from pycsghub.constants import DEFAULT_REVISION
+from pycsghub import utils
 
 
 #logger = get_logger() # todo logger

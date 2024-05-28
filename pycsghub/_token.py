@@ -1,7 +1,7 @@
 from typing import Optional
 from pathlib import Path
 import os
-from constants import CSG_TOKEN_PATH
+from pycsghub.constants import CSG_TOKEN_PATH
 
 
 def _get_token_from_environment() -> Optional[str]:
