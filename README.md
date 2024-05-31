@@ -55,15 +55,35 @@ result = snapshot_download(repo_id,
 ### 库安装
 
 ```shell
-git clone ..../pycsg_hub
+git clone ..../repo
 
-cd pycsh_hub
+cd repo
 
-python setup.py sdist
+pip install .
 
-cd dist
-
-pip install pycsghub-xxx(生成的包)
 ```
+
+
+### 兼容huggingface的类库加载
+
+huggingface的transformers库支持直接输入huggingface上的repo_id以下载并读取相关模型，如下列所示：
+```python
+from transformers import AutoModelForCausalLM
+model = AutoModelForCausalLM.from_pretrained('model/repoid')
+```
+在这段代码中，hf的transformer库首先下载模型到本地cache文件夹中，然后读取配置，并通过反射到相关类进行加载的方式加载模型。
+
+cshhubsdkV0.1版本为了兼容huggingface也提供用户最常用的功能，模型下载与加载。并可以通过如下的方式进行模型下载与加载
+```python
+# 注意首先要进行环境变量设置，因为下载需要token，下述api的调用，会直接在环境变量中查找相应的token。
+# import os 
+# os.environ['CSG_TOKEN'] = 'token_to_set'
+from pycsghub.repo_reader import AutoModelForCausalLM
+model = AutoModelForCausalLM.from_pretrained('model/repoid')
+```
+
+这段代码首先：1. 调用pycsghub库的snaphotdownload下载相关文件；2.通过动态批量类生成与类名反射机制，批量为pycsghub.repo_reader创建大量与transformers自动类加载的重名类。并为其赋予from_pretrained方法。这样读取出来的模型即为hf-transformers模型。
+
+
 
 
