@@ -1,0 +1,1 @@
+from .model.huggingface.model_auto import *
