@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 from pycsghub.utils import get_file_download_url, model_id_to_group_owner_name
 from pycsghub.cache import ModelFileSystemCache
 from pycsghub.utils import (get_cache_dir,
-                   pack_model_file_info,
+                            pack_model_file_info,
                             get_endpoint)
 from huggingface_hub.utils import filter_repo_objects
 from pycsghub.file_download import http_get
@@ -56,7 +56,7 @@ def snapshot_download(
         repo_info = utils.get_repo_info(repo_id,
                                         revision=revision,
                                         token=token,
-                                        endpoint=endpoint if endpoint else get_endpoint())
+                                        endpoint=endpoint if endpoint is not None else get_endpoint())
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
