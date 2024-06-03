@@ -14,4 +14,4 @@ DEFAULT_REVISION = "main"
 
 FILE_HASH = 'Sha256'
 
-DEFAULT_CSG_DOMAIN = 'https://hub-stg.opencsg.com'
+DEFAULT_CSGHUB_DOMAIN = 'https://hub-stg.opencsg.com'

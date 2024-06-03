@@ -2,7 +2,7 @@ from typing import Optional, Union, Dict
 
 from pathlib import Path
 import os
-from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSG_DOMAIN
+from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
 import requests
 from huggingface_hub.hf_api import ModelInfo
 import urllib
@@ -221,8 +221,8 @@ def model_info(
 
 
 def get_endpoint():
-    csghub_domain = os.getenv('CSG_DOMAIN',
-                              DEFAULT_CSG_DOMAIN)
+    csghub_domain = os.getenv('CSGHUB_DOMAIN',
+                              DEFAULT_CSGHUB_DOMAIN)
     return csghub_domain
 
 
