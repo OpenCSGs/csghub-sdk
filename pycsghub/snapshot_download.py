@@ -16,25 +16,23 @@ from pycsghub.constants import DEFAULT_REVISION
 from pycsghub import utils
 
 
-#logger = get_logger() # todo logger
-
-
-def snapshot_download(repo_id: str,
-                      *,
-                      revision: Optional[str] = DEFAULT_REVISION,
-                      cache_dir: Union[str, Path, None] = None,
-                      user_agent: Optional[Union[Dict, str]] = None,
-                      local_files_only: Optional[bool] = False,
-                      cookies: Optional[CookieJar] = None,
-                      ignore_file_pattern: List = None,
-                      allow_patterns: Optional[Union[List[str], str]] = None,
-                      ignore_patterns: Optional[Union[List[str], str]] = None,
-                      headers: Optional[Dict[str, str]] = None,
-                      endpoint: Optional[str] = None, #todo 这里后续放成环境变量
-                      token: Optional[str] = None #todo 这里后续放成环境变量
-                      ) -> str:
+def snapshot_download(
+    repo_id: str,
+    *,
+    revision: Optional[str] = DEFAULT_REVISION,
+    cache_dir: Union[str, Path, None] = None,
+    user_agent: Optional[Union[Dict, str]] = None,
+    local_files_only: Optional[bool] = False,
+    cookies: Optional[CookieJar] = None,
+    ignore_file_pattern: List = None,
+    allow_patterns: Optional[Union[List[str], str]] = None,
+    ignore_patterns: Optional[Union[List[str], str]] = None,
+    headers: Optional[Dict[str, str]] = None,
+    endpoint: Optional[str] = None,
+    token: Optional[str] = None
+) -> str:
     if cache_dir is None:
-        cache_dir = get_cache_dir() #todo cache dir
+        cache_dir = get_cache_dir()
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
@@ -51,24 +49,15 @@ def snapshot_download(repo_id: str,
                 'Cannot find the requested files in the cached path and outgoing'
                 ' traffic has been disabled. To enable model look-ups and downloads'
                 " online, set 'local_files_only' to False.")
-        # logger.warning('We can not confirm the cached file is for revision: %s'
-        #                % revision)
-        return cache.get_root_location(
-        )  # we can not confirm the cached file is for snapshot 'revision'
+        return cache.get_root_location()
     else:
         # make headers
-        # headers = {
-        #     'user-agent':
-        #         ModelScopeConfig.get_user_agent(user_agent=user_agent, )
-        # } todo headers 暂时不加 user-agent
-        # if cookies is None: # todo cookies询问是否需要加？
-        #     cookies = ModelScopeConfig.get_cookies()
+        # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id,
                                         revision=revision,
                                         token=token,
                                         endpoint=endpoint if endpoint else get_endpoint())
 
-        # todo 这边是否需要支持？
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
         model_files = list(
@@ -83,12 +72,11 @@ def snapshot_download(repo_id: str,
                 dir=temporary_cache_dir) as temp_cache_dir:
             for model_file in model_files:
                 model_file_info = pack_model_file_info(model_file, revision)
-                # check model_file is exist in cache, if existed, skip download, otherwise download todo 待解决
                 if cache.exists(model_file_info):
                     file_name = os.path.basename(model_file_info['Path'])
-                    # logger.debug(
-                    #     f'File {file_name} already in cache, skip downloading!'
-                    # )
+                    print(
+                        f'File {file_name} already in cache, skip downloading!'
+                    )
                     continue
 
                 # get download url
@@ -96,7 +84,7 @@ def snapshot_download(repo_id: str,
                     model_id=repo_id,
                     file_path=model_file,
                     revision=revision)
-                # todo 支持并行下载或者下载api
+                # todo support parallel download api
                 http_get(
                     url=url,
                     local_dir=temp_cache_dir,
@@ -105,12 +93,9 @@ def snapshot_download(repo_id: str,
                     cookies=cookies,
                     token=token)
 
-                # check file integrity todo 待完善
+                # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, model_file)
-                # if FILE_HASH in model_file:
-                #     file_integrity_validation(temp_file, model_file[FILE_HASH]) todo 待完善
-                # put file into to cache
                 cache.put_file(model_file_info, temp_file)
 
-        cache.save_model_version(revision_info={'Revision': revision}) # todo 待完善
+        cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())

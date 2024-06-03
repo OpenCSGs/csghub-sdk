@@ -34,24 +34,12 @@ def _validate_token_to_send():
 def build_csg_headers(
     *,
     token: Optional[Union[bool, str]] = None,
-    is_write_action: bool = False,
-    library_name: Optional[str] = None,
-    library_version: Optional[str] = None,
-    user_agent: Union[Dict, str, None] = None,
-    headers: Optional[Dict[str, str]] = None,
+    headers: Optional[Dict[str, str]] = None
 ) -> Dict[str, str]:
     # Get auth token to send
     token_to_send = get_token_to_send(token)
-    # _validate_token_to_send(token_to_send, is_write_action=is_write_action) todo 添加validate
     csg_headers = {}
     # Combine headers
-    # hf_headers = {
-    #     "user-agent": _http_user_agent(
-    #         library_name=library_name,
-    #         library_version=library_version,
-    #         user_agent=user_agent,
-    #     )
-    # } todo 需要加useragent吗？
     if token_to_send is not None:
         csg_headers["authorization"] = f"Bearer {token_to_send}"
     if headers is not None:
@@ -59,7 +47,7 @@ def build_csg_headers(
     return csg_headers
 
 
-def model_id_to_group_owner_name(model_id): #todo 这块是否还需要
+def model_id_to_group_owner_name(model_id: str):
     if MODEL_ID_SEPARATOR in model_id:
         group_or_owner = model_id.split(MODEL_ID_SEPARATOR)[0]
         name = model_id.split(MODEL_ID_SEPARATOR)[1]
@@ -87,9 +75,9 @@ def get_cache_dir(model_id: Optional[str] = None):
 
 def get_default_cache_dir():
     """
-    default base dir: '~/.cache/csgcache'
+    default base dir: '~/.cache/csg'
     """
-    default_cache_dir = Path.home().joinpath('.cache', 'csghub')
+    default_cache_dir = Path.home().joinpath('.cache', 'csg')
     return default_cache_dir
 
 
@@ -124,9 +112,7 @@ def get_repo_info(
                 (size, LFS metadata, etc). Defaults to `False`.
             token (Union[bool, str, None], optional):
                 A valid user access token (string). Defaults to the locally saved
-                token, which is the recommended method for authentication (see
-                https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
-                To disable authentication, pass `False`.
+                token.
 
         Returns:
             `Union[SpaceInfo, DatasetInfo, ModelInfo]`: The repository information, as a
@@ -147,10 +133,7 @@ def get_repo_info(
         """
         if repo_type is None or repo_type == "model":
             method = model_info
-        # elif repo_type == "dataset": #todo 这两种暂时不支持
-        #     method = self.dataset_info  # type: ignore
-        # elif repo_type == "space":
-        #     method = self.space_info  # type: ignore
+        #todo dataset and spaceset are now not supported
         else:
             raise ValueError("Unsupported repo type.")
         return method(
@@ -172,8 +155,10 @@ def model_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None
-) -> ModelInfo: #todo 改造代码
+) -> ModelInfo:
     """
+    Note: It is a huggingface method moved here to adjust csghub server response.
+
     Get info on one specific model on huggingface.co
 
     Model can be private if you pass an acceptable token or are logged in.
@@ -194,10 +179,8 @@ def model_info(
             Whether or not to retrieve metadata for files in the repository
             (size, LFS metadata, etc). Defaults to `False`.
         token (Union[bool, str, None], optional):
-            A valid user access token (string). Defaults to the locally saved
-            token, which is the recommended method for authentication (see
-            https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
-            To disable authentication, pass `False`.
+            A valid user access token (string). Used to build csghub server request
+            header.
 
     Returns:
         [`huggingface_hub.hf_api.ModelInfo`]: The model repository information.
@@ -214,11 +197,11 @@ def model_info(
 
     </Tip>
     """
-    headers = build_csg_headers(token=token) # todo build headers
+    headers = build_csg_headers(token=token)
     path = (
         f"{endpoint}/hf/api/models/{repo_id}/revision/main"
         if revision is None
-        else f"{endpoint}/hf/api/models/{repo_id}/revision/{quote(revision, safe='')}" # todo 多种api如何组合？
+        else f"{endpoint}/hf/api/models/{repo_id}/revision/{quote(revision, safe='')}"
     )
     params = {}
     if securityStatus:
@@ -239,9 +222,6 @@ def get_endpoint():
     return CSG_URL_SCHEME + modelscope_domain
 def get_file_download_url(model_id: str, file_path: str, revision: str):
     """Format file download url according to `model_id`, `revision` and `file_path`.
-    e.g., Given `model_id=john/bert`, `revision=master`, `file_path=README.md.md`,
-    the resulted download url is: https://modelscope.cn/api/v1/models/john/bert/repo?Revision=master&FilePath=README.md
-
     Args:
         model_id (str): The model_id.
         file_path (str): File path
@@ -275,7 +255,6 @@ def file_integrity_validation(file_path, expected_sha256):
     if not file_sha256 == expected_sha256:
         os.remove(file_path)
         msg = 'File %s integrity check failed, the download may be incomplete, please try again.' % file_path
-        #logger.error(msg) todo logger
         raise FileIntegrityError(msg)
 
 def compute_hash(file_path):

@@ -33,16 +33,16 @@ def http_get(*,
              file_name: str,
              headers: dict = None,
              cookies: CookieJar = None,
-             token: str = None):
+             token: str = None) -> None:
     '''
-    下载核心API，通过request的方式直接拉取对象到本地的临时文件
-    :param token:
-    :param url:
-    :param local_dir:
-    :param file_name:
-    :param headers:
-    :param cookies:
-    :return:
+    download core API，using python request to download file to local cache dirs
+    :param token: csghub token
+    :param url: url to download
+    :param local_dir: local dir to download
+    :param file_name: file name to download
+    :param headers: http headers
+    :param cookies: http cookies
+    :return: None
     '''
     tempfile_mgr = partial(tempfile.NamedTemporaryFile,
                            mode='wb',
@@ -59,7 +59,9 @@ def http_get(*,
         while True:
             try:
                 downloaded_size = temp_file.tell()
-                # get_headers['Range'] = 'bytes=%d-' % downloaded_size #todo 暂时先不放
+                # get_headers['Range'] = 'bytes=%d-' % downloaded_size
+                # todo some problem occurs in download huge file
+                # fixme here
                 r = requests.get(url,
                                  headers=get_headers,
                                  stream=True,
@@ -81,23 +83,21 @@ def http_get(*,
                 )
                 for chunk in r.iter_content(
                         chunk_size=API_FILE_DOWNLOAD_CHUNK_SIZE):
-                    if chunk:  # filter out keep-alive new chunks
+                    if chunk:
                         progress.update(len(chunk))
                         temp_file.write(chunk)
                 progress.close()
                 break
-            except Exception as e:  # no matter what happen, we will retry.
+            except Exception as e:
                 retry = retry.increment('GET', url, error=e)
                 retry.sleep()
 
-    #logger.debug('storing %s in cache at %s', url, local_dir)
     downloaded_length = os.path.getsize(temp_file.name)
     if total != downloaded_length:
         os.remove(temp_file.name)
         msg = 'File %s download incomplete, content_length: %s but the \
                             file downloaded length: %s, please download again' % (
             file_name, total, downloaded_length)
-        #logger.error(msg)
         raise FileDownloadError(msg)
     os.replace(temp_file.name, os.path.join(local_dir, file_name))
     return
