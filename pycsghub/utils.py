@@ -221,9 +221,9 @@ def model_info(
 
 
 def get_endpoint():
-    modelscope_domain = os.getenv('CSG_DOMAIN',
-                                  DEFAULT_CSG_DOMAIN)
-    return modelscope_domain
+    csghub_domain = os.getenv('CSG_DOMAIN',
+                              DEFAULT_CSG_DOMAIN)
+    return csghub_domain
 
 
 def get_file_download_url(model_id: str, file_path: str, revision: str):
