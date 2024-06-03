@@ -2,7 +2,7 @@ from typing import Optional, Union, Dict
 
 from pathlib import Path
 import os
-from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, CSG_URL_SCHEME, DEFAULT_CSG_DOMAIN
+from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSG_DOMAIN
 import requests
 from huggingface_hub.hf_api import ModelInfo
 import urllib
@@ -13,14 +13,15 @@ from urllib.parse import quote
 
 
 def get_session():
-        session = requests.Session()
-        # if constants.HF_HUB_OFFLINE:
-        #     session.mount("http://", OfflineAdapter())
-        #     session.mount("https://", OfflineAdapter())
-        # else:
-        #     session.mount("http://", UniqueRequestIdAdapter())
-        #     session.mount("https://", UniqueRequestIdAdapter())
-        return session
+    session = requests.Session()
+    # if constants.HF_HUB_OFFLINE:
+    #     session.mount("http://", OfflineAdapter())
+    #     session.mount("https://", OfflineAdapter())
+    # else:
+    #     session.mount("http://", UniqueRequestIdAdapter())
+    #     session.mount("https://", UniqueRequestIdAdapter())
+    return session
+
 
 def get_token_to_send(token):
     if token:
@@ -28,8 +29,10 @@ def get_token_to_send(token):
     else:
         return _get_token_from_environment() or _get_token_from_file()
 
+
 def _validate_token_to_send():
     pass
+
 
 def build_csg_headers(
     *,
@@ -56,6 +59,7 @@ def model_id_to_group_owner_name(model_id: str):
         name = model_id
     return group_or_owner, name
 
+
 def get_cache_dir(model_id: Optional[str] = None):
     """cache dir precedence:
         function parameter > environment > ~/.cache/csg/hub
@@ -81,69 +85,68 @@ def get_default_cache_dir():
     return default_cache_dir
 
 
-
 def get_repo_info(
-        repo_id: str,
-        *,
-        revision: Optional[str] = None,
-        repo_type: Optional[str] = None,
-        timeout: Optional[float] = None,
-        files_metadata: bool = False,
-        token: Union[bool, str, None] = None,
-        endpoint: Optional[str] = None
-    ):
-        """
-        Get the info object for a given repo of a given type.
+    repo_id: str,
+    *,
+    revision: Optional[str] = None,
+    repo_type: Optional[str] = None,
+    timeout: Optional[float] = None,
+    files_metadata: bool = False,
+    token: Union[bool, str, None] = None,
+    endpoint: Optional[str] = None
+):
+    """
+    Get the info object for a given repo of a given type.
 
-        Args:
-            repo_id (`str`):
-                A namespace (user or an organization) and a repo name separated
-                by a `/`.
-            revision (`str`, *optional*):
-                The revision of the repository from which to get the
-                information.
-            repo_type (`str`, *optional*):
-                Set to `"dataset"` or `"space"` if getting repository info from a dataset or a space,
-                `None` or `"model"` if getting repository info from a model. Default is `None`.
-            timeout (`float`, *optional*):
-                Whether to set a timeout for the request to the Hub.
-            files_metadata (`bool`, *optional*):
-                Whether or not to retrieve metadata for files in the repository
-                (size, LFS metadata, etc). Defaults to `False`.
-            token (Union[bool, str, None], optional):
-                A valid user access token (string). Defaults to the locally saved
-                token.
+    Args:
+        repo_id (`str`):
+            A namespace (user or an organization) and a repo name separated
+            by a `/`.
+        revision (`str`, *optional*):
+            The revision of the repository from which to get the
+            information.
+        repo_type (`str`, *optional*):
+            Set to `"dataset"` or `"space"` if getting repository info from a dataset or a space,
+            `None` or `"model"` if getting repository info from a model. Default is `None`.
+        timeout (`float`, *optional*):
+            Whether to set a timeout for the request to the Hub.
+        files_metadata (`bool`, *optional*):
+            Whether or not to retrieve metadata for files in the repository
+            (size, LFS metadata, etc). Defaults to `False`.
+        token (Union[bool, str, None], optional):
+            A valid user access token (string). Defaults to the locally saved
+            token.
 
-        Returns:
-            `Union[SpaceInfo, DatasetInfo, ModelInfo]`: The repository information, as a
-            [`huggingface_hub.hf_api.DatasetInfo`], [`huggingface_hub.hf_api.ModelInfo`]
-            or [`huggingface_hub.hf_api.SpaceInfo`] object.
+    Returns:
+        `Union[SpaceInfo, DatasetInfo, ModelInfo]`: The repository information, as a
+        [`huggingface_hub.hf_api.DatasetInfo`], [`huggingface_hub.hf_api.ModelInfo`]
+        or [`huggingface_hub.hf_api.SpaceInfo`] object.
 
-        <Tip>
+    <Tip>
 
-        Raises the following errors:
+    Raises the following errors:
 
-            - [`~utils.RepositoryNotFoundError`]
-              If the repository to download from cannot be found. This may be because it doesn't exist,
-              or because it is set to `private` and you do not have access.
-            - [`~utils.RevisionNotFoundError`]
-              If the revision to download from cannot be found.
+        - [`~utils.RepositoryNotFoundError`]
+          If the repository to download from cannot be found. This may be because it doesn't exist,
+          or because it is set to `private` and you do not have access.
+        - [`~utils.RevisionNotFoundError`]
+          If the revision to download from cannot be found.
 
-        </Tip>
-        """
-        if repo_type is None or repo_type == "model":
-            method = model_info
-        #todo dataset and spaceset are now not supported
-        else:
-            raise ValueError("Unsupported repo type.")
-        return method(
-            repo_id,
-            revision=revision,
-            token=token,
-            timeout=timeout,
-            files_metadata=files_metadata,
-            endpoint=endpoint
-        )
+    </Tip>
+    """
+    if repo_type is None or repo_type == "model":
+        method = model_info
+    # todo dataset and spaceset are now not supported
+    else:
+        raise ValueError("Unsupported repo type.")
+    return method(
+        repo_id,
+        revision=revision,
+        token=token,
+        timeout=timeout,
+        files_metadata=files_metadata,
+        endpoint=endpoint
+    )
 
 
 def model_info(
@@ -216,10 +219,13 @@ def model_info(
     data = r.json()
     return ModelInfo(**data)
 
+
 def get_endpoint():
     modelscope_domain = os.getenv('CSG_DOMAIN',
                                   DEFAULT_CSG_DOMAIN)
-    return CSG_URL_SCHEME + modelscope_domain
+    return modelscope_domain
+
+
 def get_file_download_url(model_id: str, file_path: str, revision: str):
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
@@ -240,6 +246,7 @@ def get_file_download_url(model_id: str, file_path: str, revision: str):
         file_path=file_path,
     )
 
+
 def file_integrity_validation(file_path, expected_sha256):
     """Validate the file hash is expected, if not, delete the file
 
@@ -257,6 +264,7 @@ def file_integrity_validation(file_path, expected_sha256):
         msg = 'File %s integrity check failed, the download may be incomplete, please try again.' % file_path
         raise FileIntegrityError(msg)
 
+
 def compute_hash(file_path):
     BUFFER_SIZE = 1024 * 64  # 64k buffer size
     sha256_hash = hashlib.sha256()
@@ -267,6 +275,7 @@ def compute_hash(file_path):
                 break
             sha256_hash.update(data)
     return sha256_hash.hexdigest()
+
 
 def pack_model_file_info(model_file_path,
                          revision):
