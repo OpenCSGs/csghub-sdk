@@ -4,8 +4,8 @@ setup(
     name='pycsghub',
     version='0.1.0',
     packages=find_packages(),
-    author="lumiere",
-    author_email="lumiere.luck@gmail.com",
+    author="opencsg",
+    author_email="contact@opencsg.com",
     install_requires=[
         "attr==0.3.2",
         "ConfigParser==7.0.0",

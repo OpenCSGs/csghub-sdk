@@ -5,7 +5,6 @@ from pycsghub.constants import CSG_TOKEN_PATH
 
 
 def _get_token_from_environment() -> Optional[str]:
-    # `HF_TOKEN` has priority (keep `HUGGING_FACE_HUB_TOKEN` for backward compatibility)
     return _clean_token(os.environ.get("CSG_TOKEN")) # apk key 直接写入环境
 
 
