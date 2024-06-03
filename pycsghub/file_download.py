@@ -119,7 +119,7 @@ def file_download(
                     f'File {file_name} already in cache, skip downloading!'
                 )
         cache.save_model_version(revision_info={'Revision': revision})
-        return os.path.join(cache.get_root_location())
+        return os.path.join(cache.get_root_location(), file_name)
 
 def http_get(*,
              url: str,

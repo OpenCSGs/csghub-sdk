@@ -26,7 +26,7 @@ class MyTestCase(unittest.TestCase):
                  "9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf")
         endpoint = "https://hub-stg.opencsg.com"
         repo_id = 'wayne0019/lwfmodel'
-        cache_dir = '/home/test5'
+        cache_dir = '/home/test6'
         result = file_download(repo_id,
                                file_name="README.md",
                                cache_dir=cache_dir,
