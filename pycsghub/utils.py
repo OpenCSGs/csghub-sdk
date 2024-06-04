@@ -12,7 +12,7 @@ from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote
 
 
-def get_session():
+def get_session() -> requests.Session:
     session = requests.Session()
     # if constants.HF_HUB_OFFLINE:
     #     session.mount("http://", OfflineAdapter())
@@ -23,7 +23,7 @@ def get_session():
     return session
 
 
-def get_token_to_send(token):
+def get_token_to_send(token) -> Optional[str]:
     if token:
         return token
     else:
@@ -50,7 +50,7 @@ def build_csg_headers(
     return csg_headers
 
 
-def model_id_to_group_owner_name(model_id: str):
+def model_id_to_group_owner_name(model_id: str) -> (str, str):
     if MODEL_ID_SEPARATOR in model_id:
         group_or_owner = model_id.split(MODEL_ID_SEPARATOR)[0]
         name = model_id.split(MODEL_ID_SEPARATOR)[1]
@@ -60,7 +60,7 @@ def model_id_to_group_owner_name(model_id: str):
     return group_or_owner, name
 
 
-def get_cache_dir(model_id: Optional[str] = None):
+def get_cache_dir(model_id: Optional[str] = None) -> Union[str, Path]:
     """cache dir precedence:
         function parameter > environment > ~/.cache/csg/hub
 
@@ -77,7 +77,7 @@ def get_cache_dir(model_id: Optional[str] = None):
         base_path, model_id + '/')
 
 
-def get_default_cache_dir():
+def get_default_cache_dir() -> Path:
     """
     default base dir: '~/.cache/csg'
     """
@@ -94,7 +94,7 @@ def get_repo_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None
-):
+) -> ModelInfo:
     """
     Get the info object for a given repo of a given type.
 
@@ -226,7 +226,9 @@ def get_endpoint():
     return csghub_domain
 
 
-def get_file_download_url(model_id: str, file_path: str, revision: str):
+def get_file_download_url(model_id: str,
+                          file_path: str,
+                          revision: str) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
         model_id (str): The model_id.
@@ -247,7 +249,8 @@ def get_file_download_url(model_id: str, file_path: str, revision: str):
     )
 
 
-def file_integrity_validation(file_path, expected_sha256):
+def file_integrity_validation(file_path,
+                              expected_sha256) -> None:
     """Validate the file hash is expected, if not, delete the file
 
     Args:
@@ -265,7 +268,7 @@ def file_integrity_validation(file_path, expected_sha256):
         raise FileIntegrityError(msg)
 
 
-def compute_hash(file_path):
+def compute_hash(file_path) -> str:
     BUFFER_SIZE = 1024 * 64  # 64k buffer size
     sha256_hash = hashlib.sha256()
     with open(file_path, 'rb') as f:
@@ -278,7 +281,7 @@ def compute_hash(file_path):
 
 
 def pack_model_file_info(model_file_path,
-                         revision):
+                         revision) -> Dict[str, str]:
     model_file_info = {'Path': model_file_path,
                        'Revision': revision}
     return model_file_info

@@ -1,7 +1,7 @@
 from typing import Optional
 from pathlib import Path
 import os
-from pycsghub.constants import CSG_TOKEN_PATH
+from pycsghub.constants import CSGHUB_TOKEN_PATH
 
 
 def _get_token_from_environment() -> Optional[str]:
@@ -10,7 +10,7 @@ def _get_token_from_environment() -> Optional[str]:
 
 def _get_token_from_file() -> Optional[str]:
     try:
-        return _clean_token(Path(CSG_TOKEN_PATH).read_text())
+        return _clean_token(Path(CSGHUB_TOKEN_PATH).read_text())
     except FileNotFoundError:
         return None
 
