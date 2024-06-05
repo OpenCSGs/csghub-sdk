@@ -5,7 +5,8 @@ import tempfile
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-from pycsghub.utils import get_file_download_url, model_id_to_group_owner_name
+from pycsghub.utils import (get_file_download_url,
+                            model_id_to_group_owner_name)
 from pycsghub.cache import ModelFileSystemCache
 from pycsghub.utils import (get_cache_dir,
                             pack_model_file_info,
@@ -17,17 +18,17 @@ from pycsghub import utils
 
 
 def snapshot_download(
-    repo_id: str,
-    *,
-    revision: Optional[str] = DEFAULT_REVISION,
-    cache_dir: Union[str, Path, None] = None,
-    local_files_only: Optional[bool] = False,
-    cookies: Optional[CookieJar] = None,
-    allow_patterns: Optional[Union[List[str], str]] = None,
-    ignore_patterns: Optional[Union[List[str], str]] = None,
-    headers: Optional[Dict[str, str]] = None,
-    endpoint: Optional[str] = None,
-    token: Optional[str] = None
+        repo_id: str,
+        *,
+        revision: Optional[str] = DEFAULT_REVISION,
+        cache_dir: Union[str, Path, None] = None,
+        local_files_only: Optional[bool] = False,
+        cookies: Optional[CookieJar] = None,
+        allow_patterns: Optional[Union[List[str], str]] = None,
+        ignore_patterns: Optional[Union[List[str], str]] = None,
+        headers: Optional[Dict[str, str]] = None,
+        endpoint: Optional[str] = None,
+        token: Optional[str] = None
 ) -> str:
     if cache_dir is None:
         cache_dir = get_cache_dir()

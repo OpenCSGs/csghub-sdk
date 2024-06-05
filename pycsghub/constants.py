@@ -4,11 +4,11 @@ API_FILE_DOWNLOAD_TIMEOUT = 5
 API_FILE_DOWNLOAD_RETRY_TIMES = 5
 
 
-CSG_HOME = os.environ.get('CSG_HOME', '/home')
-CSG_TOKEN_PATH = os.environ.get("CSG_TOKEN_PATH", os.path.join(CSG_HOME, "token"))
+CSGHUB_HOME = os.environ.get('CSGHUB_HOME', '/home')
+CSGHUB_TOKEN_PATH = os.environ.get("CSGHUB_TOKEN_PATH", os.path.join(CSGHUB_HOME, "token"))
 
 MODEL_ID_SEPARATOR = '/'
-DEFAULT_CSG_GROUP = 'OpenSCG'
+DEFAULT_CSG_GROUP = 'OpenCSG'
 
 DEFAULT_REVISION = "main"
 

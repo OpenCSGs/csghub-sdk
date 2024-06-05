@@ -5,7 +5,8 @@ import os
 from pathlib import Path
 
 @classmethod
-def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **model_kwargs):
+def from_pretrained(cls, pretrained_model_name_or_path,
+                    *model_args, **model_kwargs):
     # first step download model
     try:
         token = get_token_to_send(None)
