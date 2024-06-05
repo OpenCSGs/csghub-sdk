@@ -4,12 +4,14 @@
 
 # CSGHUB_SDK
 ## 介绍
-csghub_sdk是csghub_server的python client,旨在方便用户利用python代码对远程的csghub进行操作
-其中包括的主体内容有：
-1. 库下载（模型/数据集）
-2. 库读取（输出模型兼容huggingface）
-3. 库上传
-4. server实例信息查询与更改等
+csghub_sdk is the python client designed for csghub_server, to facilitate users using python code 
+to operate remote csghub
+The main contents included are:
+
+1. Repo downloading（model/dataset）
+2. Repo information query（ Compatible with huggingface）
+3. Repo uploading
+4. Repo information update
 
 
 ## RoadMap
@@ -17,10 +19,10 @@ csghub_sdk是csghub_server的python client,旨在方便用户利用python代码�
 二期完成下载模型的库加载
 
 
-## 使用示例
+## Use cases
 
-### 单文件下载
-使用http_get接口进行单文件下载
+### Downloading single file
+use `http_get` function to download single file
 ```python
 
 from pycsghub.file_download import http_get
@@ -39,8 +41,8 @@ http_get(url=url,
          headers=headers,
          cookies=cookies)
 ```
+use `file_download` function to download single file from a rep
 
-使用file_download 封装接口进行单文件下载
 ```python
 from pycsghub.file_download import file_download
 token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9" + \
@@ -56,7 +58,7 @@ result = file_download(repo_id,
 
 ```
 
-### 库下载
+### Repo download
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
@@ -72,7 +74,7 @@ result = snapshot_download(repo_id,
 ```
 
 
-### 本repo安装
+### Install
 
 ```shell
 git clone thisrepo
@@ -84,16 +86,21 @@ pip install .
 ```
 
 
-### 兼容huggingface的模型加载
+### Model loading compatible with huggingface
 
-huggingface的transformers库支持直接输入huggingface上的repo_id以下载并读取相关模型，如下列所示：
+
+The transformers library supports directly inputting the repo_id on huggingface to download and load 
+related models, as shown below:
 ```python
 from transformers import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
-在这段代码中，hf的transformer库首先下载模型到本地cache文件夹中，然后读取配置，并通过反射到相关类进行加载的方式加载模型。
+In this code, transformer library of huggingface first downloads the model to the local cache folder, then reads the 
+configuration, and loads the model by reflecting to the relevant class for loading.
 
-cshhubsdkV0.1版本为了兼容huggingface也提供用户最常用的功能，模型下载与加载。并可以通过如下的方式进行模型下载与加载
+In order to be compatible with huggingface, the V0.1 version of cshhubsdk also provides users with the most 
+commonly used functions, model downloading and loading. And the model can be downloaded and loaded in the 
+following ways.
 ```python
 # 注意首先要进行环境变量设置，因为下载需要token，下述api的调用，会直接在环境变量中查找相应的token。
 # import os 
@@ -102,8 +109,10 @@ from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
-这段代码首先：1. 调用pycsghub库的snaphotdownload下载相关文件；2.通过动态批量类生成与类名反射机制，批量为pycsghub.repo_reader创建大量与transformers自动类加载的重名类。并为其赋予from_pretrained方法。这样读取出来的模型即为hf-transformers模型。
-
+This code: 1. Call snapshotdownload of the pycsghub library to download relevant files; 2. Create a large number
+of automatic model loading classes for pycsghub.repo_reader in batches through dynamic batch class generation and
+class reflection mechanisms. And give it the from_pretrained method. The model read in this way is the 
+hf-transformers model.
 
 
 
