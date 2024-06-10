@@ -3,18 +3,22 @@ from functools import partial
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Optional, Union, List, Dict
-
 import requests
 from huggingface_hub.utils import filter_repo_objects
 from requests.adapters import Retry
 from tqdm import tqdm
-
 from pycsghub import utils
 from pycsghub.cache import ModelFileSystemCache
-from pycsghub.utils import build_csg_headers, get_cache_dir, model_id_to_group_owner_name, pack_model_file_info, \
-    get_file_download_url
-from pycsghub.constants import API_FILE_DOWNLOAD_RETRY_TIMES, API_FILE_DOWNLOAD_TIMEOUT, API_FILE_DOWNLOAD_CHUNK_SIZE, \
-    DEFAULT_REVISION
+from pycsghub.utils import (build_csg_headers,
+                            get_cache_dir,
+                            model_id_to_group_owner_name,
+                            pack_model_file_info,
+                            get_file_download_url,
+                            get_endpoint)
+from pycsghub.constants import (API_FILE_DOWNLOAD_RETRY_TIMES,
+                                API_FILE_DOWNLOAD_TIMEOUT,
+                                API_FILE_DOWNLOAD_CHUNK_SIZE,
+                                DEFAULT_REVISION)
 from pycsghub.errors import FileDownloadError
 import os
 from pycsghub.errors import InvalidParameter
