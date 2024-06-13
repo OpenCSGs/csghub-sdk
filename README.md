@@ -10,11 +10,18 @@ csghub_sdk是csghub_server的python client,旨在方便用户利用python代码�
 2. 库读取（输出模型兼容huggingface）
 3. 库上传
 4. server实例信息查询与更改等
-
+## 设计理念
+csghubserver是一个repo
 
 ## RoadMap
 初步计划5月底前完成下载与部分库查询接口，见飞书文档
 二期完成下载模型的库加载
+
+6月开发规划
+1. repo信息查询，
+2. repo信息增删改查
+3. 模型上传
+4. 通过cshhubapi调用所有接口
 
 
 ## 使用示例
