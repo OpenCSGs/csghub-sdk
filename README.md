@@ -13,7 +13,7 @@ csghub_sdk是csghub_server的python client,旨在方便用户利用python代码�
 
 
 ## RoadMap
-初步计划5月底前完成下载与部分库查询接口，见飞书文档
+初步计划5月底前完成下载与部分库查询接口,
 二期完成下载模型的库加载
 
 

@@ -29,6 +29,7 @@ setup(
         "thread==2.0.3",
         "tornado==6.4",
         "tqdm==4.66.2",
+        "torch",
         "transformers==4.40.1",
         "trove_classifiers==2024.5.22",
         "truststore==0.9.1",

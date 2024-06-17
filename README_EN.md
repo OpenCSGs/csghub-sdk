@@ -15,8 +15,6 @@ The main contents included are:
 
 
 ## RoadMap
-初步计划5月底前完成下载与部分库查询接口，见飞书文档
-二期完成下载模型的库加载
 
 
 ## Use cases
