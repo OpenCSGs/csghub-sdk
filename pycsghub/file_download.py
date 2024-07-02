@@ -142,45 +142,39 @@ def http_get(*,
     :param cookies: http cookies
     :return: None
     '''
-    tempfile_mgr = partial(tempfile.NamedTemporaryFile,
-                           mode='wb',
-                           dir=local_dir,
-                           delete=False)
-    get_headers = build_csg_headers(token=token,
-                                    headers=headers)
+    tempfile_mgr = partial(tempfile.NamedTemporaryFile, mode='wb', dir=local_dir, delete=False)
+    get_headers = build_csg_headers(token=token, headers=headers)
+    total_content_length = 0
     with tempfile_mgr() as temp_file:
         # retry sleep 0.5s, 1s, 2s, 4s
-        retry = Retry(
-            total=API_FILE_DOWNLOAD_RETRY_TIMES,
-            backoff_factor=1,
-            allowed_methods=['GET'])
+        retry = Retry(total=API_FILE_DOWNLOAD_RETRY_TIMES, backoff_factor=1, allowed_methods=['GET'])
         while True:
             try:
                 downloaded_size = temp_file.tell()
-                # get_headers['Range'] = 'bytes=%d-' % downloaded_size
-                # todo some problem occurs in download huge file
-                # fixme here
-                r = requests.get(url,
-                                 headers=get_headers,
-                                 stream=True,
-                                 cookies=cookies,
-                                 timeout=API_FILE_DOWNLOAD_TIMEOUT)
-
+                if downloaded_size > 0:
+                    get_headers['Range'] = 'bytes=%d-' % downloaded_size
+                r = requests.get(url, headers=get_headers, stream=True, cookies=cookies, timeout=API_FILE_DOWNLOAD_TIMEOUT)
                 r.raise_for_status()
+                accept_ranges = r.headers.get('Accept-Ranges')
                 content_length = r.headers.get('Content-Length')
-                total = int(
-                    content_length) if content_length is not None else None
-
+                if accept_ranges == 'bytes':
+                    if downloaded_size == 0:
+                        total_content_length = int(content_length) if content_length is not None else None 
+                else:
+                    if downloaded_size > 0:
+                        temp_file.truncate(0)
+                        downloaded_size = temp_file.tell()
+                    total_content_length = int(content_length) if content_length is not None else None 
+                
                 progress = tqdm(
                     unit='B',
                     unit_scale=True,
                     unit_divisor=1024,
-                    total=total,
+                    total=total_content_length,
                     initial=downloaded_size,
                     desc="Downloading {}".format(file_name),
                 )
-                for chunk in r.iter_content(
-                        chunk_size=API_FILE_DOWNLOAD_CHUNK_SIZE):
+                for chunk in r.iter_content(chunk_size=API_FILE_DOWNLOAD_CHUNK_SIZE):
                     if chunk:
                         progress.update(len(chunk))
                         temp_file.write(chunk)
@@ -191,11 +185,9 @@ def http_get(*,
                 retry.sleep()
 
     downloaded_length = os.path.getsize(temp_file.name)
-    if total != downloaded_length:
+    if total_content_length != downloaded_length:
         os.remove(temp_file.name)
-        msg = 'File %s download incomplete, content_length: %s but the \
-                            file downloaded length: %s, please download again' % (
-            file_name, total, downloaded_length)
+        msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (file_name, total_content_length, downloaded_length)
         raise FileDownloadError(msg)
     os.replace(temp_file.name, os.path.join(local_dir, file_name))
     return
