@@ -193,7 +193,6 @@ def http_get(*,
         msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (
             file_name, total_content_length, downloaded_length)
         raise FileDownloadError(msg)
-    print(f"{temp_file.name}, {local_dir}, {file_name}")
     # fix folder recursive issue
     os.makedirs(os.path.dirname(os.path.join(local_dir, file_name)), exist_ok=True)
     os.replace(temp_file.name, os.path.join(local_dir, file_name))
