@@ -36,7 +36,7 @@ def snapshot_download(
     if repo_type not in REPO_TYPES:
         raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
     if cache_dir is None:
-        cache_dir = get_cache_dir()
+        cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')

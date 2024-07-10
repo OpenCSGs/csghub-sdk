@@ -52,10 +52,11 @@ def file_download(
         ignore_patterns: Optional[Union[List[str], str]] = None,
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None
+        token: Optional[str] = None,
+        repo_type: Optional[str] = None
 ) -> str:
     if cache_dir is None:
-        cache_dir = get_cache_dir()
+        cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')

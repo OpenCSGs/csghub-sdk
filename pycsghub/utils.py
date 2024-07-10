@@ -60,19 +60,23 @@ def model_id_to_group_owner_name(model_id: str) -> (str, str):
     return group_or_owner, name
 
 
-def get_cache_dir(model_id: Optional[str] = None) -> Union[str, Path]:
+def get_cache_dir(model_id: Optional[str] = None, repo_type: Optional[str] = None) -> Union[str, Path]:
     """cache dir precedence:
         function parameter > environment > ~/.cache/csg/hub
 
     Args:
         model_id (str, optional): The model id.
+        repo_type (str, optional): The repo type
 
     Returns:
         str: the model_id dir if model_id not None, otherwise cache root dir.
     """
     default_cache_dir = get_default_cache_dir()
+    sub_dir = 'hub'
+    if repo_type == "dataset":
+        sub_dir = 'dataset'
     base_path = os.getenv('CSGHUB_CACHE',
-                          os.path.join(default_cache_dir, 'hub'))
+                          os.path.join(default_cache_dir, sub_dir))
     return base_path if model_id is None else os.path.join(
         base_path, model_id + '/')
 
