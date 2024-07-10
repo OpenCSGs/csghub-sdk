@@ -12,7 +12,7 @@ from pycsghub.cache import ModelFileSystemCache
 from pycsghub.utils import (build_csg_headers,
                             get_cache_dir,
                             model_id_to_group_owner_name,
-                            pack_model_file_info,
+                            pack_repo_file_info,
                             get_file_download_url,
                             get_endpoint)
 from pycsghub.constants import (API_FILE_DOWNLOAD_RETRY_TIMES,
@@ -38,6 +38,7 @@ def csg_hub_download():
 
 def get_csg_hub_url():
     pass
+
 
 def file_download(
         repo_id: str,
@@ -98,9 +99,9 @@ def file_download(
 
         with tempfile.TemporaryDirectory(
                 dir=temporary_cache_dir) as temp_cache_dir:
-            model_file_info = pack_model_file_info(file_name, revision)
-            if not cache.exists(model_file_info):
-                file_name = os.path.basename(model_file_info['Path'])
+            repo_file_info = pack_repo_file_info(file_name, revision)
+            if not cache.exists(repo_file_info):
+                file_name = os.path.basename(repo_file_info['Path'])
                 # get download url
                 url = get_file_download_url(
                     model_id=repo_id,
@@ -117,13 +118,14 @@ def file_download(
 
                 # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, file_name)
-                cache.put_file(model_file_info, temp_file)
+                cache.put_file(repo_file_info, temp_file)
             else:
                 print(
                     f'File {file_name} already in cache, skip downloading!'
                 )
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location(), file_name)
+
 
 def http_get(*,
              url: str,
@@ -153,19 +155,20 @@ def http_get(*,
                 downloaded_size = temp_file.tell()
                 if downloaded_size > 0:
                     get_headers['Range'] = 'bytes=%d-' % downloaded_size
-                r = requests.get(url, headers=get_headers, stream=True, cookies=cookies, timeout=API_FILE_DOWNLOAD_TIMEOUT)
+                r = requests.get(url, headers=get_headers, stream=True,
+                                 cookies=cookies, timeout=API_FILE_DOWNLOAD_TIMEOUT)
                 r.raise_for_status()
                 accept_ranges = r.headers.get('Accept-Ranges')
                 content_length = r.headers.get('Content-Length')
                 if accept_ranges == 'bytes':
                     if downloaded_size == 0:
-                        total_content_length = int(content_length) if content_length is not None else None 
+                        total_content_length = int(content_length) if content_length is not None else None
                 else:
                     if downloaded_size > 0:
                         temp_file.truncate(0)
                         downloaded_size = temp_file.tell()
-                    total_content_length = int(content_length) if content_length is not None else None 
-                
+                    total_content_length = int(content_length) if content_length is not None else None
+
                 progress = tqdm(
                     unit='B',
                     unit_scale=True,
@@ -187,8 +190,12 @@ def http_get(*,
     downloaded_length = os.path.getsize(temp_file.name)
     if total_content_length != downloaded_length:
         os.remove(temp_file.name)
-        msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (file_name, total_content_length, downloaded_length)
+        msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (
+            file_name, total_content_length, downloaded_length)
         raise FileDownloadError(msg)
+    print(f"{temp_file.name}, {local_dir}, {file_name}")
+    # fix folder recursive issue
+    os.makedirs(os.path.dirname(os.path.join(local_dir, file_name)), exist_ok=True)
     os.replace(temp_file.name, os.path.join(local_dir, file_name))
     return
 
@@ -208,9 +215,3 @@ if __name__ == '__main__':
              file_name=file_name,
              headers=headers,
              cookies=cookies)
-
-
-
-
-
-

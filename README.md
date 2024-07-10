@@ -126,6 +126,21 @@ result = snapshot_download(repo_id,
                            token=token)
 ```
 
+### 数据集下载
+```python
+from pycsghub.snapshot_download import snapshot_download
+token="xxxx"
+endpoint = "https://hub.opencsg.com"
+repo_id = 'AIWizards/tmmluplus'
+repo_type="dataset"
+cache_dir = '/Users/xiangzhen/Downloads/'
+result = snapshot_download(repo_id,
+			   repo_type=repo_type,
+                           cache_dir=cache_dir,
+                           endpoint=endpoint,
+                           token=token)
+```
+
 ### 兼容huggingface的模型加载
 
 huggingface的transformers库支持直接输入huggingface上的repo_id以下载并读取相关模型，如下列所示：

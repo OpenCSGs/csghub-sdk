@@ -128,6 +128,20 @@ result = snapshot_download(repo_id,
                            endpoint=endpoint,
                            token=token)
 ```
+### Download dataset 
+```python
+from pycsghub.snapshot_download import snapshot_download
+token="xxxx"
+endpoint = "https://hub.opencsg.com"
+repo_id = 'AIWizards/tmmluplus'
+repo_type="dataset"
+cache_dir = '/Users/xiangzhen/Downloads/'
+result = snapshot_download(repo_id,
+			   repo_type=repo_type,
+                           cache_dir=cache_dir,
+                           endpoint=endpoint,
+                           token=token)
+```
 
 ### Model loading compatible with huggingface
 
