@@ -1,12 +1,11 @@
 from setuptools import setup, find_packages
 
-# 确保你已经读取了README文件作为长描述
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name='csghub-sdk',
-    version='0.3.0',
+    version='0.3.1',
     packages=find_packages(),
     author="opencsg",
     author_email="contact@opencsg.com",
