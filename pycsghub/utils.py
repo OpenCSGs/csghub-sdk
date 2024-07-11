@@ -2,9 +2,9 @@ from typing import Optional, Union, Dict
 
 from pathlib import Path
 import os
-from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
+from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN, REPO_TYPE_DATASET
 import requests
-from huggingface_hub.hf_api import ModelInfo
+from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
 import hashlib
 from pycsghub.errors import FileIntegrityError
@@ -60,19 +60,23 @@ def model_id_to_group_owner_name(model_id: str) -> (str, str):
     return group_or_owner, name
 
 
-def get_cache_dir(model_id: Optional[str] = None) -> Union[str, Path]:
+def get_cache_dir(model_id: Optional[str] = None, repo_type: Optional[str] = None) -> Union[str, Path]:
     """cache dir precedence:
         function parameter > environment > ~/.cache/csg/hub
 
     Args:
         model_id (str, optional): The model id.
+        repo_type (str, optional): The repo type
 
     Returns:
         str: the model_id dir if model_id not None, otherwise cache root dir.
     """
     default_cache_dir = get_default_cache_dir()
+    sub_dir = 'hub'
+    if repo_type == "dataset":
+        sub_dir = 'dataset'
     base_path = os.getenv('CSGHUB_CACHE',
-                          os.path.join(default_cache_dir, 'hub'))
+                          os.path.join(default_cache_dir, sub_dir))
     return base_path if model_id is None else os.path.join(
         base_path, model_id + '/')
 
@@ -94,7 +98,7 @@ def get_repo_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None
-) -> ModelInfo:
+) -> Union[ModelInfo, DatasetInfo, SpaceInfo]:
     """
     Get the info object for a given repo of a given type.
 
@@ -136,7 +140,10 @@ def get_repo_info(
     """
     if repo_type is None or repo_type == "model":
         method = model_info
-    # todo dataset and spaceset are now not supported
+    elif repo_type == "dataset":
+        method = dataset_info
+    elif repo_type == "space":
+        method = space_info
     else:
         raise ValueError("Unsupported repo type.")
     return method(
@@ -147,6 +154,136 @@ def get_repo_info(
         files_metadata=files_metadata,
         endpoint=endpoint
     )
+
+
+def dataset_info(
+    repo_id: str,
+    *,
+    revision: Optional[str] = None,
+    timeout: Optional[float] = None,
+    files_metadata: bool = False,
+    token: Union[bool, str, None] = None,
+    endpoint: Optional[str] = None,
+) -> DatasetInfo:
+    """
+    Get info on one specific dataset on huggingface.co.
+
+    Dataset can be private if you pass an acceptable token.
+
+    Args:
+        repo_id (`str`):
+            A namespace (user or an organization) and a repo name separated
+            by a `/`.
+        revision (`str`, *optional*):
+            The revision of the dataset repository from which to get the
+            information.
+        timeout (`float`, *optional*):
+            Whether to set a timeout for the request to the Hub.
+        files_metadata (`bool`, *optional*):
+            Whether or not to retrieve metadata for files in the repository
+            (size, LFS metadata, etc). Defaults to `False`.
+        token (Union[bool, str, None], optional):
+            A valid user access token (string). Defaults to the locally saved
+            token, which is the recommended method for authentication (see
+            https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
+            To disable authentication, pass `False`.
+
+    Returns:
+        [`hf_api.DatasetInfo`]: The dataset repository information.
+
+    <Tip>
+
+    Raises the following errors:
+
+        - [`~utils.RepositoryNotFoundError`]
+            If the repository to download from cannot be found. This may be because it doesn't exist,
+            or because it is set to `private` and you do not have access.
+        - [`~utils.RevisionNotFoundError`]
+            If the revision to download from cannot be found.
+
+    </Tip>
+    """
+    headers = build_csg_headers(token=token)
+    path = (
+        f"{endpoint}/hf/api/datasets/{repo_id}"
+        if revision is None
+        else (f"{endpoint}/hf/api/datasets/{repo_id}/revision/{quote(revision, safe='')}")
+    )
+    params = {}
+    if files_metadata:
+        params["blobs"] = True
+    r = requests.get(path,
+                     headers=headers,
+                     timeout=timeout,
+                     params=params)
+    r.raise_for_status()
+    data = r.json()
+    return DatasetInfo(**data)
+
+
+def space_info(
+    repo_id: str,
+    *,
+    revision: Optional[str] = None,
+    timeout: Optional[float] = None,
+    files_metadata: bool = False,
+    token: Union[bool, str, None] = None,
+    endpoint: Optional[str] = None,
+) -> SpaceInfo:
+    """
+    Get info on one specific Space on huggingface.co.
+
+    Space can be private if you pass an acceptable token.
+
+    Args:
+        repo_id (`str`):
+            A namespace (user or an organization) and a repo name separated
+            by a `/`.
+        revision (`str`, *optional*):
+            The revision of the space repository from which to get the
+            information.
+        timeout (`float`, *optional*):
+            Whether to set a timeout for the request to the Hub.
+        files_metadata (`bool`, *optional*):
+            Whether or not to retrieve metadata for files in the repository
+            (size, LFS metadata, etc). Defaults to `False`.
+        token (Union[bool, str, None], optional):
+            A valid user access token (string). Defaults to the locally saved
+            token, which is the recommended method for authentication (see
+            https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
+            To disable authentication, pass `False`.
+
+    Returns:
+        [`~hf_api.SpaceInfo`]: The space repository information.
+
+    <Tip>
+
+    Raises the following errors:
+
+        - [`~utils.RepositoryNotFoundError`]
+            If the repository to download from cannot be found. This may be because it doesn't exist,
+            or because it is set to `private` and you do not have access.
+        - [`~utils.RevisionNotFoundError`]
+            If the revision to download from cannot be found.
+
+    </Tip>
+    """
+    headers = build_csg_headers(token=token)
+    path = (
+        f"{endpoint}/hf/api/spaces/{repo_id}"
+        if revision is None
+        else (f"{endpoint}/hf/api/spaces/{repo_id}/revision/{quote(revision, safe='')}")
+    )
+    params = {}
+    if files_metadata:
+        params["blobs"] = True
+    r = requests.get(path,
+                     headers=headers,
+                     timeout=timeout,
+                     params=params)
+    r.raise_for_status()
+    data = r.json()
+    return SpaceInfo(**data)
 
 
 def model_info(
@@ -228,7 +365,9 @@ def get_endpoint():
 
 def get_file_download_url(model_id: str,
                           file_path: str,
-                          revision: str) -> str:
+                          revision: str,
+                          repo_type: Optional[str] = None,
+                          ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
         model_id (str): The model_id.
@@ -241,6 +380,8 @@ def get_file_download_url(model_id: str,
     file_path = urllib.parse.quote_plus(file_path)
     revision = urllib.parse.quote_plus(revision)
     download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
+    if repo_type == REPO_TYPE_DATASET:
+        download_url_template = '{endpoint}/hf/datasets//{model_id}/resolve/{revision}/{file_path}'
     return download_url_template.format(
         endpoint=get_endpoint(),
         model_id=model_id,
@@ -280,8 +421,8 @@ def compute_hash(file_path) -> str:
     return sha256_hash.hexdigest()
 
 
-def pack_model_file_info(model_file_path,
-                         revision) -> Dict[str, str]:
-    model_file_info = {'Path': model_file_path,
-                       'Revision': revision}
-    return model_file_info
+def pack_repo_file_info(repo_file_path,
+                        revision) -> Dict[str, str]:
+    repo_file_info = {'Path': repo_file_path,
+                      'Revision': revision}
+    return repo_file_info

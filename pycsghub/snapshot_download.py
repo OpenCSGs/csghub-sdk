@@ -9,17 +9,18 @@ from pycsghub.utils import (get_file_download_url,
                             model_id_to_group_owner_name)
 from pycsghub.cache import ModelFileSystemCache
 from pycsghub.utils import (get_cache_dir,
-                            pack_model_file_info,
+                            pack_repo_file_info,
                             get_endpoint)
 from huggingface_hub.utils import filter_repo_objects
 from pycsghub.file_download import http_get
-from pycsghub.constants import DEFAULT_REVISION
+from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
 from pycsghub import utils
 
 
 def snapshot_download(
         repo_id: str,
         *,
+        repo_type: Optional[str] = None,
         revision: Optional[str] = DEFAULT_REVISION,
         cache_dir: Union[str, Path, None] = None,
         local_files_only: Optional[bool] = False,
@@ -30,8 +31,12 @@ def snapshot_download(
         endpoint: Optional[str] = None,
         token: Optional[str] = None
 ) -> str:
+    if repo_type is None:
+        repo_type = "model"
+    if repo_type not in REPO_TYPES:
+        raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
     if cache_dir is None:
-        cache_dir = get_cache_dir()
+        cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
@@ -53,13 +58,14 @@ def snapshot_download(
         # make headers
         # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id,
+                                        repo_type=repo_type,
                                         revision=revision,
                                         token=token,
                                         endpoint=endpoint if endpoint is not None else get_endpoint())
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
-        model_files = list(
+        repo_files = list(
             filter_repo_objects(
                 items=[f.rfilename for f in repo_info.siblings],
                 allow_patterns=allow_patterns,
@@ -69,10 +75,10 @@ def snapshot_download(
 
         with tempfile.TemporaryDirectory(
                 dir=temporary_cache_dir) as temp_cache_dir:
-            for model_file in model_files:
-                model_file_info = pack_model_file_info(model_file, revision)
-                if cache.exists(model_file_info):
-                    file_name = os.path.basename(model_file_info['Path'])
+            for repo_file in repo_files:
+                repo_file_info = pack_repo_file_info(repo_file, revision)
+                if cache.exists(repo_file_info):
+                    file_name = os.path.basename(repo_file_info['Path'])
                     print(
                         f'File {file_name} already in cache, skip downloading!'
                     )
@@ -81,20 +87,21 @@ def snapshot_download(
                 # get download url
                 url = get_file_download_url(
                     model_id=repo_id,
-                    file_path=model_file,
+                    file_path=repo_file,
+                    repo_type=repo_type,
                     revision=revision)
                 # todo support parallel download api
                 http_get(
                     url=url,
                     local_dir=temp_cache_dir,
-                    file_name=model_file,
+                    file_name=repo_file,
                     headers=headers,
                     cookies=cookies,
                     token=token)
 
                 # todo using hash to check file integrity
-                temp_file = os.path.join(temp_cache_dir, model_file)
-                cache.put_file(model_file_info, temp_file)
+                temp_file = os.path.join(temp_cache_dir, repo_file)
+                cache.put_file(repo_file_info, temp_file)
 
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())
