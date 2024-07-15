@@ -15,7 +15,7 @@ from huggingface_hub.utils import filter_repo_objects
 from pycsghub.file_download import http_get
 from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
 from pycsghub import utils
-
+from pycsghub.constants import REPO_TYPE_MODEL
 
 def snapshot_download(
         repo_id: str,
@@ -32,7 +32,7 @@ def snapshot_download(
         token: Optional[str] = None
 ) -> str:
     if repo_type is None:
-        repo_type = "model"
+        repo_type = REPO_TYPE_MODEL
     if repo_type not in REPO_TYPES:
         raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
     if cache_dir is None:
@@ -55,13 +55,14 @@ def snapshot_download(
                 " online, set 'local_files_only' to False.")
         return cache.get_root_location()
     else:
+        download_endpoint = endpoint if endpoint is not None else get_endpoint()
         # make headers
         # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id,
                                         repo_type=repo_type,
                                         revision=revision,
                                         token=token,
-                                        endpoint=endpoint if endpoint is not None else get_endpoint())
+                                        endpoint=download_endpoint)
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
@@ -89,7 +90,8 @@ def snapshot_download(
                     model_id=repo_id,
                     file_path=repo_file,
                     repo_type=repo_type,
-                    revision=revision)
+                    revision=revision,
+                    endpoint=download_endpoint)
                 # todo support parallel download api
                 http_get(
                     url=url,

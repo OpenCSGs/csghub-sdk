@@ -74,7 +74,45 @@ pip install .
 
 ## 使用示例
 
+### 模型下载
+
+```python
+from pycsghub.snapshot_download import snapshot_download
+token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+
+endpoint = "https://hub.opencsg.com"
+repo_type = "model"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/Users/hhwang/temp/'
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repotype)
+```
+
+### 数据集下载
+```python
+from pycsghub.snapshot_download import snapshot_download
+token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+
+endpoint = "https://hub.opencsg.com"
+repo_id = 'AIWizards/tmmluplus'
+repo_type = "dataset"
+cache_dir = '/Users/xiangzhen/Downloads/'
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
+
 ### 单文件下载
+
+使用`file_download`封装接口进行单文件下载
+
+```python
+from pycsghub.file_download import file_download
+token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+
+endpoint = "https://hub.opencsg.com"
+repo_type = "model"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/home/test/'
+result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repo_type)
+```
 
 使用`http_get`接口进行单文件下载
 
@@ -87,58 +125,7 @@ local_dir = '/home/test/'
 file_name = 'test.txt'
 headers = None
 cookies = None
-http_get(url=url,
-         token=token,
-         local_dir=local_dir,
-         file_name=file_name,
-         headers=headers,
-         cookies=cookies)
-```
-
-使用`file_download`封装接口进行单文件下载
-
-```python
-from pycsghub.file_download import file_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
-
-endpoint = "https://hub.opencsg.com"
-repo_id = 'OpenCSG/csg-wukong-1B'
-cache_dir = '/home/test/'
-result = file_download(repo_id,
-                       file_name='README.md',
-                       cache_dir=cache_dir,
-                       endpoint=endpoint,
-                       token=token)
-```
-
-### 仓库下载
-
-```python
-from pycsghub.snapshot_download import snapshot_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
-
-endpoint = "https://hub.opencsg.com"
-repo_id = 'OpenCSG/csg-wukong-1B'
-cache_dir = '/Users/hhwang/temp/'
-result = snapshot_download(repo_id,
-                           cache_dir=cache_dir,
-                           endpoint=endpoint,
-                           token=token)
-```
-
-### 数据集下载
-```python
-from pycsghub.snapshot_download import snapshot_download
-token="xxxx"
-endpoint = "https://hub.opencsg.com"
-repo_id = 'AIWizards/tmmluplus'
-repo_type="dataset"
-cache_dir = '/Users/xiangzhen/Downloads/'
-result = snapshot_download(repo_id,
-			   repo_type=repo_type,
-                           cache_dir=cache_dir,
-                           endpoint=endpoint,
-                           token=token)
+http_get(url=url, token=token, local_dir=local_dir, file_name=file_name, headers=headers, cookies=cookies)
 ```
 
 ### 兼容huggingface的模型加载

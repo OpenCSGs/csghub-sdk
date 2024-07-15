@@ -2,7 +2,8 @@ from typing import Optional, Union, Dict
 
 from pathlib import Path
 import os
-from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN, REPO_TYPE_DATASET
+from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
@@ -138,11 +139,11 @@ def get_repo_info(
 
     </Tip>
     """
-    if repo_type is None or repo_type == "model":
+    if repo_type is None or repo_type == REPO_TYPE_MODEL:
         method = model_info
-    elif repo_type == "dataset":
+    elif repo_type == REPO_TYPE_DATASET:
         method = dataset_info
-    elif repo_type == "space":
+    elif repo_type == REPO_TYPE_SPACE:
         method = space_info
     else:
         raise ValueError("Unsupported repo type.")
@@ -358,8 +359,7 @@ def model_info(
 
 
 def get_endpoint():
-    csghub_domain = os.getenv('CSGHUB_DOMAIN',
-                              DEFAULT_CSGHUB_DOMAIN)
+    csghub_domain = os.getenv('CSGHUB_DOMAIN', DEFAULT_CSGHUB_DOMAIN)
     return csghub_domain
 
 
@@ -367,6 +367,7 @@ def get_file_download_url(model_id: str,
                           file_path: str,
                           revision: str,
                           repo_type: Optional[str] = None,
+                          endpoint: Optional[str] = None
                           ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
@@ -381,9 +382,9 @@ def get_file_download_url(model_id: str,
     revision = urllib.parse.quote_plus(revision)
     download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
-        download_url_template = '{endpoint}/hf/datasets//{model_id}/resolve/{revision}/{file_path}'
+        download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
     return download_url_template.format(
-        endpoint=get_endpoint(),
+        endpoint=endpoint if endpoint is not None else get_endpoint(),
         model_id=model_id,
         revision=revision,
         file_path=file_path,
