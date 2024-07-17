@@ -73,18 +73,6 @@ pip install .
 
 ## Use cases of command line
 
-```
-# download model
-csghub download --repo-id=wanghh2000/myprivate1 --repo-type=model --token=3b77c98077b415ca381ded189b86d5df226e3776
-
-# download dataset
-csghub download --repo-id=wanghh2000/myds1 --repo-type=dataset --token=3b77c98077b415ca381ded189b86d5df226e3776
-```
-
-文件默认下载路径为`~/.cache/csg/`
-
-## Use cases of command line
-
 ```shell
 # download model
 csghub download --repo-id=wanghh2000/myprivate1 --repo-type=model --token=3b77c98077b415ca381ded189b86d5df226e3776
@@ -98,6 +86,8 @@ csghub upload --repo-id=wanghh2000/myprivate1 --repo-type=model --repo-file=abc/
 # upload files
 csghub upload --repo-id=wanghh2000/myds1 --repo-type=dataset --repo-file=abc/4.txt --repo-file=abc/5.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
 ```
+
+Default download path is `~/.cache/csg/`
 
 ## Use cases of SDK
 
