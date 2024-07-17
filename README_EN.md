@@ -87,7 +87,7 @@ csghub upload --repo-id=wanghh2000/myprivate1 --repo-type=model --repo-file=abc/
 csghub upload --repo-id=wanghh2000/myds1 --repo-type=dataset --repo-file=abc/4.txt --repo-file=abc/5.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
 ```
 
-Default download path is `~/.cache/csg/`
+Download location is `~/.cache/csg/` by default.
 
 ## Use cases of SDK
 
