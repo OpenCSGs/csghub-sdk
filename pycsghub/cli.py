@@ -16,7 +16,7 @@ OPTIONS = {
     "token": typer.Option(default=..., help="A User Access Token generated from https://opencsg.com/settings/access-token"),
 }
 
-@app.command(name="download", help="Download model/dataset from OpenCSGS Hub")
+@app.command(name="download", help="Download model/dataset from opencsg.com")
 def download(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         repo_type: Annotated[RepoType, OPTIONS["repoType"]] = RepoType.MODEL, 
@@ -34,7 +34,7 @@ def download(
         token=token
     )
 
-@app.command(name="upload", help="Upload repository files to OpenCSGS Hub.")
+@app.command(name="upload", help="Upload repository files to opencsg.com.")
 def upload(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         repo_file: Annotated[List[str], OPTIONS["repoFiles"]],

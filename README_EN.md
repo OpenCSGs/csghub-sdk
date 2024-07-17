@@ -75,16 +75,16 @@ pip install .
 
 ```shell
 # download model
-csghub download --repo-id=wanghh2000/myprivate1 --repo-type=model --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli download --repo-id=wanghh2000/myprivate1 --repo-type=model --token=3b77c98077b415ca381ded189b86d5df226e3776
 
 # donwload dataset
-csghub download --repo-id=wanghh2000/myds1 --repo-type=dataset --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli download --repo-id=wanghh2000/myds1 --repo-type=dataset --token=3b77c98077b415ca381ded189b86d5df226e3776
 
 # upload a single file
-csghub upload --repo-id=wanghh2000/myprivate1 --repo-type=model --repo-file=abc/3.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli upload --repo-id=wanghh2000/myprivate1 --repo-type=model --repo-file=abc/3.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
 
 # upload files
-csghub upload --repo-id=wanghh2000/myds1 --repo-type=dataset --repo-file=abc/4.txt --repo-file=abc/5.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli upload --repo-id=wanghh2000/myds1 --repo-type=dataset --repo-file=abc/4.txt --repo-file=abc/5.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
 ```
 
 Download location is `~/.cache/csg/` by default.

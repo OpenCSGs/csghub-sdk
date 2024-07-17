@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "csghub=pycsghub.cli:app",
+            "csghub-cli=pycsghub.cli:app",
         ]
     },
     install_requires=[
