@@ -74,17 +74,19 @@ pip install .
 ## Use cases of command line
 
 ```shell
+export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+
 # download model
-csghub-cli download --repo-id=wanghh2000/myprivate1 --repo-type=model --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli download wanghh2000/myprivate1
 
 # donwload dataset
-csghub-cli download --repo-id=wanghh2000/myds1 --repo-type=dataset --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli download wanghh2000/myds1 -t dataset
 
 # upload a single file
-csghub-cli upload --repo-id=wanghh2000/myprivate1 --repo-type=model --repo-file=abc/3.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli upload wanghh2000/myprivate1 abc/3.txt
 
 # upload files
-csghub-cli upload --repo-id=wanghh2000/myds1 --repo-type=dataset --repo-file=abc/4.txt --repo-file=abc/5.txt --token=3b77c98077b415ca381ded189b86d5df226e3776
+csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
 ```
 
 Download location is `~/.cache/csg/` by default.

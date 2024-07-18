@@ -25,12 +25,12 @@ def download(
 def upload(
         repo_id: str,
         repo_type: str,
-        repo_file: List[str],
+        repo_files: List[str],
         revision: Optional[str] = DEFAULT_REVISION,
         endpoint: Optional[str] = None,
         token: Optional[str] = None
     ):
-    for item in repo_file:
+    for item in repo_files:
         http_upload_file(
             repo_id=repo_id,
             repo_type=repo_type,
