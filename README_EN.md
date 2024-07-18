@@ -71,9 +71,52 @@ cd csghub-sdk
 pip install .
 ```
 
-## Use cases
+## Use cases of command line
+
+```shell
+export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+
+# download model
+csghub-cli download wanghh2000/myprivate1
+
+# donwload dataset
+csghub-cli download wanghh2000/myds1 -t dataset
+
+# upload a single file
+csghub-cli upload wanghh2000/myprivate1 abc/3.txt
+
+# upload files
+csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
+```
+
+Download location is `~/.cache/csg/` by default.
+
+## Use cases of SDK
 
 For more detailed instructions, including API documentation and usage examples, please refer to the Use case.
+
+### Download model
+
+```python
+from pycsghub.snapshot_download import snapshot_download
+token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+
+endpoint = "https://hub.opencsg.com"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/Users/hhwang/temp/'
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
+
+### Download dataset 
+```python
+from pycsghub.snapshot_download import snapshot_download
+token="xxxx"
+endpoint = "https://hub.opencsg.com"
+repo_id = 'AIWizards/tmmluplus'
+repo_type="dataset"
+cache_dir = '/Users/xiangzhen/Downloads/'
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
 
 ### Download single file
 
@@ -88,15 +131,8 @@ local_dir = '/home/test/'
 file_name = 'test.txt'
 headers = None
 cookies = None
-http_get(url=url,
-         token=token,
-         local_dir=local_dir,
-         file_name=file_name,
-         headers=headers,
-         cookies=cookies)
+http_get(url=url, token=token, local_dir=local_dir, file_name=file_name, headers=headers, cookies=cookies)
 ```
-
-### Download single file
 
 use `file_download` function to download single file from a repository
 
@@ -107,40 +143,7 @@ token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/home/test/'
-result = file_download(repo_id,
-                       file_name='README.md',
-                       cache_dir=cache_dir,
-                       endpoint=endpoint,
-                       token=token)
-```
-
-### Download repository
-
-```python
-from pycsghub.snapshot_download import snapshot_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
-
-endpoint = "https://hub.opencsg.com"
-repo_id = 'OpenCSG/csg-wukong-1B'
-cache_dir = '/Users/hhwang/temp/'
-result = snapshot_download(repo_id,
-                           cache_dir=cache_dir,
-                           endpoint=endpoint,
-                           token=token)
-```
-### Download dataset 
-```python
-from pycsghub.snapshot_download import snapshot_download
-token="xxxx"
-endpoint = "https://hub.opencsg.com"
-repo_id = 'AIWizards/tmmluplus'
-repo_type="dataset"
-cache_dir = '/Users/xiangzhen/Downloads/'
-result = snapshot_download(repo_id,
-			   repo_type=repo_type,
-                           cache_dir=cache_dir,
-                           endpoint=endpoint,
-                           token=token)
+result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token)
 ```
 
 ### Model loading compatible with huggingface

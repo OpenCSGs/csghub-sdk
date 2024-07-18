@@ -72,7 +72,27 @@ cd csghub-sdk
 pip install .
 ```
 
-## 使用示例
+## 命令行使用示例
+
+```shell
+export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+
+# 模型下载
+csghub-cli download wanghh2000/myprivate1 
+
+# 数据集下载
+csghub-cli download wanghh2000/myds1 -t dataset
+
+# 上传单个文件
+csghub-cli upload wanghh2000/myprivate1 abc/3.txt
+
+# 上传多个文件
+csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset 
+```
+
+文件默认下载路径为`~/.cache/csg/`
+
+## SDK使用示例
 
 ### 模型下载
 

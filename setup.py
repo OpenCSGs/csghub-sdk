@@ -6,12 +6,19 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='csghub-sdk',
     version='0.3.1',
-    packages=find_packages(),
     author="opencsg",
     author_email="contact@opencsg.com",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    packages=find_packages(include="pycsghub*"),
+    include_package_data=True,
+    entry_points={
+        "console_scripts": [
+            "csghub-cli=pycsghub.cli:app",
+        ]
+    },
     install_requires=[
+        "typer==0.12.3",
         "attr==0.3.2",
         "ConfigParser==7.0.0",
         "contextlib2==21.6.0",
@@ -39,5 +46,6 @@ setup(
         "trove_classifiers==2024.5.22",
         "truststore==0.9.1",
         "urllib3_secure_extra==0.1.0",
-    ]
+    ],
+    python_requires=">=3.10",
 )
