@@ -28,6 +28,10 @@ The main functions are:
 1. Repo downloading（model/dataset）
 2. Repo information query（Compatible with huggingface）
 
+## Get My Token
+
+Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.
+
 ## Getting Started
 
 To get started with the CSGHub SDK, ensure you have Python installed on your system. Then, you can install the SDK using pip:
@@ -42,7 +46,7 @@ After installation, you can begin using the SDK to connect to your CSGHub server
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = 'f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf'
+os.environ['CSG_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -61,7 +65,6 @@ By simply changing the import package name from `transformers` to `pycsghub.repo
 os.environ['CSG_TOKEN'] = 'token-of-your'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
-Get My Token from [OpenCSG](https://opencsg.com/settings/access-token)
 
 ### Install from source code
 
@@ -99,7 +102,7 @@ For more detailed instructions, including API documentation and usage examples, 
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
@@ -124,7 +127,7 @@ Use `http_get` function to download single file
 
 ```python
 from pycsghub.file_download import http_get
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
 local_dir = '/home/test/'
@@ -138,7 +141,7 @@ use `file_download` function to download single file from a repository
 
 ```python
 from pycsghub.file_download import file_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'

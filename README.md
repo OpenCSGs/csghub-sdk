@@ -28,6 +28,10 @@ CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub �
 1. 仓库下载（模型/数据集）
 2. 仓库信息查询（与huggingface兼容）
 
+## 获取Token
+
+浏览器访问[OpenCSG](https://opencsg.com/)，点击右上角`注册`完成用户注册过程，使用已经注册成功的用户和密码登录[OpenCSG](https://opencsg.com/)，登录成功后在`账号设置`中找到[`Access Token`](https://opencsg.com/settings/access-token)来获取token。
+
 ## 入门
 
 要开始使用 CSGHub SDK，请确保您的系统上安装了 Python。然后，您可以使用 pip 安装 SDK：
@@ -42,7 +46,7 @@ pip install csghub-sdk
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = 'f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf'
+os.environ['CSG_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -61,8 +65,6 @@ print('result: ',tokenizer.batch_decode(outputs))
 os.environ['CSG_TOKEN'] = 'token-of-your'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
-
-从[OpenCSG](https://opencsg.com/settings/access-token)获取我的Token
 
 ### 从源代码安装
 
@@ -98,7 +100,7 @@ csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -110,7 +112,7 @@ result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, toke
 ### 数据集下载
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'AIWizards/tmmluplus'
@@ -125,7 +127,7 @@ result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, en
 
 ```python
 from pycsghub.file_download import file_download
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -138,7 +140,7 @@ result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endp
 
 ```python
 from pycsghub.file_download import http_get
-token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
 local_dir = '/home/test/'
