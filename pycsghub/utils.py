@@ -3,7 +3,7 @@ from typing import Optional, Union, Dict
 from pathlib import Path
 import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, MIRROR
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
@@ -98,7 +98,8 @@ def get_repo_info(
     timeout: Optional[float] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None
+    endpoint: Optional[str] = None,
+    mirror: Optional[str] = MIRROR.AUTO,
 ) -> Union[ModelInfo, DatasetInfo, SpaceInfo]:
     """
     Get the info object for a given repo of a given type.
@@ -153,7 +154,8 @@ def get_repo_info(
         token=token,
         timeout=timeout,
         files_metadata=files_metadata,
-        endpoint=endpoint
+        endpoint=endpoint,
+        mirror=mirror,
     )
 
 
@@ -165,6 +167,7 @@ def dataset_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
+    mirror: Optional[str] = MIRROR.AUTO,
 ) -> DatasetInfo:
     """
     Get info on one specific dataset on huggingface.co.
@@ -208,7 +211,7 @@ def dataset_info(
     path = (
         f"{endpoint}/hf/api/datasets/{repo_id}"
         if revision is None
-        else (f"{endpoint}/hf/api/datasets/{repo_id}/revision/{quote(revision, safe='')}")
+        else (f"{endpoint}/hf/api/datasets/{repo_id}/revision/{quote(revision, safe='')}?mirror={mirror}")
     )
     params = {}
     if files_metadata:
@@ -295,7 +298,8 @@ def model_info(
     securityStatus: Optional[bool] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None
+    endpoint: Optional[str] = None,
+    mirror: Optional[str] = MIRROR.AUTO,
 ) -> ModelInfo:
     """
     Note: It is a huggingface method moved here to adjust csghub server response.
@@ -342,7 +346,7 @@ def model_info(
     path = (
         f"{endpoint}/hf/api/models/{repo_id}/revision/main"
         if revision is None
-        else f"{endpoint}/hf/api/models/{repo_id}/revision/{quote(revision, safe='')}"
+        else f"{endpoint}/hf/api/models/{repo_id}/revision/{quote(revision, safe='')}?mirror={mirror}"
     )
     params = {}
     if securityStatus:

@@ -13,9 +13,10 @@ from pycsghub.utils import (get_cache_dir,
                             get_endpoint)
 from huggingface_hub.utils import filter_repo_objects
 from pycsghub.file_download import http_get
-from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
+from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES, MIRROR
 from pycsghub import utils
 from pycsghub.constants import REPO_TYPE_MODEL
+
 
 def snapshot_download(
         repo_id: str,
@@ -29,7 +30,8 @@ def snapshot_download(
         ignore_patterns: Optional[Union[List[str], str]] = None,
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None
+        token: Optional[str] = None,
+        mirror: Optional[str] = MIRROR.AUTO,
 ) -> str:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
@@ -62,7 +64,8 @@ def snapshot_download(
                                         repo_type=repo_type,
                                         revision=revision,
                                         token=token,
-                                        endpoint=download_endpoint)
+                                        endpoint=download_endpoint,
+                                        mirror=mirror)
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
