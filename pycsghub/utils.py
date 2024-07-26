@@ -371,7 +371,8 @@ def get_file_download_url(model_id: str,
                           file_path: str,
                           revision: str,
                           repo_type: Optional[str] = None,
-                          endpoint: Optional[str] = None
+                          endpoint: Optional[str] = None,
+                          mirror: Optional[str] = MIRROR.AUTO,
                           ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
@@ -384,9 +385,9 @@ def get_file_download_url(model_id: str,
     """
     file_path = urllib.parse.quote_plus(file_path)
     revision = urllib.parse.quote_plus(revision)
-    download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
+    download_url_template = f"{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}?mirror={mirror}"
     if repo_type == REPO_TYPE_DATASET:
-        download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
+        download_url_template = f"{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}?mirror={mirror}"
     return download_url_template.format(
         endpoint=endpoint if endpoint is not None else get_endpoint(),
         model_id=model_id,

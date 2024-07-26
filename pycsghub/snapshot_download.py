@@ -94,7 +94,9 @@ def snapshot_download(
                     file_path=repo_file,
                     repo_type=repo_type,
                     revision=revision,
-                    endpoint=download_endpoint)
+                    endpoint=download_endpoint,
+                    mirror=mirror,
+                )
                 # todo support parallel download api
                 http_get(
                     url=url,
