@@ -1,5 +1,5 @@
 <p align="left">
-    <a href="README_EN.md">English</a> ｜ 中文
+    <a href="https://github.com/OpenCSGs/csghub-sdk/blob/main/README_EN.md">English</a> ｜ 中文
 </p>
 
 # CSGHub SDK
@@ -148,6 +148,19 @@ file_name = 'test.txt'
 headers = None
 cookies = None
 http_get(url=url, token=token, local_dir=local_dir, file_name=file_name, headers=headers, cookies=cookies)
+```
+
+### 单文件上传
+
+```python
+from pycsghub.file_upload import http_upload_file
+
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
+
+endpoint = "https://hub.opencsg.com"
+repo_type = "model"
+repo_id = 'wanghh2000/myprivate1'
+result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='model', file_path='test1.txt')
 ```
 
 ### 兼容huggingface的模型加载

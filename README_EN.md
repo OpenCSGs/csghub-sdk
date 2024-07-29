@@ -1,5 +1,5 @@
 <p align="left">
-    <a href="README_EN.md">English</a> ｜ 中文
+    English ｜ <a href="https://github.com/OpenCSGs/csghub-sdk">中文</a>
 </p>
 
 # CSGHub SDK
@@ -147,6 +147,19 @@ endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/home/test/'
 result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
+
+### Upload file
+
+```python
+from pycsghub.file_upload import http_upload_file
+
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
+
+endpoint = "https://hub.opencsg.com"
+repo_type = "model"
+repo_id = 'wanghh2000/myprivate1'
+result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='model', file_path='test1.txt')
 ```
 
 ### Model loading compatible with huggingface
