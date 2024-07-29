@@ -162,6 +162,22 @@ repo_id = 'wanghh2000/myprivate1'
 result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='model', file_path='test1.txt')
 ```
 
+### Upload multi-files
+
+```python
+from pycsghub.file_upload import http_upload_file
+
+token = "3b77c98077b415ca381ded189b86d5df226e3776"
+
+endpoint = "https://hub.opencsg.com"
+repo_type = "model"
+repo_id = 'wanghh2000/myprivate1'
+
+repo_files = ["1.txt", "2.txt"]
+for item in repo_files:
+    http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
+```
+
 ### Model loading compatible with huggingface
 
 The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models, as shown below:
