@@ -14,7 +14,7 @@ OPTIONS = {
     "cache_dir": typer.Option("-cd", "--cache-dir", help="Path to the directory where to save the downloaded files."),
     "endpoint": typer.Option("-e", "--endpoint", help="The address of the request to be sent."),
     "token": typer.Option("-k", "--token", help="A User Access Token generated from https://opencsg.com/settings/access-token"),
-    "mirror": typer.Option("-m", "--mirror", help="the mirror of the csghub server repo download, available value: auto, hf,csghub, default: auto"),
+    "mirror": typer.Option("-m", "--mirror", help="the mirror of the csghub repo to download, available value: auto, hf, csghub, default: auto. hf: can download model/dataset with huggingface repo id. csghub: can download model/dataset with csghub repo id. auto: both repo id can download model/dataset"),
 }
 
 
