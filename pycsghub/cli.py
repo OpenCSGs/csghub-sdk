@@ -2,18 +2,26 @@ import typer
 from typing import Annotated, List, Optional
 from pycsghub.cmd import repo
 from pycsghub.cmd.repo_types import RepoType
+from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
 
 app = typer.Typer(add_completion=False)
 
+def version_callback(value: bool):
+    if value:
+        pkg_version = version("csghub-sdk")
+        print(f"csghub-cli version {pkg_version}")
+        raise typer.Exit()
+
 OPTIONS = {
     "repoID": typer.Argument(help="The ID of the repo. (e.g. `username/repo-name`)."),
     "repoFiles": typer.Argument(help="Local path to the file or files to upload. Defaults to the relative path of the file of repo of OpenCSG Hub."),
-    "repoType": typer.Option("-t","--repo-type",help="Specify the repository type."),
+    "repoType": typer.Option("-t", "--repo-type", help="Specify the repository type."),
     "revision": typer.Option("-r", "--revision", help="An optional Git revision id which can be a branch name"),
     "cache_dir": typer.Option("-cd", "--cache-dir", help="Path to the directory where to save the downloaded files."),
     "endpoint": typer.Option("-e", "--endpoint", help="The address of the request to be sent."),
     "token": typer.Option("-k", "--token", help="A User Access Token generated from https://opencsg.com/settings/access-token"),
+    "version": typer.Option(None, "-V", "--version", callback=version_callback, is_eager=True, help="Show the version and exit."),
 }
 
 @app.command(name="download", help="Download model/dataset from opencsg.com")
@@ -51,6 +59,10 @@ def upload(
         endpoint=endpoint,
         token=token
     )
+ 
+@app.callback(invoke_without_command=True)
+def main(version: bool = OPTIONS["version"]):
+    pass
 
 if __name__ == "__main__":
     app()
