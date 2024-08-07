@@ -2,9 +2,16 @@ import typer
 from typing import Annotated, List, Optional
 from pycsghub.cmd import repo
 from pycsghub.cmd.repo_types import RepoType
+from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, MIRROR
 
 app = typer.Typer(add_completion=False)
+
+def version_callback(value: bool):
+    if value:
+        pkg_version = version("csghub-sdk")
+        print(f"csghub-cli version {pkg_version}")
+        raise typer.Exit()
 
 OPTIONS = {
     "repoID": typer.Argument(help="The ID of the repo. (e.g. `username/repo-name`)."),
@@ -15,6 +22,7 @@ OPTIONS = {
     "endpoint": typer.Option("-e", "--endpoint", help="The address of the request to be sent."),
     "token": typer.Option("-k", "--token", help="A User Access Token generated from https://opencsg.com/settings/access-token"),
     "mirror": typer.Option("-m", "--mirror", help="the mirror of the csghub repo to download, available value: auto, hf, csghub, default: auto. hf: can download model/dataset with huggingface repo id. csghub: can download model/dataset with csghub repo id. auto: both repo id can download model/dataset"),
+    "version": typer.Option(None, "-V", "--version", callback=version_callback, is_eager=True, help="Show the version and exit."),
 }
 
 
@@ -55,6 +63,10 @@ def upload(
         endpoint=endpoint,
         token=token
     )
+ 
+@app.callback(invoke_without_command=True)
+def main(version: bool = OPTIONS["version"]):
+    pass
 
 
 if __name__ == "__main__":
