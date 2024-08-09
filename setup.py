@@ -40,12 +40,13 @@ setup(
         "Sphinx==7.3.7",
         "thread==2.0.3",
         "tornado==6.4",
-        "tqdm==4.66.2",
+        "tqdm==4.66.3",
         "torch",
         "transformers==4.40.1",
         "trove_classifiers==2024.5.22",
         "truststore==0.9.1",
         "urllib3_secure_extra==0.1.0",
+        "datasets==2.20.0"
     ],
     python_requires=">=3.10",
 )

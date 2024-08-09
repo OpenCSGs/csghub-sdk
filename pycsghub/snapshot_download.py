@@ -74,15 +74,12 @@ def snapshot_download(
             )
         )
 
-        with tempfile.TemporaryDirectory(
-                dir=temporary_cache_dir) as temp_cache_dir:
+        with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
             for repo_file in repo_files:
                 repo_file_info = pack_repo_file_info(repo_file, revision)
                 if cache.exists(repo_file_info):
                     file_name = os.path.basename(repo_file_info['Path'])
-                    print(
-                        f'File {file_name} already in cache, skip downloading!'
-                    )
+                    print(f"File {file_name} already in cache '{cache.get_root_location()}', skip downloading!")
                     continue
 
                 # get download url
@@ -103,7 +100,8 @@ def snapshot_download(
 
                 # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, repo_file)
-                cache.put_file(repo_file_info, temp_file)
-
+                savedFile = cache.put_file(repo_file_info, temp_file)
+                print(f"Saved file to '{savedFile}'")
+            
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())
