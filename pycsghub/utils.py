@@ -387,55 +387,6 @@ def get_endpoint(endpoint: Optional[str] = None):
         corrent_endpoint = corrent_endpoint[:-1]
     return corrent_endpoint
 
-#src/hubapi/utils.py
-import hashlib
-from typing import Optional, Union
-
-import requests
-
-def compute_hash(file_path)  -> str:
-    """Compute the sha256 hash of a file.
-    
-    Args:
-        file_path (str): The path to the file.
-        
-    Returns:
-        str: The sha256 hash of the file.
-    """
-    with open(file_path, 'rb') as f:
-        return hashlib.sha256(f.read()).hexdigest()
-    
-def get_url_content_length(url)  -> Optional[int]:
-    """Get the content length of a url.
-    
-    Args:
-        url (str): The url to get the content length from.
-        
-    Returns:
-        int: The content length of the url.
-    """
-    response = requests.head(url)
-    return int(response.headers['Content-Length'])
-
-def file_integrity_validation(file_path,
-                              expected_sha256) -> None:
-    """Validate the file hash is expected, if not, delete the file
-
-    Args:
-        file_path (str): The file to validate
-        expected_sha256 (str): The expected sha256 hash
-
-    Raises:
-        FileIntegrityError: If file_path hash is not expected.
-
-    """
-    file_sha256 = compute_hash(file_path)
-    if not file_sha256 == expected_sha256:
-        os.remove(file_path)
-        msg = 'File %s integrity check failed, the download may be incomplete, please try again.' % file_path
-        raise FileIntegrityError(msg)
-
-
 def compute_hash(file_path) -> str:
     BUFFER_SIZE = 1024 * 64  # 64k buffer size
     sha256_hash = hashlib.sha256()
