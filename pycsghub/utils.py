@@ -387,6 +387,24 @@ def get_endpoint(endpoint: Optional[str] = None):
         corrent_endpoint = corrent_endpoint[:-1]
     return corrent_endpoint
 
+def file_integrity_validation(file_path,
+                              expected_sha256) -> None:
+    """Validate the file hash is expected, if not, delete the file
+
+    Args:
+        file_path (str): The file to validate
+        expected_sha256 (str): The expected sha256 hash
+
+    Raises:
+        FileIntegrityError: If file_path hash is not expected.
+
+    """
+    file_sha256 = compute_hash(file_path)
+    if not file_sha256 == expected_sha256:
+        os.remove(file_path)
+        msg = 'File %s integrity check failed, the download may be incomplete, please try again.' % file_path
+        raise FileIntegrityError(msg)
+
 def compute_hash(file_path) -> str:
     BUFFER_SIZE = 1024 * 64  # 64k buffer size
     sha256_hash = hashlib.sha256()
