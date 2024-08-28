@@ -55,7 +55,7 @@ def snapshot_download(
                 " online, set 'local_files_only' to False.")
         return cache.get_root_location()
     else:
-        download_endpoint = endpoint if endpoint is not None else get_endpoint()
+        download_endpoint = get_endpoint(endpoint=endpoint)
         # make headers
         # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id,

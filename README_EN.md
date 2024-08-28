@@ -46,7 +46,7 @@ After installation, you can begin using the SDK to connect to your CSGHub server
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
+os.environ['CSG_TOKEN'] = 'your_access_token'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -77,7 +77,7 @@ pip install .
 ## Use cases of command line
 
 ```shell
-export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+export CSG_TOKEN=your_access_token
 
 # download model
 csghub-cli download wanghh2000/myprivate1
@@ -102,7 +102,7 @@ For more detailed instructions, including API documentation and usage examples, 
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
@@ -127,7 +127,7 @@ Use `http_get` function to download single file
 
 ```python
 from pycsghub.file_download import http_get
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
 local_dir = '/home/test/'
@@ -141,7 +141,7 @@ use `file_download` function to download single file from a repository
 
 ```python
 from pycsghub.file_download import file_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
@@ -154,7 +154,7 @@ result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endp
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -167,7 +167,7 @@ result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='mo
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"

@@ -79,7 +79,7 @@ def file_download(
                 " online, set 'local_files_only' to False.")
         return cache.get_root_location()
     else:
-        download_endpoint = endpoint if endpoint is not None else get_endpoint()
+        download_endpoint = get_endpoint(endpoint=endpoint)
         # make headers
         # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id=repo_id,
@@ -205,10 +205,9 @@ def http_get(*,
 
 
 if __name__ == '__main__':
-    token = "f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f9" + \
-            "b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf"
+    token = "your_access_token"
 
-    url = "https://hub-stg.opencsg.com/api/v1/models/wayne0019/lwfmodel/resolve/lfsfile.bin"
+    url = "https://hub.opencsg.com/api/v1/models/wayne0019/lwfmodel/resolve/lfsfile.bin"
     local_dir = '/home/test/'
     file_name = 'test.txt'
     headers = None

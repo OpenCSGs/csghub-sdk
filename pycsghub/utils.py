@@ -76,8 +76,7 @@ def get_cache_dir(model_id: Optional[str] = None, repo_type: Optional[str] = Non
     sub_dir = 'hub'
     if repo_type == "dataset":
         sub_dir = 'dataset'
-    base_path = os.getenv('CSGHUB_CACHE',
-                          os.path.join(default_cache_dir, sub_dir))
+    base_path = os.getenv('CSGHUB_CACHE', os.path.join(default_cache_dir, sub_dir))
     return base_path if model_id is None else os.path.join(
         base_path, model_id + '/')
 
@@ -205,18 +204,11 @@ def dataset_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = (
-        f"{endpoint}/hf/api/datasets/{repo_id}"
-        if revision is None
-        else (f"{endpoint}/hf/api/datasets/{repo_id}/revision/{quote(revision, safe='')}")
-    )
+    path = get_repo_meta_path(repo_type=REPO_TYPE_DATASET, repo_id=repo_id, revision=revision, endpoint=endpoint)
     params = {}
     if files_metadata:
         params["blobs"] = True
-    r = requests.get(path,
-                     headers=headers,
-                     timeout=timeout,
-                     params=params)
+    r = requests.get(path, headers=headers, timeout=timeout, params=params)
     r.raise_for_status()
     data = r.json()
     return DatasetInfo(**data)
@@ -270,18 +262,11 @@ def space_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = (
-        f"{endpoint}/hf/api/spaces/{repo_id}"
-        if revision is None
-        else (f"{endpoint}/hf/api/spaces/{repo_id}/revision/{quote(revision, safe='')}")
-    )
+    path = get_repo_meta_path(repo_type=REPO_TYPE_SPACE, repo_id=repo_id, revision=revision, endpoint=endpoint)
     params = {}
     if files_metadata:
         params["blobs"] = True
-    r = requests.get(path,
-                     headers=headers,
-                     timeout=timeout,
-                     params=params)
+    r = requests.get(path, headers=headers, timeout=timeout, params=params)
     r.raise_for_status()
     data = r.json()
     return SpaceInfo(**data)
@@ -339,29 +324,27 @@ def model_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = (
-        f"{endpoint}/hf/api/models/{repo_id}/revision/main"
-        if revision is None
-        else f"{endpoint}/hf/api/models/{repo_id}/revision/{quote(revision, safe='')}"
-    )
+    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id, revision=revision, endpoint=endpoint)
     params = {}
     if securityStatus:
         params["securityStatus"] = True
     if files_metadata:
         params["blobs"] = True
-    r = requests.get(path,
-                     headers=headers,
-                     timeout=timeout,
-                     params=params)
+    r = requests.get(path, headers=headers, timeout=timeout, params=params)
     r.raise_for_status()
     data = r.json()
     return ModelInfo(**data)
 
-
-def get_endpoint():
-    csghub_domain = os.getenv('CSGHUB_DOMAIN', DEFAULT_CSGHUB_DOMAIN)
-    return csghub_domain
-
+def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None) -> str:
+    if repo_type == REPO_TYPE_MODEL or repo_type == REPO_TYPE_DATASET or repo_type == REPO_TYPE_SPACE:
+        path = (
+            f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/main"
+            if revision is None
+            else f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/{quote(revision, safe='')}"
+        )
+    else:
+        raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
+    return path
 
 def get_file_download_url(model_id: str,
                           file_path: str,
@@ -384,12 +367,55 @@ def get_file_download_url(model_id: str,
     if repo_type == REPO_TYPE_DATASET:
         download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
     return download_url_template.format(
-        endpoint=endpoint if endpoint is not None else get_endpoint(),
+        endpoint=endpoint,
         model_id=model_id,
         revision=revision,
         file_path=file_path,
     )
 
+def get_endpoint(endpoint: Optional[str] = None):
+    """Format endpoint to remove trailing slash and add a leading slash if not present.
+    Args:
+        endpoint (str): The endpoint url.
+    
+    Returns:
+        str: The formatted endpoint url.
+    """
+    csghub_domain = os.getenv('CSGHUB_DOMAIN', DEFAULT_CSGHUB_DOMAIN)
+    corrent_endpoint = endpoint if endpoint is not None else csghub_domain
+    if corrent_endpoint.endswith('/'):
+        corrent_endpoint = corrent_endpoint[:-1]
+    return corrent_endpoint
+
+#src/hubapi/utils.py
+import hashlib
+from typing import Optional, Union
+
+import requests
+
+def compute_hash(file_path)  -> str:
+    """Compute the sha256 hash of a file.
+    
+    Args:
+        file_path (str): The path to the file.
+        
+    Returns:
+        str: The sha256 hash of the file.
+    """
+    with open(file_path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+    
+def get_url_content_length(url)  -> Optional[int]:
+    """Get the content length of a url.
+    
+    Args:
+        url (str): The url to get the content length from.
+        
+    Returns:
+        int: The content length of the url.
+    """
+    response = requests.head(url)
+    return int(response.headers['Content-Length'])
 
 def file_integrity_validation(file_path,
                               expected_sha256) -> None:

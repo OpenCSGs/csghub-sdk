@@ -77,7 +77,7 @@ pip install .
 ## 命令行使用示例
 
 ```shell
-export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+export CSG_TOKEN=your_access_token
 
 # 模型下载
 csghub-cli download wanghh2000/myprivate1 
@@ -100,19 +100,19 @@ csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
-result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repotype)
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,)
 ```
 
 ### 数据集下载
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'AIWizards/tmmluplus'
@@ -127,7 +127,7 @@ result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, en
 
 ```python
 from pycsghub.file_download import file_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -140,7 +140,7 @@ result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endp
 
 ```python
 from pycsghub.file_download import http_get
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
 local_dir = '/home/test/'
@@ -155,7 +155,7 @@ http_get(url=url, token=token, local_dir=local_dir, file_name=file_name, headers
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -168,7 +168,7 @@ result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='mo
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
