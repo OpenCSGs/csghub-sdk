@@ -361,8 +361,8 @@ def get_file_download_url(model_id: str,
     Returns:
         str: The file url.
     """
-    file_path = urllib.parse.quote_plus(file_path)
-    revision = urllib.parse.quote_plus(revision)
+    file_path = urllib.parse.quote(file_path)
+    revision = urllib.parse.quote(revision)
     download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
         download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
