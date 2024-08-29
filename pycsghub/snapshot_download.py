@@ -43,7 +43,7 @@ def snapshot_download(
     os.makedirs(temporary_cache_dir, exist_ok=True)
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
-    name = name.replace('.', '___')
+    # name = name.replace('.', '___')
 
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name)
 
