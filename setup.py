@@ -42,7 +42,7 @@ setup(
         "tornado==6.4",
         "tqdm==4.66.3",
         "torch",
-        "transformers>=4.33.2",
+        "transformers>=4.33.3",
         "trove_classifiers==2024.5.22",
         "truststore==0.9.1",
         "urllib3_secure_extra==0.1.0",
