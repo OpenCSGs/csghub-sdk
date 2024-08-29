@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='csghub-sdk',
-    version='0.3.3',
+    version='0.3.4',
     author="opencsg",
     author_email="contact@opencsg.com",
     long_description=long_description,
@@ -42,7 +42,7 @@ setup(
         "tornado==6.4",
         "tqdm==4.66.3",
         "torch",
-        "transformers==4.40.1",
+        "transformers>=4.33.3",
         "trove_classifiers==2024.5.22",
         "truststore==0.9.1",
         "urllib3_secure_extra==0.1.0",
