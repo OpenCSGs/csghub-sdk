@@ -126,7 +126,7 @@ def file_download(
                 cache.put_file(repo_file_info, temp_file)
             else:
                 print(
-                    f'File {file_name} already in cache, skip downloading!'
+                    f'File {file_name} already in cache {cache.get_root_location()}, skip downloading!'
                 )
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location(), file_name)

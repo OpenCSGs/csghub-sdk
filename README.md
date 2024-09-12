@@ -74,6 +74,11 @@ cd csghub-sdk
 pip install .
 ```
 
+您可以使用`pip install '.[train]'`来安装与模型和数据集相关的依赖，例如：
+```shell
+pip install '.[train]'
+```
+
 ## 命令行使用示例
 
 ```shell
