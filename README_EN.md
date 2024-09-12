@@ -74,6 +74,12 @@ cd csghub-sdk
 pip install .
 ```
 
+You can install the dependencies related to the model and dataset using `pip install '.[train]'`, for example:
+
+```shell
+pip install '.[train]'
+```
+
 ## Use cases of command line
 
 ```shell
