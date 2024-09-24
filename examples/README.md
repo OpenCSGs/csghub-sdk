@@ -1,14 +1,14 @@
 # Examples
 
-我们提供了大量示例脚本，用于通过 CSGHub SDK 与 CSGHub 服务器进行交互。
+We host a wide range of example scripts for use CSGHub SDK to interact with the CSGHub server.
 
-虽然我们努力展示尽可能多的用例，但预计它们不会在您的特定问题上开箱即用，并且您需要更改几行代码以适应您的需求。为了帮助您，大多数示例完全公开了数据的预处理，允许您根据需要进行调整和编辑。
+While we strive to present as many use cases as possible. It is expected that they won't work out-of-the-box on your specific problem and that you will be required to change a few lines of code to adapt them to your needs. To help you with that, most of the examples fully expose the preprocessing of the data, allowing you to tweak and edit them as required.
 
 ## Important note
 
 **Important**
 
-为了确保您能够成功运行最新版本的示例脚本，您需要**从源代码安装库**。为此，请在新虚拟环境中执行以下步骤：
+To make sure you can successfully run the latest versions of the example scripts, you have to **install the library from source**. To do this, execute the following steps in a new virtual environment:
 
 ```shell
 git clone https://github.com/OpenCSGs/csghub-sdk.git
@@ -16,10 +16,10 @@ cd csghub-sdk
 pip install .
 ```
 
-运行示例脚本前，请先设置必要的环境变量如下。
+Before running the example script, please set the necessary environment variables as follows.
 
 ```shell
-export HF_ENDPOINT="https://hub.opencsg.com"
+export HF_ENDPOINT="https://hub.opencsg.com/hf"
 ```
 
-你可以根据自己的需求调整脚本。
+You can also adapt the script to your own needs.
