@@ -16,10 +16,4 @@ cd csghub-sdk
 pip install .
 ```
 
-Before running the example script, please set the necessary environment variables as follows.
-
-```shell
-export HF_ENDPOINT="https://hub.opencsg.com/hf"
-```
-
 You can also adapt the script to your own needs.

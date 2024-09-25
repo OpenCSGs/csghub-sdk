@@ -16,10 +16,4 @@ cd csghub-sdk
 pip install .
 ```
 
-运行示例脚本前，请先设置必要的环境变量如下。
-
-```shell
-export HF_ENDPOINT="https://hub.opencsg.com/hf"
-```
-
 你可以根据自己的需求调整脚本。
