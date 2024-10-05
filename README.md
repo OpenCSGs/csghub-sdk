@@ -184,6 +184,51 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
+### Upload to new repo or branch
+
+Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2003/ds12",
+    work_dir="/Users/hhwang/temp/ccc",
+    user_name="wanghh2003",
+    token=token,
+    repo_type="dataset"
+)
+
+# push to a new repo
+r.upload_as_new_repo(
+    upload_path="/Users/hhwang/temp/bbb/jsonl",
+    uploadPath_as_repoPath=False
+)
+```
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2003/ds8",
+    work_dir="/Users/hhwang/temp/ccc",
+    user_name="wanghh2003",
+    token=token,
+    repo_type="dataset"
+)
+
+# push to a new branch
+r.upload_as_new_branch(
+    new_branch_name="v6", 
+    upload_path="/Users/hhwang/temp/bbb/jsonl",
+    uploadPath_as_repoPath=True
+)
+```
+
 ### Model loading compatible with huggingface
 
 The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models, as shown below:
