@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 API_FILE_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 API_FILE_DOWNLOAD_TIMEOUT = 5
 API_FILE_DOWNLOAD_RETRY_TIMES = 5
@@ -78,3 +79,8 @@ saved_model/**/* filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.webp filter=lfs diff=lfs merge=lfs -text
 """
+
+class MIRROR(str, Enum):
+    AUTO = "auto"
+    HF = "hf"
+    CSGHUB = "csghub"
