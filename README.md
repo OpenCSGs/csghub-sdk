@@ -184,7 +184,7 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
-### Upload to new repo or branch
+### Upload repo
 
 Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
 
@@ -194,39 +194,14 @@ from pycsghub.repository import Repository
 token = "your access token"
 
 r = Repository(
-    repo_id="wanghh2003/ds12",
-    work_dir="/Users/hhwang/temp/ccc",
+    repo_id="wanghh2003/ds15",
+    upload_path="/Users/hhwang/temp/bbb/jsonl",
     user_name="wanghh2003",
     token=token,
-    repo_type="dataset"
+    repo_type="dataset",
 )
 
-# push to a new repo
-r.upload_as_new_repo(
-    upload_path="/Users/hhwang/temp/bbb/jsonl",
-    uploadPath_as_repoPath=False
-)
-```
-
-```python
-from pycsghub.repository import Repository
-
-token = "your access token"
-
-r = Repository(
-    repo_id="wanghh2003/ds8",
-    work_dir="/Users/hhwang/temp/ccc",
-    user_name="wanghh2003",
-    token=token,
-    repo_type="dataset"
-)
-
-# push to a new branch
-r.upload_as_new_branch(
-    new_branch_name="v6", 
-    upload_path="/Users/hhwang/temp/bbb/jsonl",
-    uploadPath_as_repoPath=True
-)
+r.upload()
 ```
 
 ### Model loading compatible with huggingface
