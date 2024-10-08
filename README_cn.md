@@ -184,6 +184,26 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
+### 上传仓库
+
+在开始之前，请确保您已安装 Git-LFS（安装说明请参见 [这里](https://git-lfs.github.com/)）。
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2003/ds15",
+    upload_path="/Users/hhwang/temp/bbb/jsonl",
+    user_name="wanghh2003",
+    token=token,
+    repo_type="dataset",
+)
+
+r.upload()
+```
+
 ### 兼容huggingface的模型加载
 
 huggingface的transformers库支持直接输入huggingface上的repo_id以下载并读取相关模型，如下列所示：

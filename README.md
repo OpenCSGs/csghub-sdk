@@ -184,6 +184,26 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
+### Upload repo
+
+Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2003/ds15",
+    upload_path="/Users/hhwang/temp/bbb/jsonl",
+    user_name="wanghh2003",
+    token=token,
+    repo_type="dataset",
+)
+
+r.upload()
+```
+
 ### Model loading compatible with huggingface
 
 The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models, as shown below:
