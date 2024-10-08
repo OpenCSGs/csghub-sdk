@@ -328,7 +328,8 @@ def model_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id, revision=revision, endpoint=endpoint)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id,
+                              revision=revision, endpoint=endpoint, mirror=mirror)
     params = {}
     if securityStatus:
         params["securityStatus"] = True
@@ -339,7 +340,8 @@ def model_info(
     data = r.json()
     return ModelInfo(**data)
 
-def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None) -> str:
+
+def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None, mirror: Optional[str] = None) -> str:
     if repo_type == REPO_TYPE_MODEL or repo_type == REPO_TYPE_DATASET or repo_type == REPO_TYPE_SPACE:
         path = (
             f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/main"
@@ -348,7 +350,10 @@ def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = N
         )
     else:
         raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
+    if mirror is not None:
+        path = f"{path}?mirror={mirror}"
     return path
+
 
 def get_file_download_url(model_id: str,
                           file_path: str,
@@ -378,11 +383,12 @@ def get_file_download_url(model_id: str,
         file_path=file_path,
     )
 
+
 def get_endpoint(endpoint: Optional[str] = None):
     """Format endpoint to remove trailing slash and add a leading slash if not present.
     Args:
         endpoint (str): The endpoint url.
-    
+
     Returns:
         str: The formatted endpoint url.
     """
@@ -391,6 +397,7 @@ def get_endpoint(endpoint: Optional[str] = None):
     if corrent_endpoint.endswith('/'):
         corrent_endpoint = corrent_endpoint[:-1]
     return corrent_endpoint
+
 
 def file_integrity_validation(file_path,
                               expected_sha256) -> None:
@@ -409,6 +416,7 @@ def file_integrity_validation(file_path,
         os.remove(file_path)
         msg = 'File %s integrity check failed, the download may be incomplete, please try again.' % file_path
         raise FileIntegrityError(msg)
+
 
 def compute_hash(file_path) -> str:
     BUFFER_SIZE = 1024 * 64  # 64k buffer size
