@@ -1,52 +1,52 @@
 <p align="left">
-    <a href="https://github.com/OpenCSGs/csghub-sdk/blob/main/README_EN.md">English</a> ｜ 中文
+    English ｜ <a href="README_cn.md">中文</a>
 </p>
 
 # CSGHub SDK
-## 介绍
+## Introduction
 
-CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub 服务器无缝交互。这个工具包旨在为 Python 开发者提供一个高效且直接的方法来操作和管理远程 CSGHub 实例。无论您是希望自动化任务、管理数据，还是将 CSGHub 功能集成到您的 Python 应用中，CSGHUB SDK 都提供了一整套功能，让您轻松实现目标。
+The CSGHub SDK is a powerful Python client specifically designed to interact seamlessly with the CSGHub server. This toolkit is engineered to provide Python developers with an efficient and straightforward method to operate and manage remote CSGHub instances. Whether you're looking to automate tasks, manage data, or integrate CSGHub functionalities into your Python applications, the CSGHub SDK offers a comprehensive set of features to accomplish your goals with ease.
 
-## 主要特性
+## Key Features
 
-仅需几行代码即可无缝快速切换模型下载地址至[OpenCSG](https://opencsg.com/)，[提高模型下载速度](#快速切换下载地址)。
+With just a few lines of code, you can seamlessly and quickly switch the model download URL to [OpenCSG](https://opencsg.com/), [enhancing the download speed of models](#quickly-switch-download-urls).
 
-轻松连接并与您的 Python 代码中的 CSGHub 服务器实例交互。
+Effortlessly connect and interact with CSGHub server instances from your Python code.
 
-全面的 API 覆盖：完全访问 CSGHub 服务器提供的广泛功能，确保您可以执行广泛的操作。
+Comprehensive API Coverage: Full access to the wide array of functionalities provided by the CSGHub server, ensuring you can perform a broad spectrum of operations.
 
-用户友好：设计简单，使其对初学者友好，同时对高级用户来说足够强大。
+User-Friendly: Designed with simplicity in mind, making it accessible for beginners while powerful enough for advanced users.
 
-高效的数据管理：简化在您的 CSGHub 服务器上管理和操作数据的过程。
+Efficient Data Management: Streamline the process of managing and manipulating data on your CSGHub server.
 
-自动化就绪：自动化重复任务和过程，节省时间并减少人为错误的可能性。
+Automation Ready: Automate repetitive tasks and processes, saving time and reducing the potential for human error.
 
-开源：深入源代码，贡献并自定义 SDK 以适应您的特定需求。
+Open Source: Dive into the source code, contribute, and customize the SDK to fit your specific needs.
 
-主要功能包括：
+The main functions are:
 
-1. 仓库下载（模型/数据集）
-2. 仓库信息查询（与huggingface兼容）
+1. Repo downloading（model/dataset）
+2. Repo information query（Compatible with huggingface）
 
-## 获取Token
+## Get My Token
 
-浏览器访问[OpenCSG](https://opencsg.com/)，点击右上角`注册`完成用户注册过程，使用已经注册成功的用户和密码登录[OpenCSG](https://opencsg.com/)，登录成功后在`账号设置`中找到[`Access Token`](https://opencsg.com/settings/access-token)来获取token。
+Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.
 
-## 入门
+## Getting Started
 
-要开始使用 CSGHub SDK，请确保您的系统上安装了 Python。然后，您可以使用 pip 安装 SDK：
+To get started with the CSGHub SDK, ensure you have Python installed on your system. Then, you can install the SDK using pip:
 
 ```python
 pip install csghub-sdk
 ```
 
-安装后，您可以开始将 SDK 导入到您的 Python 脚本中，以连接到您的 CSGHub 服务器：
+After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python script:
 
 ```python
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
+os.environ['CSG_TOKEN'] = 'your_access_token'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -57,16 +57,16 @@ outputs = model.generate(inputs)
 print('result: ',tokenizer.batch_decode(outputs))
 ```
 
-### 快速切换下载地址
+### Quickly switch download URLs
 
-通过如下方式仅需将导入包名`transformers`修改为`pycsghub.repo_reader`并设置下载token，即可实现无缝快速切换模型下载地址
+By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token, you can seamlessly and quickly switch the model download URL.
 
 ```python
 os.environ['CSG_TOKEN'] = 'token-of-your'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
 
-### 从源代码安装
+### Install from source code
 
 ```shell
 git clone https://github.com/OpenCSGs/csghub-sdk.git
@@ -74,73 +74,66 @@ cd csghub-sdk
 pip install .
 ```
 
-## 命令行使用示例
+You can install the dependencies related to the model and dataset using `pip install '.[train]'`, for example:
 
 ```shell
-export CSG_TOKEN=3b77c98077b415ca381ded189b86d5df226e3776
+pip install '.[train]'
+```
 
-# 模型下载
-csghub-cli download wanghh2000/myprivate1 
+## Use cases of command line
 
-# 数据集下载
+```shell
+export CSG_TOKEN=your_access_token
+
+# download model
+csghub-cli download wanghh2000/myprivate1
+
+# donwload dataset
 csghub-cli download wanghh2000/myds1 -t dataset
 
-# 上传单个文件
+# upload a single file
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt
 
-# 上传多个文件
-csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset 
+# upload files
+csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
 ```
 
-文件默认下载路径为`~/.cache/csg/`
+Download location is `~/.cache/csg/` by default.
 
-## SDK使用示例
+## Use cases of SDK
 
-### 模型下载
+For more detailed instructions, including API documentation and usage examples, please refer to the Use case.
+
+### Download model
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
-repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
-result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repotype)
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token)
 ```
 
-### 数据集下载
+### Download dataset 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
-
+token="xxxx"
 endpoint = "https://hub.opencsg.com"
 repo_id = 'AIWizards/tmmluplus'
-repo_type = "dataset"
+repo_type="dataset"
 cache_dir = '/Users/xiangzhen/Downloads/'
 result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
 ```
 
-### 单文件下载
+### Download single file
 
-使用`file_download`封装接口进行单文件下载
-
-```python
-from pycsghub.file_download import file_download
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
-
-endpoint = "https://hub.opencsg.com"
-repo_type = "model"
-repo_id = 'OpenCSG/csg-wukong-1B'
-cache_dir = '/home/test/'
-result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repo_type)
-```
-
-使用`http_get`接口进行单文件下载
+Use `http_get` function to download single file
 
 ```python
 from pycsghub.file_download import http_get
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
 local_dir = '/home/test/'
@@ -150,12 +143,24 @@ cookies = None
 http_get(url=url, token=token, local_dir=local_dir, file_name=file_name, headers=headers, cookies=cookies)
 ```
 
-### 单文件上传
+use `file_download` function to download single file from a repository
+
+```python
+from pycsghub.file_download import file_download
+token = "your_access_token"
+
+endpoint = "https://hub.opencsg.com"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/home/test/'
+result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
+
+### Upload file
 
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -163,12 +168,12 @@ repo_id = 'wanghh2000/myprivate1'
 result = http_upload_file(repo_id, endpoint=endpoint, token=token, repo_type='model', file_path='test1.txt')
 ```
 
-### 多文件上传
+### Upload multi-files
 
 ```python
 from pycsghub.file_upload import http_upload_file
 
-token = "3b77c98077b415ca381ded189b86d5df226e3776"
+token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
@@ -179,43 +184,39 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
-### 兼容huggingface的模型加载
+### Model loading compatible with huggingface
 
-huggingface的transformers库支持直接输入huggingface上的repo_id以下载并读取相关模型，如下列所示：
+The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models, as shown below:
 
-```
+```python
 from transformers import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
-在这段代码中，hf的transformer库首先下载模型到本地cache文件夹中，然后读取配置，并通过反射到相关类进行加载的方式加载模型。
+In this code, the Hugging Face Transformers library first downloads the model to a local cache folder, then reads the configuration, and loads the model by dynamically selecting the relevant class for instantiation.
 
-CSGHub SDK v0.2版本为了兼容huggingface也提供用户最常用的功能，模型下载与加载。并可以通过如下的方式进行模型下载与加载
+To ensure compatibility with Hugging Face, version 0.2 of the CSGHub SDK now includes the most commonly features: downloading and loading models. Models can be downloaded and loaded as follows:
 
 ```python
-# 注意首先要进行环境变量设置，因为下载需要token，下述api的调用，会直接在环境变量中查找相应的token。
 # import os 
 # os.environ['CSG_TOKEN'] = 'token_to_set'
 from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
-这段代码首先：
+This code: 
 
-1. 调用CSGHub SDK库的`snapshot_download`下载相关文件。
+1. Use the `snapshot_download` from the CSGHub SDK library to download the related files.
 
-2. 通过动态批量类生成与类名反射机制，批量创建大量与transformers自动类加载的重名类。
+2. By generating batch classes dynamically and using class name reflection mechanism, a large number of classes with the same names as those automatically loaded by transformers are created in batches.
 
-3. 为其赋予from_pretrained方法，这样读取出来的模型即为hf-transformers模型。
+3. Assign it with the from_pretrained method, so the model read out will be an hf-transformers model.
 
+## Roadmap
 
-## 功能计划
-
-1. 数据集下载
-2. 使用命令行工具的方式与CSGHub交互
-3. CSGHub仓库的创建、修改等管理操作
-4. 模型本地或在线部署
-5. 模型本地或在线微调
-6. 模型发布到远程托管仓库
-
-
+1. Dataset Download
+2. Interacting with CSGHub via command-line tools
+3. Management operations such as creation and modification of CSGHub repositories
+4. Model deployment locally or online
+5. Model fine-tuning locally or online
+6. Publishing the model to a remote hosting repository

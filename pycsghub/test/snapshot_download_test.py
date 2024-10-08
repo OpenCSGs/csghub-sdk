@@ -9,7 +9,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(True, False)  # add assertion here
 
     def test_snapshot_download(self):
-        token = ("4e5b97a59c1f8a954954971bf1cdbf3ce61a35sd5")
+        token = ("your_access_token")
         endpoint = "https://hub.opencsg.com"
         repo_id = 'OpenCSG/csg-wukong-1B'
         cache_dir = '/home/test4'
@@ -20,9 +20,8 @@ class MyTestCase(unittest.TestCase):
         print(result)
 
     def test_singlefile_download(self):
-        token = ("f3a7b9c1d6e5f8e2a1b5d4f9e6a2b8d7c3a4e2b1d9f6e7a8d2c5a7b4c1e3f5b8a1d4f"
-                 "9b7d6e2f8a5d3b1e7f9c6a8b2d1e4f7d5b6e9f2a4b3c8e1d7f995hd82hf")
-        endpoint = "https://hub-stg.opencsg.com"
+        token = ("your_access_token")
+        endpoint = "https://hub.opencsg.com"
         repo_id = 'wayne0019/lwfmodel'
         cache_dir = '/home/test6'
         result = file_download(repo_id,
@@ -33,7 +32,7 @@ class MyTestCase(unittest.TestCase):
         print(result)
 
     def test_singlefile_download_not_exist(self):
-        token = ("4e5b97a59c1f8a954954971bf1cdbf3ce61a35d5")
+        token = ("your_access_token")
         endpoint = "https://hub.opencsg.com"
         repo_id = 'OpenCSG/csg-wukong-1B'
         cache_dir = '/home/test5'
@@ -47,7 +46,7 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(str(e), "file wolegequ.hehe not in repo wayne0019/lwfmodel")
 
     def test_snapshot_download(self):
-        token = ("4e5b97a59c1f8a954954971bf1cdbf3ce61a35sd5")
+        token = ("your_access_token")
         endpoint = "https://hub.opencsg.com"
         repo_id = 'AIWizards/tmmluplus'
         cache_dir = '~/Downloads/'
