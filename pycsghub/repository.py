@@ -17,22 +17,22 @@ class Repository:
     def __init__(
         self,
         repo_id: str,
-        work_dir: str,
-        user_name: str,
-        token: str,
+        upload_path: str,
+        branch_name: Optional[str] = "main",
+        work_dir: Optional[str] = "/tmp/csg",
+        user_name: Optional[str] = "",
+        token: Optional[str] = "",
         license: Optional[str] = "apache-2.0",
         nickname: Optional[str] = "",
         description: Optional[str] = "",
         repo_type: Optional[str] = None,
         endpoint: Optional[str] = None,
-    ):
-        if work_dir is None:
-            raise ValueError("work dir is None")
-    
-        if not os.path.exists(work_dir):
-            raise ValueError("work dir is not a valid path")
-        
+        auto_create: Optional[bool] = True,
+        copy_files: Optional[bool] = True,
+    ):    
         self.repo_id = repo_id
+        self.upload_path = upload_path
+        self.branch_name = branch_name
         self.work_dir = work_dir
         self.user_name = user_name
         self.token = token
@@ -41,6 +41,8 @@ class Repository:
         self.description = description
         self.repo_type = repo_type
         self.endpoint = endpoint
+        self.auto_create = auto_create
+        self.copy_files = copy_files
         if self.repo_type == REPO_TYPE_DATASET:
             self.repo_url_prefix = "datasets"
         else:
@@ -48,40 +50,42 @@ class Repository:
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
 
-    def upload_as_new_branch(
-        self, 
-        branch_name: str, 
-        upload_path: str,
-        uploadPath_as_repoPath: bool = False,
-    ) -> str:
-        if branch_name is None:
-            raise ValueError("new branch name is None")
+    def upload(self) -> None:
+        if not os.path.exists(self.upload_path):
+           raise ValueError("upload path does not exist")
+       
+        if not os.path.exists(self.work_dir):
+            os.makedirs(self.work_dir, exist_ok=True)
         
-        if not os.path.exists(upload_path):
-           raise ValueError("src_path does not exist")
-        
-        response = self.create_new_branch(branch_name=branch_name)
-        if response.status_code != 200:
-            raise ValueError(f"fail to request new branch {branch_name} for {self.repo_id}")
-        
-        json_response = response.json()
-        if json_response["msg"] != "OK":
-            raise ValueError(f"fail to create new branch {branch_name} for {self.repo_id}")
-        
-        if os.path.exists(self.repo_dir):
-            shutil.rmtree(self.repo_dir)
+        if self.auto_create:
+            repoExist, branchExist = self.repo_exists()
+            if not repoExist:
+                response = self.create_new_repo()
+                if response.status_code != 200:
+                    err_msg = f"fail to create new repo for {self.repo_id} with http status code '{response.status_code}' and message '{response.text}'"
+                    raise ValueError(err_msg)
+                repoExist, branchExist = self.repo_exists()
+            
+            if not branchExist:
+                response = self.create_new_branch()
+                if response.status_code != 200:
+                    err_msg = f"fail to request new branch {self.branch_name} for {self.repo_id} with status code '{response.status_code}' and message {response.text}"
+                    raise ValueError(err_msg)
+                branch_res = response.json()
+                if branch_res["msg"] != "OK":
+                    raise ValueError(f"fail to create new branch {self.branch_name} for {self.repo_id}")
         
         repo_url = self.generate_repo_clone_url()
-        self.git_clone(branch_name=branch_name, repo_url=repo_url)
+        self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
         
         from_path = ""
         git_cmd_workdir = ""
-        if uploadPath_as_repoPath:
-            from_path = self.repo_dir
-            git_cmd_workdir = upload_path
-        else:
-            from_path = upload_path
+        if self.copy_files:
+            from_path = self.upload_path 
             git_cmd_workdir = self.repo_dir
+        else:
+            from_path = self.repo_dir 
+            git_cmd_workdir = self.upload_path
         
         shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
         
@@ -91,18 +95,38 @@ class Repository:
         if number_of_commits > 1:
             self.git_push(work_dir=git_cmd_workdir)
 
-    def create_new_branch(
-        self,
-        branch_name: str,
-        ):
+    def repo_exists(self):
+        action_endpoint = get_endpoint(endpoint=self.endpoint)
+        url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}/{self.repo_id}/branches"
+        headers = build_csg_headers(token=self.token, headers={
+            "Content-Type": "application/json"
+        })
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return False, False
+        
+        response.raise_for_status()
+        
+        jsonRes = response.json()
+        if jsonRes["msg"] != "OK":
+            return True, False
+
+        branches = jsonRes["data"]
+        for b in branches:
+            if b["name"] == self.branch_name:
+                return True, True
+        
+        return True, False
+        
+    def create_new_branch(self):
         action_endpoint = get_endpoint(endpoint=self.endpoint)
         url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}/{self.repo_id}/raw/.gitattributes"
         
         GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
-            "message": f"create new branch {branch_name} by data flow",
-            "new_branch": branch_name,
+            "message": f"create new branch {self.branch_name} by data flow",
+            "new_branch": self.branch_name,
             "content": GIT_ATTRIBUTES_CONTENT_BASE64
         }
         
@@ -113,42 +137,7 @@ class Repository:
         response.raise_for_status()
         return response
 
-    def upload_as_new_repo(
-        self,
-        upload_path: str,
-        uploadPath_as_repoPath: bool = False,
-        ) -> None:
-        if not os.path.exists(upload_path):
-           raise ValueError("src_path does not exist")
-       
-        response = self.create_new_repo()
-        if response.status_code != 200:
-            raise ValueError(f"fail to create new repo for {self.repo_id}")
-        
-        repo_url = self.generate_repo_clone_url()
-        self.git_clone(branch_name="main", repo_url=repo_url)
-        
-        from_path = ""
-        git_cmd_workdir = ""
-        if uploadPath_as_repoPath:
-            from_path = self.repo_dir
-            git_cmd_workdir = upload_path
-        else:
-            from_path = upload_path
-            git_cmd_workdir = self.repo_dir
-        
-        shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
-        
-        self.git_add(work_dir=git_cmd_workdir)
-        self.git_commit(work_dir=git_cmd_workdir)
-        number_of_commits = self.commits_to_push(work_dir=git_cmd_workdir)
-        if number_of_commits > 1:
-            self.git_push(work_dir=git_cmd_workdir)
-
-        
-    def create_new_repo(
-        self,
-        ):
+    def create_new_repo(self):
         action_endpoint = get_endpoint(endpoint=self.endpoint)
         url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}"
 
@@ -182,7 +171,12 @@ class Repository:
         repo_url: str
     ) -> subprocess.CompletedProcess:
         try:
-            result = self.run_subprocess(f"git clone -b {branch_name} {repo_url}", self.work_dir).stdout.strip()
+            result = self.run_subprocess(
+                command=f"git clone -b {branch_name} {repo_url}", 
+                folder=self.work_dir,
+                check=True,
+                env={"GIT_LFS_SKIP_SMUDGE": "1"}
+            ).stdout.strip()
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
         return result
