@@ -8,7 +8,7 @@ import base64
 import shutil
 import re
 from urllib.parse import urlparse
-from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, REPO_TYPE_DATASET
+from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
                             get_endpoint)
@@ -43,13 +43,20 @@ class Repository:
         self.endpoint = endpoint
         self.auto_create = auto_create
         self.copy_files = copy_files
-        if self.repo_type == REPO_TYPE_DATASET:
-            self.repo_url_prefix = "datasets"
-        else:
-            self.repo_url_prefix = "models"
+        self.repo_url_prefix = self.repo_url_prefix()
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
-
+        
+    def get_url_prefix(self):
+        if self.repo_type == REPO_TYPE_DATASET:
+            return "datasets"
+        if self.repo_type == REPO_TYPE_SPACE:
+            return "spaces"
+        if self.repo_type == REPO_TYPE_CODE:
+            return "codes"
+        else:
+            return "models"
+    
     def upload(self) -> None:
         if not os.path.exists(self.upload_path):
            raise ValueError("upload path does not exist")
