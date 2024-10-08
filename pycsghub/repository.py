@@ -58,42 +58,69 @@ class Repository:
             os.makedirs(self.work_dir, exist_ok=True)
         
         if self.auto_create:
-            repoExist, branchExist = self.repo_exists()
-            if not repoExist:
-                response = self.create_new_repo()
-                if response.status_code != 200:
-                    err_msg = f"fail to create new repo for {self.repo_id} with http status code '{response.status_code}' and message '{response.text}'"
-                    raise ValueError(err_msg)
-                repoExist, branchExist = self.repo_exists()
-            
-            if not branchExist:
-                response = self.create_new_branch()
-                if response.status_code != 200:
-                    err_msg = f"fail to request new branch {self.branch_name} for {self.repo_id} with status code '{response.status_code}' and message {response.text}"
-                    raise ValueError(err_msg)
-                branch_res = response.json()
-                if branch_res["msg"] != "OK":
-                    raise ValueError(f"fail to create new branch {self.branch_name} for {self.repo_id}")
+            self.auto_create_repo_and_branch()
         
+        if os.path.exists(self.repo_dir):
+            shutil.rmtree(self.repo_dir)
+            
         repo_url = self.generate_repo_clone_url()
         self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
         
-        from_path = ""
-        git_cmd_workdir = ""
-        if self.copy_files:
-            from_path = self.upload_path 
-            git_cmd_workdir = self.repo_dir
-        else:
-            from_path = self.repo_dir 
-            git_cmd_workdir = self.upload_path
-        
-        shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
+        git_cmd_workdir = self.copy_repo_files()
         
         self.git_add(work_dir=git_cmd_workdir)
         self.git_commit(work_dir=git_cmd_workdir)
         number_of_commits = self.commits_to_push(work_dir=git_cmd_workdir)
         if number_of_commits > 1:
             self.git_push(work_dir=git_cmd_workdir)
+
+    def copy_repo_files(self):
+        from_path = ""
+        git_cmd_workdir = ""
+        if self.copy_files:
+            from_path = self.upload_path
+            git_cmd_workdir = self.repo_dir
+            
+            for item in os.listdir(git_cmd_workdir):
+                item_path = os.path.join(git_cmd_workdir, item)
+                if item != '.git' and item != '.gitattributes':
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                    elif os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                        
+            shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
+        else:
+            from_path = self.repo_dir
+            git_cmd_workdir = self.upload_path
+            
+            for item in os.listdir(from_path):
+                item_path = os.path.join(from_path, item)
+                if item == '.git' or item == '.gitattributes':
+                    if os.path.isdir(item_path):
+                        shutil.copytree(item_path, os.path.join(git_cmd_workdir, item), dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(item_path, git_cmd_workdir)
+        
+        return git_cmd_workdir     
+
+    def auto_create_repo_and_branch(self):
+        repoExist, branchExist = self.repo_exists()
+        if not repoExist:
+            response = self.create_new_repo()
+            if response.status_code != 200:
+                err_msg = f"fail to create new repo for {self.repo_id} with http status code '{response.status_code}' and message '{response.text}'"
+                raise ValueError(err_msg)
+            repoExist, branchExist = self.repo_exists()
+        
+        if not branchExist:
+            response = self.create_new_branch()
+            if response.status_code != 200:
+                err_msg = f"fail to request new branch {self.branch_name} for {self.repo_id} with status code '{response.status_code}' and message {response.text}"
+                raise ValueError(err_msg)
+            branch_res = response.json()
+            if branch_res["msg"] != "OK":
+                raise ValueError(f"fail to create new branch {self.branch_name} for {self.repo_id}")
 
     def repo_exists(self):
         action_endpoint = get_endpoint(endpoint=self.endpoint)
