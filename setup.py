@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='csghub-sdk',
-    version='0.3.7',
+    version='0.3.8',
     author="opencsg",
     author_email="contact@opencsg.com",
     long_description=long_description,
@@ -27,7 +27,7 @@ setup(
         "dl==0.1.0",
         "docutils==0.21.2",
         "HTMLParser==0.0.2",
-        "huggingface_hub==0.22.2",
+        "huggingface_hub>=0.22.2",
         "ipython==8.12.3",
         "ipywidgets==8.1.2",
         "keyring==25.2.1",
