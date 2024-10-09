@@ -43,7 +43,7 @@ class Repository:
         self.endpoint = endpoint
         self.auto_create = auto_create
         self.copy_files = copy_files
-        self.repo_url_prefix = self.repo_url_prefix()
+        self.repo_url_prefix = self.get_url_prefix()
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
         
@@ -84,7 +84,7 @@ class Repository:
     def copy_repo_files(self):
         from_path = ""
         git_cmd_workdir = ""
-        if self.copy_files:
+        if self.copy_files or os.path.isfile(self.upload_path):
             from_path = self.upload_path
             git_cmd_workdir = self.repo_dir
             
@@ -96,7 +96,10 @@ class Repository:
                     elif os.path.isdir(item_path):
                         shutil.rmtree(item_path)
                         
-            shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
+            if os.path.isfile(self.upload_path):
+                shutil.copyfile(self.upload_path, git_cmd_workdir)
+            else:
+                shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
         else:
             from_path = self.repo_dir
             git_cmd_workdir = self.upload_path
