@@ -85,3 +85,7 @@ class MIRROR(str, Enum):
     AUTO = "auto"
     HF = "hf"
     CSGHUB = "csghub"
+
+S3_INTERNAL_KEY = "S3_INTERNAL"
+
+S3_INTERNAL = os.environ.get(S3_INTERNAL_KEY, '')
