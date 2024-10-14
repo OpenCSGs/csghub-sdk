@@ -11,6 +11,7 @@ import hashlib
 from pycsghub.errors import FileIntegrityError
 from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote
+from pycsghub.constants import S3_INTERNAL
 
 
 def get_session() -> requests.Session:
@@ -48,8 +49,9 @@ def build_csg_headers(
         csg_headers["authorization"] = f"Bearer {token_to_send}"
     if headers is not None:
         csg_headers.update(headers)
+        
+    csg_headers["X-OPENCSG-S3-Internal"] = S3_INTERNAL
     return csg_headers
-
 
 def model_id_to_group_owner_name(model_id: str) -> (str, str):
     if MODEL_ID_SEPARATOR in model_id:
@@ -355,13 +357,14 @@ def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = N
     return path
 
 
-def get_file_download_url(model_id: str,
-                          file_path: str,
-                          revision: str,
-                          repo_type: Optional[str] = None,
-                          endpoint: Optional[str] = None,
-                          mirror: Optional[str] = MIRROR.AUTO,
-                          ) -> str:
+def get_file_download_url(
+    model_id: str,
+    file_path: str,
+    revision: str,
+    repo_type: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    mirror: Optional[str] = MIRROR.AUTO,
+) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
         model_id (str): The model_id.
