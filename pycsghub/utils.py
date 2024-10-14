@@ -50,7 +50,7 @@ def build_csg_headers(
     if headers is not None:
         csg_headers.update(headers)
         
-    csg_headers[S3_INTERNAL_KEY] = f"{S3_INTERNAL}"
+    csg_headers[S3_INTERNAL_KEY] = S3_INTERNAL
     return csg_headers
 
 
