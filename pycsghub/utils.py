@@ -11,7 +11,7 @@ import hashlib
 from pycsghub.errors import FileIntegrityError
 from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote
-from pycsghub.constants import S3_INTERNAL_KEY, S3_INTERNAL
+from pycsghub.constants import S3_INTERNAL
 
 
 def get_session() -> requests.Session:
@@ -50,9 +50,8 @@ def build_csg_headers(
     if headers is not None:
         csg_headers.update(headers)
         
-    csg_headers[S3_INTERNAL_KEY] = S3_INTERNAL
+    csg_headers["X-OPENCSG-S3-Internal"] = S3_INTERNAL
     return csg_headers
-
 
 def model_id_to_group_owner_name(model_id: str) -> (str, str):
     if MODEL_ID_SEPARATOR in model_id:
