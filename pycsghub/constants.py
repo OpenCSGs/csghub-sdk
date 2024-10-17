@@ -24,6 +24,8 @@ DEFAULT_CSGHUB_DOMAIN = 'https://hub.opencsg.com'
 
 GIT_ATTRIBUTES_CONTENT = """
 *.duckdb filter=lfs diff=lfs merge=lfs -text
+*.jsonl filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
 *.7z filter=lfs diff=lfs merge=lfs -text
 *.arrow filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
