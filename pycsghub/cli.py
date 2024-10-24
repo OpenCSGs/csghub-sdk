@@ -7,11 +7,13 @@ from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, MIRROR
 
 app = typer.Typer(add_completion=False)
 
+
 def version_callback(value: bool):
     if value:
         pkg_version = version("csghub-sdk")
         print(f"csghub-cli version {pkg_version}")
         raise typer.Exit()
+
 
 OPTIONS = {
     "repoID": typer.Argument(help="The ID of the repo. (e.g. `username/repo-name`)."),
@@ -34,7 +36,7 @@ def download(
     endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
     token: Annotated[Optional[str], OPTIONS["token"]] = None,
     cache_dir: Annotated[Optional[str], OPTIONS["cache_dir"]] = None,
-    mirror: Annotated[Optional[str], OPTIONS["mirror"]] = MIRROR.AUTO,
+    mirror: Annotated[Optional[str], OPTIONS["mirror"]] = MIRROR.CSGHUB,
 ):
     repo.download(
         repo_id=repo_id,
@@ -63,7 +65,8 @@ def upload(
         endpoint=endpoint,
         token=token
     )
- 
+
+
 @app.callback(invoke_without_command=True)
 def main(version: bool = OPTIONS["version"]):
     pass
