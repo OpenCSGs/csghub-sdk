@@ -49,9 +49,10 @@ def build_csg_headers(
         csg_headers["authorization"] = f"Bearer {token_to_send}"
     if headers is not None:
         csg_headers.update(headers)
-        
+
     csg_headers["X-OPENCSG-S3-Internal"] = S3_INTERNAL
     return csg_headers
+
 
 def model_id_to_group_owner_name(model_id: str) -> (str, str):
     if MODEL_ID_SEPARATOR in model_id:
@@ -100,7 +101,7 @@ def get_repo_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.AUTO,
+    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> Union[ModelInfo, DatasetInfo, SpaceInfo]:
     """
     Get the info object for a given repo of a given type.
@@ -168,7 +169,7 @@ def dataset_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.AUTO,
+    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> DatasetInfo:
     """
     Get info on one specific dataset on huggingface.co.
@@ -286,7 +287,7 @@ def model_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.AUTO,
+    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> ModelInfo:
     """
     Note: It is a huggingface method moved here to adjust csghub server response.
@@ -363,7 +364,7 @@ def get_file_download_url(
     revision: str,
     repo_type: Optional[str] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.AUTO,
+    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:

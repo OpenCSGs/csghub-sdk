@@ -31,7 +31,7 @@ def snapshot_download(
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
         token: Optional[str] = None,
-        mirror: Optional[str] = MIRROR.AUTO,
+        mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> str:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
@@ -107,6 +107,6 @@ def snapshot_download(
                 temp_file = os.path.join(temp_cache_dir, repo_file)
                 savedFile = cache.put_file(repo_file_info, temp_file)
                 print(f"Saved file to '{savedFile}'")
-            
+
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())
