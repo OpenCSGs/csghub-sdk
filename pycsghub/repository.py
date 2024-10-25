@@ -277,11 +277,11 @@ class Repository:
             path_to_file = os.path.join(os.getcwd(), work_dir, filename)
             size_in_mb = os.path.getsize(path_to_file) / (1024 * 1024)
 
-            if size_in_mb >= 10 and not self.is_tracked_with_lfs(filename=path_to_file) and not self.is_git_ignored(filename=path_to_file):
+            if size_in_mb >= 1 and not self.is_tracked_with_lfs(filename=path_to_file) and not self.is_git_ignored(filename=path_to_file):
                 self.lfs_track(work_dir=work_dir,patterns=filename)
                 files_to_be_tracked_with_lfs.append(filename)
 
-        self.lfs_untrack(deleted_files)
+        self.lfs_untrack(work_dir=work_dir, patterns=deleted_files)
 
         return files_to_be_tracked_with_lfs
 
