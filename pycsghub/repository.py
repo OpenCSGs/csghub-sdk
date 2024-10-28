@@ -75,6 +75,7 @@ class Repository:
         
         git_cmd_workdir = self.copy_repo_files()
         
+        self.track_large_files(work_dir=git_cmd_workdir)
         self.git_add(work_dir=git_cmd_workdir)
         self.git_commit(work_dir=git_cmd_workdir)
         number_of_commits = self.commits_to_push(work_dir=git_cmd_workdir)
@@ -262,6 +263,109 @@ class Repository:
             return len(result.stdout.split("\n"))
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
+
+
+    def track_large_files(self, work_dir: str, pattern: str = ".") -> List[str]:
+        files_to_be_tracked_with_lfs = []
+
+        deleted_files = self.list_deleted_files(work_dir=work_dir)
+
+        for filename in self.list_files_to_be_staged(work_dir=work_dir, pattern=pattern):
+            if filename in deleted_files:
+                continue
+
+            path_to_file = os.path.join(os.getcwd(), work_dir, filename)
+            size_in_mb = os.path.getsize(path_to_file) / (1024 * 1024)
+
+            if size_in_mb >= 1 and not self.is_tracked_with_lfs(filename=path_to_file) and not self.is_git_ignored(filename=path_to_file):
+                self.lfs_track(work_dir=work_dir,patterns=filename)
+                files_to_be_tracked_with_lfs.append(filename)
+
+        self.lfs_untrack(work_dir=work_dir, patterns=deleted_files)
+
+        return files_to_be_tracked_with_lfs
+
+    def list_files_to_be_staged(self, work_dir: str, pattern: str = ".") -> List[str]:
+        try:
+            p = self.run_subprocess("git ls-files --exclude-standard -mo".split() + [pattern], work_dir)
+            if len(p.stdout.strip()):
+                files = p.stdout.strip().split("\n")
+            else:
+                files = []
+        except subprocess.CalledProcessError as exc:
+            raise EnvironmentError(exc.stderr)
+
+        return files
+    
+    def list_deleted_files(self, work_dir: str) -> List[str]:
+        try:
+            git_status = self.run_subprocess("git status -s", work_dir).stdout.strip()
+        except subprocess.CalledProcessError as exc:
+            raise EnvironmentError(exc.stderr)
+
+        if len(git_status) == 0:
+            return []
+
+        modified_files_statuses = [status.strip() for status in git_status.split("\n")]
+        deleted_files_statuses = [status for status in modified_files_statuses if "D" in status.split()[0]]
+        deleted_files = [status.split()[-1].strip() for status in deleted_files_statuses]
+        return deleted_files
+
+    def lfs_track(self, work_dir: str, patterns: Union[str, List[str]], filename: bool = False):
+        if isinstance(patterns, str):
+            patterns = [patterns]
+        try:
+            for pattern in patterns:
+                self.run_subprocess(
+                    f"git lfs track {'--filename' if filename else ''} {pattern}",
+                    work_dir,
+                )
+        except subprocess.CalledProcessError as exc:
+            raise EnvironmentError(exc.stderr)
+
+
+    def lfs_untrack(self, work_dir: str, patterns: Union[str, List[str]]):
+        if isinstance(patterns, str):
+            patterns = [patterns]
+        try:
+            for pattern in patterns:
+                self.run_subprocess("git lfs untrack".split() + [pattern], work_dir)
+        except subprocess.CalledProcessError as exc:
+            raise EnvironmentError(exc.stderr)
+
+    def is_tracked_with_lfs(self, filename: Union[str, Path]) -> bool:
+        folder = Path(filename).parent
+        filename = Path(filename).name
+
+        try:
+            p = self.run_subprocess("git check-attr -a".split() + [filename], folder)
+            attributes = p.stdout.strip()
+        except subprocess.CalledProcessError as exc:
+            raise OSError(exc.stderr)
+
+        if len(attributes) == 0:
+            return False
+
+        found_lfs_tag = {"diff": False, "merge": False, "filter": False}
+
+        for attribute in attributes.split("\n"):
+            for tag in found_lfs_tag.keys():
+                if tag in attribute and "lfs" in attribute:
+                    found_lfs_tag[tag] = True
+
+        return all(found_lfs_tag.values())
+
+    def is_git_ignored(self, filename: Union[str, Path]) -> bool:
+        folder = Path(filename).parent
+        filename = Path(filename).name
+
+        try:
+            p = self.run_subprocess("git check-ignore".split() + [filename], folder, check=False)
+            is_ignored = not bool(p.returncode)
+        except subprocess.CalledProcessError as exc:
+            raise OSError(exc.stderr)
+
+        return is_ignored
 
     def run_subprocess(
         self,
