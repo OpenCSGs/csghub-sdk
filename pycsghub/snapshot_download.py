@@ -13,10 +13,9 @@ from pycsghub.utils import (get_cache_dir,
                             get_endpoint)
 from huggingface_hub.utils import filter_repo_objects
 from pycsghub.file_download import http_get
-from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES, MIRROR
+from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
 from pycsghub import utils
 from pycsghub.constants import REPO_TYPE_MODEL
-
 
 def snapshot_download(
         repo_id: str,
@@ -30,8 +29,7 @@ def snapshot_download(
         ignore_patterns: Optional[Union[List[str], str]] = None,
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None,
-        mirror: Optional[str] = MIRROR.CSGHUB,
+        token: Optional[str] = None
 ) -> str:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
@@ -64,8 +62,7 @@ def snapshot_download(
                                         repo_type=repo_type,
                                         revision=revision,
                                         token=token,
-                                        endpoint=download_endpoint,
-                                        mirror=mirror)
+                                        endpoint=download_endpoint)
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
@@ -91,9 +88,7 @@ def snapshot_download(
                     file_path=repo_file,
                     repo_type=repo_type,
                     revision=revision,
-                    endpoint=download_endpoint,
-                    mirror=mirror,
-                )
+                    endpoint=download_endpoint)
                 # todo support parallel download api
                 http_get(
                     url=url,
@@ -107,6 +102,6 @@ def snapshot_download(
                 temp_file = os.path.join(temp_cache_dir, repo_file)
                 savedFile = cache.put_file(repo_file_info, temp_file)
                 print(f"Saved file to '{savedFile}'")
-
+            
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())

@@ -3,7 +3,7 @@ from typing import Optional, Union, Dict
 from pathlib import Path
 import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, MIRROR
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
@@ -100,8 +100,7 @@ def get_repo_info(
     timeout: Optional[float] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.CSGHUB,
+    endpoint: Optional[str] = None
 ) -> Union[ModelInfo, DatasetInfo, SpaceInfo]:
     """
     Get the info object for a given repo of a given type.
@@ -156,8 +155,7 @@ def get_repo_info(
         token=token,
         timeout=timeout,
         files_metadata=files_metadata,
-        endpoint=endpoint,
-        mirror=mirror,
+        endpoint=endpoint
     )
 
 
@@ -169,7 +167,6 @@ def dataset_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> DatasetInfo:
     """
     Get info on one specific dataset on huggingface.co.
@@ -286,8 +283,7 @@ def model_info(
     securityStatus: Optional[bool] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.CSGHUB,
+    endpoint: Optional[str] = None
 ) -> ModelInfo:
     """
     Note: It is a huggingface method moved here to adjust csghub server response.
@@ -331,8 +327,7 @@ def model_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id,
-                              revision=revision, endpoint=endpoint, mirror=mirror)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id, revision=revision, endpoint=endpoint)
     params = {}
     if securityStatus:
         params["securityStatus"] = True
@@ -344,7 +339,7 @@ def model_info(
     return ModelInfo(**data)
 
 
-def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None, mirror: Optional[str] = None) -> str:
+def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None) -> str:
     if repo_type == REPO_TYPE_MODEL or repo_type == REPO_TYPE_DATASET or repo_type == REPO_TYPE_SPACE:
         path = (
             f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/main"
@@ -353,8 +348,6 @@ def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = N
         )
     else:
         raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
-    if mirror is not None:
-        path = f"{path}?mirror={mirror}"
     return path
 
 
@@ -364,7 +357,6 @@ def get_file_download_url(
     revision: str,
     repo_type: Optional[str] = None,
     endpoint: Optional[str] = None,
-    mirror: Optional[str] = MIRROR.CSGHUB,
 ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
@@ -379,7 +371,7 @@ def get_file_download_url(
     revision = urllib.parse.quote(revision)
     download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
-        download_url_template = f"{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}?mirror={mirror}"
+        download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
     return download_url_template.format(
         endpoint=endpoint,
         model_id=model_id,
