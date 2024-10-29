@@ -1,5 +1,5 @@
 <p align="left">
-    <a href="README.md">English</a> ｜ 中文
+    <a href="https://github.com/OpenCSGs/csghub-sdk/blob/main/README.md">English</a> ｜ 中文
 </p>
 
 # CSGHub SDK
