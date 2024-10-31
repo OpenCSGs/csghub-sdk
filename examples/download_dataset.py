@@ -3,7 +3,7 @@ from pycsghub.snapshot_download import snapshot_download
 token = None
 
 endpoint = "https://hub.opencsg.com"
-repo_id = 'OpenDataLab/CodeExp'
+repo_id = "OpenDataLab/CodeExp"
 repo_type = "dataset"
-cache_dir = '/Users/hhwang/temp/'
+cache_dir = "/Users/hhwang/temp/"
 result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
