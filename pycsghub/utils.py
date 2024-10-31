@@ -3,6 +3,7 @@ from typing import Optional, Union, Dict
 from pathlib import Path
 import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
+from pycsghub.constants import OPERATION_ACTION_API, OPERATION_ACTION_GIT
 from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
@@ -10,7 +11,7 @@ import urllib
 import hashlib
 from pycsghub.errors import FileIntegrityError
 from pycsghub._token import _get_token_from_file, _get_token_from_environment
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from pycsghub.constants import S3_INTERNAL
 
 
@@ -380,7 +381,7 @@ def get_file_download_url(
     )
 
 
-def get_endpoint(endpoint: Optional[str] = None):
+def get_endpoint(endpoint: Optional[str] = None, operation: Optional[str] = OPERATION_ACTION_API) -> str:
     """Format endpoint to remove trailing slash and add a leading slash if not present.
     Args:
         endpoint (str): The endpoint url.
@@ -389,10 +390,13 @@ def get_endpoint(endpoint: Optional[str] = None):
         str: The formatted endpoint url.
     """
     csghub_domain = os.getenv('CSGHUB_DOMAIN', DEFAULT_CSGHUB_DOMAIN)
-    corrent_endpoint = endpoint if endpoint is not None else csghub_domain
-    if corrent_endpoint.endswith('/'):
-        corrent_endpoint = corrent_endpoint[:-1]
-    return corrent_endpoint
+    correct_endpoint = endpoint if endpoint is not None else csghub_domain
+    if operation == OPERATION_ACTION_GIT:
+        scheme = urlparse(correct_endpoint).scheme
+        correct_endpoint = correct_endpoint.replace(f"{scheme}://hub.", f"{scheme}://")
+    if correct_endpoint.endswith('/'):
+        correct_endpoint = correct_endpoint[:-1]
+    return correct_endpoint
 
 
 def file_integrity_validation(file_path,

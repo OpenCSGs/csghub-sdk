@@ -8,7 +8,7 @@ import base64
 import shutil
 import re
 from urllib.parse import urlparse
-from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE
+from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, OPERATION_ACTION_GIT, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
                             get_endpoint)
@@ -197,7 +197,7 @@ class Repository:
         return response
 
     def generate_repo_clone_url(self) -> str:
-        clone_endpoint = get_endpoint(endpoint=self.endpoint)
+        clone_endpoint = get_endpoint(endpoint=self.endpoint, operation=OPERATION_ACTION_GIT)
         clone_url = f"{clone_endpoint}/{self.repo_url_prefix}/{self.repo_id}.git"
         scheme = urlparse(clone_url).scheme
         clone_url = clone_url.replace(f"{scheme}://", f"{scheme}://{self.user_name}:{self.token}@")
@@ -264,7 +264,6 @@ class Repository:
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
 
-
     def track_large_files(self, work_dir: str, pattern: str = ".") -> List[str]:
         files_to_be_tracked_with_lfs = []
 
@@ -273,7 +272,7 @@ class Repository:
         for filename in self.list_files_to_be_staged(work_dir=work_dir, pattern=pattern):
             if filename in deleted_files:
                 continue
-
+            
             path_to_file = os.path.join(os.getcwd(), work_dir, filename)
             size_in_mb = os.path.getsize(path_to_file) / (1024 * 1024)
 
