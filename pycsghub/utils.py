@@ -52,6 +52,7 @@ def build_csg_headers(
         csg_headers.update(headers)
 
     csg_headers["X-OPENCSG-S3-Internal"] = S3_INTERNAL
+    csg_headers["Accept-Encoding"] = None
     return csg_headers
 
 
