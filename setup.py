@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='csghub-sdk',
-    version='0.4.5',
+    version='0.4.6',
     author="opencsg",
     author_email="contact@opencsg.com",
     long_description=long_description,
@@ -34,7 +34,7 @@ setup(
         "lockfile>=0.12.2",
         "mock>=5.1.0",
         "Pillow>=10.3.0",
-        "protobuf>=5.27.0",
+        "protobuf>=4.25.1",
         "pyOpenSSL>=24.1.0",
         "railroad>=0.5.0",
         "Sphinx>=7.3.7",
