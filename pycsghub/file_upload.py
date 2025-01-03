@@ -8,19 +8,21 @@ def http_upload_file(
         repo_id: str,
         repo_type: Optional[str] = None,
         file_path: str = None,
+        path_in_repo: Optional[str] = "",
         revision: Optional[str] = DEFAULT_REVISION,
         endpoint: Optional[str] = None,
         token: Optional[str] = None,
     ):
     if not os.path.exists(file_path):
         raise ValueError(f"file '{file_path}' does not exist")
+    destination_path = os.path.join(path_in_repo, os.path.basename(file_path)) if path_in_repo else file_path
     http_endpoint = endpoint if endpoint is not None else get_endpoint()
     if not http_endpoint.endswith("/"):
         http_endpoint += "/"
     http_url = http_endpoint + "api/v1/" + repo_type + "s/" + repo_id + "/upload_file"
     post_headers = build_csg_headers(token=token)
     file_data = {'file': open(file_path, 'rb')}
-    form_data = {'file_path': file_path, 'branch': revision, 'message': 'upload' + file_path}
+    form_data = {'file_path': destination_path, 'branch': revision, 'message': 'upload' + file_path}
     response = requests.post(http_url, headers=post_headers, data=form_data, files=file_data)
     if response.status_code == 200:
         print(f"file '{file_path}' upload successfully.")

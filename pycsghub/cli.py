@@ -61,7 +61,8 @@ def upload(
         repo.upload_files(
             repo_id=repo_id, 
             repo_type=repo_type, 
-            repo_files=[local_path], 
+            repo_file=local_path,
+            path_in_repo=path_in_repo,
             revision=revision, 
             endpoint=endpoint,
             token=token

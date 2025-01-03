@@ -26,20 +26,21 @@ def download(
 def upload_files(
         repo_id: str,
         repo_type: str,
-        repo_files: List[str],
+        repo_file: str,
+        path_in_repo: Optional[str] = "",
         revision: Optional[str] = DEFAULT_REVISION,
         endpoint: Optional[str] = None,
         token: Optional[str] = None
     ):
-    for item in repo_files:
-        http_upload_file(
-            repo_id=repo_id,
-            repo_type=repo_type,
-            file_path=item,
-            revision=revision,
-            endpoint=endpoint,
-            token=token,
-        )
+    http_upload_file(
+        repo_id=repo_id,
+        repo_type=repo_type,
+        file_path=repo_file,
+        path_in_repo=path_in_repo,
+        revision=revision,
+        endpoint=endpoint,
+        token=token,
+    )
 
 def upload_folder(
         repo_id: str,
