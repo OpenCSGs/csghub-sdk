@@ -93,8 +93,14 @@ csghub-cli download wanghh2000/myds1 -t dataset
 # 上传单个文件
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt
 
-# 上传多个文件
-csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset 
+# 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支根目录下
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
+
+# 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的v1分支的'test/files'目录下
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision v1
+
+# 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支'test/files'目录下并使用指定token
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 ```
 
 文件默认下载路径为`~/.cache/csg/`
@@ -184,7 +190,7 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
-### 上传仓库
+### 上传本地目录到仓库
 
 在开始之前，请确保您已安装 Git-LFS（安装说明请参见 [这里](https://git-lfs.github.com/)）。
 
@@ -199,6 +205,28 @@ r = Repository(
     user_name="wanghh2003",
     token=token,
     repo_type="dataset",
+)
+
+r.upload()
+```
+
+### 上传本地目录到仓库的指定目录
+
+在开始之前，请确保您已安装 Git-LFS（安装说明请参见 [这里](https://git-lfs.github.com/)）。
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2000/model01",
+    upload_path="/Users/hhwang/temp/jsonl",
+    path_in_repo="test/abc",
+    user_name="wanghh2000",
+    token=token,
+    repo_type="model",
+    branch_name="v1",
 )
 
 r.upload()

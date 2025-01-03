@@ -94,8 +94,14 @@ csghub-cli download wanghh2000/myds1 -t dataset
 # upload a single file
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt
 
-# upload files
-csghub-cli upload wanghh2000/myds1 abc/4.txt abc/5.txt -t dataset
+# upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m01' with default branch
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
+
+# upload local folder '/Users/hhwang/temp/jsonl' to path 'test/files' of repo 'wanghh2000/m01' with branch v1
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision v1
+
+# upload local folder '/Users/hhwang/temp/jsonl' to path 'test/files' of repo 'wanghh2000/m01' with token 'xxxxxx'
+csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 ```
 
 Download location is `~/.cache/csg/` by default.
@@ -184,7 +190,7 @@ for item in repo_files:
     http_upload_file(repo_id=repo_id, repo_type=repo_type, file_path=item, endpoint=endpoint, token=token)
 ```
 
-### Upload repo
+### Upload the local path to repo
 
 Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
 
@@ -199,6 +205,28 @@ r = Repository(
     user_name="wanghh2003",
     token=token,
     repo_type="dataset",
+)
+
+r.upload()
+```
+
+### Upload the local path to the specified path in the repo
+
+Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
+
+```python
+from pycsghub.repository import Repository
+
+token = "your access token"
+
+r = Repository(
+    repo_id="wanghh2000/model01",
+    upload_path="/Users/hhwang/temp/jsonl",
+    path_in_repo="test/abc",
+    user_name="wanghh2000",
+    token=token,
+    repo_type="model",
+    branch_name="v1",
 )
 
 r.upload()

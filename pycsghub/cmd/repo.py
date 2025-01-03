@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional, Union, List
 from pycsghub.constants import DEFAULT_REVISION
 import requests
+from pycsghub.repository import Repository
 
 def download(
         repo_id: str,
@@ -22,7 +23,7 @@ def download(
         token=token,
     )
 
-def upload(
+def upload_files(
         repo_id: str,
         repo_type: str,
         repo_files: List[str],
@@ -39,3 +40,36 @@ def upload(
             endpoint=endpoint,
             token=token,
         )
+
+def upload_folder(
+        repo_id: str,
+        repo_type: str,
+        local_path: str,
+        path_in_repo: Optional[str] = "",
+        work_dir: Optional[str] = "/tmp/csg",
+        nickname: Optional[str] = "",
+        description: Optional[str] = "",
+        license: Optional[str] = "apache-2.0",
+        revision: Optional[str] = DEFAULT_REVISION,
+        endpoint: Optional[str] = None,
+        user_name: Optional[str] = "",
+        token: Optional[str] = None,
+        auto_create: Optional[bool] = True,
+    ):
+    r = Repository(
+        repo_id=repo_id,
+        upload_path=local_path,
+        path_in_repo=path_in_repo,
+        work_dir=work_dir,
+        repo_type=repo_type,
+        nickname=nickname,
+        description=description,
+        license=license,
+        branch_name=revision,
+        endpoint=endpoint,
+        user_name=user_name,
+        token=token,
+        auto_create=auto_create,
+    )
+    r.upload()
+    
