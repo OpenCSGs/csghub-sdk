@@ -90,8 +90,8 @@ csghub-cli download wanghh2000/myprivate1
 # 数据集下载
 csghub-cli download wanghh2000/myds1 -t dataset
 
-# 上传单个文件
-csghub-cli upload wanghh2000/myprivate1 abc/3.txt
+# 上传单个文件到仓库目录folder1
+csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
 
 # 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支根目录下
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
