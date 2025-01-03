@@ -86,3 +86,6 @@ saved_model/**/* filter=lfs diff=lfs merge=lfs -text
 
 
 S3_INTERNAL = os.environ.get("S3_INTERNAL", '')
+
+GIT_HIDDEN_DIR = ".git"
+GIT_ATTRIBUTES_FILE = ".gitattributes"

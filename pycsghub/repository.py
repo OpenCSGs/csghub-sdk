@@ -8,16 +8,30 @@ import base64
 import shutil
 import re
 from urllib.parse import urlparse
-from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, OPERATION_ACTION_GIT, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE
+from pycsghub.constants import (GIT_ATTRIBUTES_CONTENT, 
+                                OPERATION_ACTION_GIT, 
+                                REPO_TYPE_DATASET, 
+                                REPO_TYPE_SPACE, 
+                                REPO_TYPE_CODE)
+from pycsghub.constants import (GIT_HIDDEN_DIR, GIT_ATTRIBUTES_FILE)
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
                             get_endpoint)
+
+def ignore_folders(folder, contents):
+    ignored = []
+    exclude_list = [GIT_HIDDEN_DIR]
+    for item in contents:
+        if item in exclude_list:
+            ignored.append(item)
+    return ignored
 
 class Repository:
     def __init__(
         self,
         repo_id: str,
         upload_path: str,
+        path_in_repo: Optional[str] = "",
         branch_name: Optional[str] = "main",
         work_dir: Optional[str] = "/tmp/csg",
         user_name: Optional[str] = "",
@@ -28,10 +42,10 @@ class Repository:
         repo_type: Optional[str] = None,
         endpoint: Optional[str] = None,
         auto_create: Optional[bool] = True,
-        copy_files: Optional[bool] = True,
     ):    
         self.repo_id = repo_id
         self.upload_path = upload_path
+        self.path_in_repo = path_in_repo
         self.branch_name = branch_name
         self.work_dir = work_dir
         self.user_name = user_name
@@ -42,10 +56,10 @@ class Repository:
         self.repo_type = repo_type
         self.endpoint = endpoint
         self.auto_create = auto_create
-        self.copy_files = copy_files
         self.repo_url_prefix = self.get_url_prefix()
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
+        self.user_name = self.user_name if self.user_name else self.namespace
         
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
@@ -85,35 +99,33 @@ class Repository:
     def copy_repo_files(self):
         from_path = ""
         git_cmd_workdir = ""
-        if self.copy_files or os.path.isfile(self.upload_path):
-            from_path = self.upload_path
-            git_cmd_workdir = self.repo_dir
-            
-            for item in os.listdir(git_cmd_workdir):
-                item_path = os.path.join(git_cmd_workdir, item)
-                if item != '.git' and item != '.gitattributes':
-                    if os.path.isfile(item_path):
-                        os.remove(item_path)
-                    elif os.path.isdir(item_path):
-                        shutil.rmtree(item_path)
-                        
-            if os.path.isfile(self.upload_path):
-                shutil.copyfile(self.upload_path, git_cmd_workdir)
-            else:
-                shutil.copytree(from_path, git_cmd_workdir, dirs_exist_ok=True)
-        else:
-            from_path = self.repo_dir
-            git_cmd_workdir = self.upload_path
-            
-            for item in os.listdir(from_path):
-                item_path = os.path.join(from_path, item)
-                if item == '.git' or item == '.gitattributes':
-                    if os.path.isdir(item_path):
-                        shutil.copytree(item_path, os.path.join(git_cmd_workdir, item), dirs_exist_ok=True)
-                    else:
-                        shutil.copy2(item_path, git_cmd_workdir)
         
-        return git_cmd_workdir     
+        from_path = self.upload_path
+        git_cmd_workdir = self.repo_dir
+        destination_path = git_cmd_workdir
+        
+        path_suffix = f"{self.path_in_repo.strip('/')}/" if self.path_in_repo else ""
+        path_suffix = re.sub(r'^\./', '', path_suffix)
+        
+        destination_path = os.path.join(destination_path, path_suffix)
+        
+        if not os.path.exists(destination_path):
+            os.makedirs(destination_path, exist_ok=True)
+        
+        for item in os.listdir(destination_path):
+            item_path = os.path.join(destination_path, item)
+            if item != GIT_HIDDEN_DIR and item != GIT_ATTRIBUTES_FILE:
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    
+        if os.path.isfile(self.upload_path):
+            shutil.copyfile(self.upload_path, destination_path)
+        else:
+            shutil.copytree(from_path, destination_path, dirs_exist_ok=True, ignore=ignore_folders)
+
+        return git_cmd_workdir
 
     def auto_create_repo_and_branch(self):
         repoExist, branchExist = self.repo_exists()
