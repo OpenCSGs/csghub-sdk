@@ -264,11 +264,9 @@ model = AutoModelForCausalLM.from_pretrained('model/repoid')
 
 ## 功能计划
 
-1. 数据集下载
+1. 使用命令行工具下载仓库文件
 2. 使用命令行工具的方式与CSGHub交互
 3. CSGHub仓库的创建、修改等管理操作
 4. 模型本地或在线部署
 5. 模型本地或在线微调
-6. 模型发布到远程托管仓库
-
-
+6. 快速上传大文件夹到CSGHub仓库
