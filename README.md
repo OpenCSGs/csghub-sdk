@@ -88,7 +88,7 @@ export CSG_TOKEN=your_access_token
 # download model
 csghub-cli download wanghh2000/myprivate1
 
-# donwload dataset
+# download dataset
 csghub-cli download wanghh2000/myds1 -t dataset
 
 # upload a single file to folder1
@@ -262,9 +262,9 @@ This code:
 
 ## Roadmap
 
-1. Dataset Download
+1. Download repo file by CLI
 2. Interacting with CSGHub via command-line tools
 3. Management operations such as creation and modification of CSGHub repositories
 4. Model deployment locally or online
 5. Model fine-tuning locally or online
-6. Publishing the model to a remote hosting repository
+6. Quick upload large folder to CSGHub
