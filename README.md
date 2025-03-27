@@ -94,7 +94,7 @@ csghub-cli download wanghh2000/myds1 -t dataset
 # upload a single file to folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
 
-# upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m01' with token 'xxxxxx' and default branch
+# upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m01' with default branch
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
 
 # upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m04' with token 'xxxxxx' and v2 branch
