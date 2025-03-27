@@ -96,12 +96,17 @@ csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
 # 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支根目录下
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
 
+# 上传本地目录'/Users/hhwang/temp/jsonl' 到仓库'wanghh2000/m04'的v2分支根目录下使用token'xxxxxx'
+csghub-cli upload wanghh2000/m04 /Users/hhwang/temp/jsonl -k xxxxxx --revision v2
+
 # 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的v1分支的'test/files'目录下
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision v1
 
 # 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支'test/files'目录下并使用指定token
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 ```
+
+注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
 
 文件默认下载路径为`~/.cache/csg/`
 

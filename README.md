@@ -97,12 +97,17 @@ csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
 # upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m01' with default branch
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl
 
+# upload local folder '/Users/hhwang/temp/jsonl' to root path of repo 'wanghh2000/m04' with token 'xxxxxx' and v2 branch
+csghub-cli upload wanghh2000/m04 /Users/hhwang/temp/jsonl -k xxxxxx --revision v2
+
 # upload local folder '/Users/hhwang/temp/jsonl' to path 'test/files' of repo 'wanghh2000/m01' with branch v1
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision v1
 
 # upload local folder '/Users/hhwang/temp/jsonl' to path 'test/files' of repo 'wanghh2000/m01' with token 'xxxxxx'
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 ```
+
+Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 
 
 Download location is `~/.cache/csg/` by default.
 
