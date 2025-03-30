@@ -1,10 +1,10 @@
-
 # import os
 # os.environ['HF_ENDPOINT'] = 'https://hub.opencsg.com/hf'
 # from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
+# mid = '/Users/hhwang/code/jihulab/opencsg/csghub-sdk/mind'
 mid = 'wanghh2000/MyMind-0.05B'
 tokenizer = AutoTokenizer.from_pretrained(mid)
 model = AutoModelForCausalLM.from_pretrained(mid, trust_remote_code=True)
