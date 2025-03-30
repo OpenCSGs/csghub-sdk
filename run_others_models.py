@@ -8,6 +8,7 @@ from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 mid = 'wanghh2000/MyMind-0.05B'
 tokenizer = AutoTokenizer.from_pretrained(mid)
 model = AutoModelForCausalLM.from_pretrained(mid, trust_remote_code=True)
+print(f'MyMind参数量: {sum(p.numel() for p in model.parameters() if p.requires_grad) / 1e6:.2f} M(illion)')
 
 messages = []
 messages.append({"role": "user", "content": "你擅长哪一个学科？"})
