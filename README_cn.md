@@ -87,6 +87,9 @@ export CSG_TOKEN=your_access_token
 # 模型下载
 csghub-cli download wanghh2000/myprivate1 
 
+# 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
+csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+
 # 数据集下载
 csghub-cli download wanghh2000/myds1 -t dataset
 
@@ -123,6 +126,20 @@ repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
 result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,)
+```
+
+### 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
+
+```python
+from pycsghub.snapshot_download import snapshot_download
+token = "your_access_token"
+
+endpoint = "https://hub.opencsg.com"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/Users/hhwang/temp/'
+allow_patterns = ["*.json"]
+ignore_patterns = ["*_config.json"]
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
 ```
 
 ### 数据集下载

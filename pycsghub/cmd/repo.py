@@ -12,7 +12,9 @@ def download(
         revision: Optional[str] = DEFAULT_REVISION,
         cache_dir: Union[str, Path, None] = None,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None
+        token: Optional[str] = None,
+        allow_patterns: Optional[Union[List[str], str]] = None,
+        ignore_patterns: Optional[Union[List[str], str]] = None,
     ):
     snapshot_download(
         repo_id=repo_id,
@@ -21,6 +23,8 @@ def download(
         cache_dir=cache_dir, 
         endpoint=endpoint, 
         token=token,
+        allow_patterns=allow_patterns,
+        ignore_patterns=ignore_patterns,
     )
 
 def upload_files(
