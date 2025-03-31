@@ -88,6 +88,9 @@ export CSG_TOKEN=your_access_token
 # download model
 csghub-cli download wanghh2000/myprivate1
 
+# download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
+csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+
 # download dataset
 csghub-cli download wanghh2000/myds1 -t dataset
 
@@ -125,6 +128,20 @@ endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
 result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token)
+```
+
+### Download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
+
+```python
+from pycsghub.snapshot_download import snapshot_download
+token = "your_access_token"
+
+endpoint = "https://hub.opencsg.com"
+repo_id = 'OpenCSG/csg-wukong-1B'
+cache_dir = '/Users/hhwang/temp/'
+allow_patterns = ["*.json"]
+ignore_patterns = ["*_config.json"]
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
 ```
 
 ### Download dataset 

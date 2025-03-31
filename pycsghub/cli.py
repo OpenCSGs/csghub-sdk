@@ -24,6 +24,8 @@ OPTIONS = {
     "endpoint": typer.Option("-e", "--endpoint", help="The address of the request to be sent."),
     "username": typer.Option("-u", "--username", help="Logon account of OpenCSG Hub."),
     "token": typer.Option("-k", "--token", help="A User Access Token generated from https://opencsg.com/settings/access-token"),
+    "allow_patterns": typer.Option("--allow-patterns", help="Allow patterns for files to be downloaded."),
+    "ignore_patterns": typer.Option("--ignore-patterns", help="Ignore patterns for files to be downloaded."),
     "version": typer.Option(None, "-V", "--version", callback=version_callback, is_eager=True, help="Show the version and exit."),
 }
 
@@ -35,6 +37,8 @@ def download(
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         cache_dir: Annotated[Optional[str], OPTIONS["cache_dir"]] = None,
+        allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
+        ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
     ):
     repo.download(
         repo_id=repo_id,
@@ -42,7 +46,9 @@ def download(
         revision=revision, 
         cache_dir=cache_dir,
         endpoint=endpoint,
-        token=token
+        token=token,
+        allow_patterns=allow_patterns,
+        ignore_patterns=ignore_patterns,
     )
 
 @app.command(name="upload", help="Upload repository files to opencsg.com.")
