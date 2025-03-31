@@ -40,7 +40,6 @@ def download(
         allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
         ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
     ):
-    print('allow_patterns', allow_patterns)
     repo.download(
         repo_id=repo_id,
         repo_type=repo_type, 
