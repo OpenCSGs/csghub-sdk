@@ -171,7 +171,7 @@ def dataset_info(
     endpoint: Optional[str] = None,
 ) -> DatasetInfo:
     """
-    Get info on one specific dataset on huggingface.co.
+    Get info on one specific dataset on opencsg.com.
 
     Dataset can be private if you pass an acceptable token.
 
@@ -189,8 +189,7 @@ def dataset_info(
             (size, LFS metadata, etc). Defaults to `False`.
         token (Union[bool, str, None], optional):
             A valid user access token (string). Defaults to the locally saved
-            token, which is the recommended method for authentication (see
-            https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
+            token, which is the recommended method for authentication.
             To disable authentication, pass `False`.
 
     Returns:
@@ -218,7 +217,6 @@ def dataset_info(
     data = r.json()
     return DatasetInfo(**data)
 
-
 def space_info(
     repo_id: str,
     *,
@@ -229,7 +227,7 @@ def space_info(
     endpoint: Optional[str] = None,
 ) -> SpaceInfo:
     """
-    Get info on one specific Space on huggingface.co.
+    Get info on one specific space on opencsg.com.
 
     Space can be private if you pass an acceptable token.
 
@@ -247,8 +245,7 @@ def space_info(
             (size, LFS metadata, etc). Defaults to `False`.
         token (Union[bool, str, None], optional):
             A valid user access token (string). Defaults to the locally saved
-            token, which is the recommended method for authentication (see
-            https://huggingface.co/docs/huggingface_hub/quick-start#authentication).
+            token, which is the recommended method for authentication.
             To disable authentication, pass `False`.
 
     Returns:
@@ -276,7 +273,6 @@ def space_info(
     data = r.json()
     return SpaceInfo(**data)
 
-
 def model_info(
     repo_id: str,
     *,
@@ -289,8 +285,7 @@ def model_info(
 ) -> ModelInfo:
     """
     Note: It is a huggingface method moved here to adjust csghub server response.
-
-    Get info on one specific model on huggingface.co
+    Get info on one specific model on opencsg.com
 
     Model can be private if you pass an acceptable token or are logged in.
 
@@ -340,7 +335,6 @@ def model_info(
     data = r.json()
     return ModelInfo(**data)
 
-
 def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None) -> str:
     if repo_type == REPO_TYPE_MODEL or repo_type == REPO_TYPE_DATASET or repo_type == REPO_TYPE_SPACE:
         path = (
@@ -374,6 +368,8 @@ def get_file_download_url(
     download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
         download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
+    elif repo_type == REPO_TYPE_SPACE:
+        download_url_template = '{endpoint}/hf/spaces/{model_id}/resolve/{revision}/{file_path}'
     return download_url_template.format(
         endpoint=endpoint,
         model_id=model_id,
