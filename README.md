@@ -94,6 +94,9 @@ csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-pat
 # download dataset
 csghub-cli download wanghh2000/myds1 -t dataset
 
+# download space
+csghub-cli download wanghh2000/space1 -t space
+
 # upload a single file to folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
 
