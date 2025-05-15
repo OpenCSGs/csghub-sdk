@@ -25,7 +25,7 @@ setup(
         "cryptography>=43.0.1",
         "Cython>=3.0.10",
         "dl>=0.1.0",
-        "docutils>=0.21.2",
+        "docutils>=0.16",
         "HTMLParser>=0.0.2",
         "huggingface_hub>=0.22.2",
         "ipython>=8.12.3",
