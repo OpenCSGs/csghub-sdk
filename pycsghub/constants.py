@@ -89,3 +89,15 @@ S3_INTERNAL = os.environ.get("S3_INTERNAL", '')
 
 GIT_HIDDEN_DIR = ".git"
 GIT_ATTRIBUTES_FILE = ".gitattributes"
+
+
+REPO_TYPES_URL_PREFIXES = {
+    REPO_TYPE_DATASET: "datasets/",
+    REPO_TYPE_SPACE: "spaces/",
+}
+
+_HF_DEFAULT_ENDPOINT = "https://huggingface.co"
+ENDPOINT = os.getenv("HF_ENDPOINT") or (_HF_DEFAULT_ENDPOINT)
+HUGGINGFACE_CO_URL_TEMPLATE = ENDPOINT + "/{repo_id}/resolve/{revision}/{filename}"
+
+FILELOCK_LOG_EVERY_SECONDS = 10

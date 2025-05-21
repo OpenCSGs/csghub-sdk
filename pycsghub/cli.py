@@ -5,6 +5,8 @@ from pycsghub.cmd import repo
 from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
+from .upload_large_folder._upload_large_folder import upload_large_folder_internal
+from .upload_large_folder.api import HfApi
 
 app = typer.Typer(add_completion=False)
 
@@ -24,9 +26,11 @@ OPTIONS = {
     "endpoint": typer.Option("-e", "--endpoint", help="The address of the request to be sent."),
     "username": typer.Option("-u", "--username", help="Logon account of OpenCSG Hub."),
     "token": typer.Option("-k", "--token", help="A User Access Token generated from https://opencsg.com/settings/access-token"),
-    "allow_patterns": typer.Option("--allow-patterns", help="Allow patterns for files to be downloaded."),
-    "ignore_patterns": typer.Option("--ignore-patterns", help="Ignore patterns for files to be downloaded."),
+    "allow_patterns": typer.Option("--allow-patterns", help="Allow patterns for files to be uploaded/downloaded."),
+    "ignore_patterns": typer.Option("--ignore-patterns", help="Ignore patterns for files to be uploaded/downloaded."),
     "version": typer.Option(None, "-V", "--version", callback=version_callback, is_eager=True, help="Show the version and exit."),
+    "num_workers": typer.Option("-nw", "--num-workers", help="Number of workers to start."),
+    "print_report_every": typer.Option("-pres", "--print-report-every", help="Frequency at which the report is printed. Defaults to 60 seconds."),
 }
 
 @app.command(name="download", help="Download model/dataset from opencsg.com")
@@ -51,7 +55,7 @@ def download(
         ignore_patterns=ignore_patterns,
     )
 
-@app.command(name="upload", help="Upload repository files to opencsg.com.")
+@app.command(name="upload", help="Upload repository files to opencsg.com")
 def upload(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         local_path: Annotated[str, OPTIONS["localPath"]],
@@ -85,7 +89,36 @@ def upload(
             token=token,
             user_name=user_name
         )
- 
+
+@app.command(name="upload-large-folder", help="Upload large folder to repository on opencsg.com")
+def upload_large_folder(
+        repo_id: Annotated[str, OPTIONS["repoID"]],
+        local_path: Annotated[str, OPTIONS["localPath"]],
+        # path_in_repo: Annotated[str, OPTIONS["pathInRepo"]] = "",
+        repo_type: Annotated[RepoType, OPTIONS["repoType"]] = RepoType.MODEL,
+        revision: Annotated[Optional[str], OPTIONS["revision"]] = DEFAULT_REVISION,
+        endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+        token: Annotated[Optional[str], OPTIONS["token"]] = None,
+        allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
+        ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
+        num_workers: Annotated[Optional[int], OPTIONS["num_workers"]] = None,
+        print_report_every: Annotated[Optional[int], OPTIONS["print_report_every"]] = 60,
+    ):
+    
+    return upload_large_folder_internal(
+            HfApi(),
+            repo_id=repo_id,
+            folder_path=local_path, # Path to the folder to upload on the local file system
+            repo_type=repo_type,
+            revision=revision,
+            # private=private,
+            allow_patterns=allow_patterns,
+            ignore_patterns=ignore_patterns,
+            num_workers=num_workers,
+            print_report=True,
+            print_report_every=print_report_every,
+        )
+
 @app.callback(invoke_without_command=True)
 def main(version: bool = OPTIONS["version"]):
     pass
