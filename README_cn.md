@@ -110,6 +110,24 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision 
 
 # 上传本地目录'/Users/hhwang/temp/jsonl'到仓库'wanghh2000/m01'的默认分支'test/files'目录下并使用指定token
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
+
+# 列出用户wanghh2000的推理实例
+csghub-cli inference list -u wanghh2000
+
+# 启动ID为1358并使用模型wanghh2000/Qwen2.5-0.5B-Instruct的推理实例
+csghub-cli inference start wanghh2000/Qwen2.5-0.5B-Instruct 1358
+
+# 停止ID为1358并使用模型wanghh2000/Qwen2.5-0.5B-Instruct的推理实例
+csghub-cli inference stop wanghh2000/Qwen2.5-0.5B-Instruct 1358
+
+# 列出用户wanghh2000的微调实例
+csghub-cli finetune list -u wanghh2000
+
+# 启动ID为326并使用模型OpenCSG/csg-wukong-1B的微调实例
+csghub-cli finetune start OpenCSG/csg-wukong-1B 326
+
+# 停止ID为326并使用模型OpenCSG/csg-wukong-1B的微调实例
+csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 ```
 
 注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
