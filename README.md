@@ -111,6 +111,24 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files --revision 
 
 # upload local folder '/Users/hhwang/temp/jsonl' to path 'test/files' of repo 'wanghh2000/m01' with token 'xxxxxx'
 csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
+
+# list inference instances for user 'wanghh2000'
+csghub-cli inference list -u wanghh2000
+
+# start inference instance for model repo 'wanghh2000/Qwen2.5-0.5B-Instruct' with ID '1358'
+csghub-cli inference start wanghh2000/Qwen2.5-0.5B-Instruct 1358
+
+# stop inference instance for model repo 'wanghh2000/Qwen2.5-0.5B-Instruct' with ID '1358'
+csghub-cli inference stop wanghh2000/Qwen2.5-0.5B-Instruct 1358
+
+# list fine-tuning instances for user 'wanghh2000'
+csghub-cli finetune list -u wanghh2000
+
+# start fine-tuning instance for model repo 'OpenCSG/csg-wukong-1B' with ID '326'
+csghub-cli finetune start OpenCSG/csg-wukong-1B 326
+
+# stop fine-tuning instance for model repo 'OpenCSG/csg-wukong-1B' with ID '326'
+csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 ```
 
 Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 
