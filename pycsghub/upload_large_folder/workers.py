@@ -38,7 +38,7 @@ def _worker_job(
     If a task fails for any reason, the item(s) are put back in the queue for another worker to pick up.
     """
     while True:
-        time.sleep(1)
+        # time.sleep(1)
         next_job: Optional[Tuple[WorkerJob, List[JOB_ITEM_T]]] = None
 
         # Determine next task
@@ -133,7 +133,6 @@ def _execute_job_get_upload_model(
         if metadata.upload_mode == REPO_LFS_TYPE:
             status.queue_preupload_lfs.put(item)
         elif metadata.upload_mode == REPO_REGULAR_TYPE:
-            status.compute_file_base64(item=item)
             status.queue_commit.put(item)
         else:
             status.queue_get_upload_mode.put(item)
@@ -167,12 +166,15 @@ def _execute_job_pre_upload_lfs(
             status.queue_commit.put(item)
         else:
             action = f"{action} fetch batch info"
-            _preupload_lfs(
+            is_uploaded = _preupload_lfs(
                 item=item, status=status,
                 api=api, endpoint=endpoint, token=token,
                 repo_id=repo_id, repo_type=repo_type, revision=revision)
-            # keep in queue preupload
-            status.queue_preupload_lfs.put(item)
+            if is_uploaded:
+                status.queue_commit.put(item)
+            else:
+                # keep in queue preupload
+                status.queue_preupload_lfs.put(item)
     except KeyboardInterrupt:
         raise
     except Exception as e:
@@ -215,6 +217,9 @@ def _execute_job_commit(
     token: str,
 ):
     try:
+        for item in items:
+            status.compute_file_base64(item=item)
+        
         _commit(items, api=api, endpoint=endpoint, token=token,
             repo_id=repo_id, repo_type=repo_type, revision=revision)
         logger.info(f"committed {len(items)} items")
@@ -314,7 +319,6 @@ def _preupload_lfs_done(
     uploaded_ids_map = status.convert_uploaded_ids_to_map(uploaded_ids)
     slices_upload_complete(item=item, uploaded_ids_map=uploaded_ids_map)
     slices_upload_verify(item=item)
-    status.compute_file_base64(item=item)
     metadata.is_uploaded = True
     metadata.save(paths)
     logger.info(f"lfs {paths.file_path} all slices upload success")
@@ -328,7 +332,7 @@ def _preupload_lfs(
     revision: str,
     endpoint: str,
     token: str,
-):
+) -> bool:
     """Preupload LFS file and update metadata."""
     paths, metadata = item
     if metadata.lfs_upload_part_count is not None:
@@ -362,7 +366,9 @@ def _preupload_lfs(
     # metadata.is_uploaded = True
     object = objects[0]
     if not isinstance(object, dict) or "actions" not in object:
-        raise ValueError(f"no actions info found for batch response of file {paths.file_path} from server: {object}")
+        logger.warning(f"no actions info found for batch response of file {paths.file_path} from server: {object}")
+        metadata.is_uploaded = True
+        return True
     
     object_actions = object["actions"]
     object_upload = object_actions["upload"]
@@ -400,6 +406,7 @@ def _preupload_lfs(
         item_slice = [paths, slice_metadata]
         status.queue_uploading_lfs.put(item_slice)
     logger.info(f"get lfs {paths.file_path} slices batch info success")
+    return False
 
 def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     resp_header = slice_upload(item=item)
@@ -409,7 +416,7 @@ def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     if etag is None or etag == "":
         raise ValueError(f"invalid response etag: {etag}")
     return etag.removeprefix('"').removesuffix('"')
-    
+
 def _commit(
     items: List[JOB_ITEM_T],
     api: CsgHubApi, 

@@ -72,7 +72,6 @@ class LargeUploadStatus:
             elif metadata.upload_mode == REPO_LFS_TYPE and not metadata.is_uploaded:
                 self.queue_preupload_lfs.put(item)
             elif not metadata.is_committed:
-                self.compute_file_base64(item=item)
                 self.queue_commit.put(item)
             else:
                 num_uploaded_and_commited += 1
