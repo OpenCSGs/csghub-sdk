@@ -78,4 +78,3 @@ class CsgHubApi:
             logger.error(f"create files commit {commit_url} response: {response.text}")
         response.raise_for_status()
         return response.json()
-        
