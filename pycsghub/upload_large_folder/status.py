@@ -63,15 +63,20 @@ class LargeUploadStatus:
             paths, metadata = item
             self._lfs_uploaded_ids[paths.file_path] = metadata.lfs_uploaded_ids
             
-            if metadata.is_uploaded and metadata.is_committed:
+            if (metadata.upload_mode is not None and metadata.upload_mode == REPO_LFS_TYPE
+                and metadata.is_uploaded and metadata.is_committed):
                 num_uploaded_and_commited += 1
-            elif metadata.sha256 is None or metadata.sha256 == "":
+            elif (metadata.upload_mode is not None and metadata.upload_mode == REPO_REGULAR_TYPE
+                  and metadata.is_committed):
+                num_uploaded_and_commited += 1
+            elif (metadata.sha256 is None or metadata.sha256 == ""):
                 self.queue_sha256.put(item)
-            elif (metadata.upload_mode is None or metadata.upload_mode == "" or metadata.remote_oid is None or metadata.remote_oid == ""):
+            elif (metadata.upload_mode is None or metadata.upload_mode == "" 
+                  or metadata.remote_oid is None or metadata.remote_oid == ""):
                 self.queue_get_upload_mode.put(item)
-            elif metadata.upload_mode == REPO_LFS_TYPE and not metadata.is_uploaded:
+            elif (metadata.upload_mode == REPO_LFS_TYPE and not metadata.is_uploaded):
                 self.queue_preupload_lfs.put(item)
-            elif not metadata.is_committed:
+            elif (not metadata.is_committed):
                 self.queue_commit.put(item)
             else:
                 num_uploaded_and_commited += 1

@@ -293,7 +293,6 @@ def _get_upload_mode(
     remote_upload_modes: Dict[str, str] = {}
     remote_should_ignore: Dict[str, bool] = {}
     remote_file_oids: Dict[str, Optional[str]] = {}
-    remote_isdirs: Dict[str, bool] = {}
     
     for file in files_modes:
         key = file["path"]
@@ -335,9 +334,6 @@ def _preupload_lfs(
 ) -> bool:
     """Preupload LFS file and update metadata."""
     paths, metadata = item
-    if metadata.lfs_upload_part_count is not None:
-        # do not need fetch lfs slice info
-        return
     
     payload: Dict = {
         "operation": "upload",

@@ -97,7 +97,7 @@ def read_upload_metadata(local_dir: Path, filename: str) -> LocalUploadFileMetad
                 upload_mode = None if _upload_mode == "" else _upload_mode
                 
                 is_uploaded = props.get(key_is_uploaded).lower() == "true"
-                is_committed = props.get(key_is_committed).lower() == "true"            
+                is_committed = props.get(key_is_committed).lower() == "true"
 
                 _lfs_upload_id = props.get(key_lfs_upload_id)
                 lfs_upload_id = None if _lfs_upload_id == "" else _lfs_upload_id

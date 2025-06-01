@@ -39,7 +39,7 @@ def upload_large_folder_internal(
         raise ValueError(f"Invalid repo type, must be one of {REPO_TYPES}")
     
     api_endpoint = get_endpoint(endpoint=endpoint)
-    
+
     if ignore_patterns is None:
         ignore_patterns = []
     elif isinstance(ignore_patterns, str):
