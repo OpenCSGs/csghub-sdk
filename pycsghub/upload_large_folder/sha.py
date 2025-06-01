@@ -27,7 +27,7 @@ def sha_fileobj(fileobj: BinaryIO, item: JOB_ITEM_T, chunk_size: Optional[int] =
     header = f'blob {meta.size}\0'.encode('utf-8')
     sha_1.update(header)
     
-    desc = f"Computing sha256 for {paths.file_path}"
+    desc = f"computing sha256 for {paths.file_path}"
     with tqdm(initial=0, total=meta.size, desc=desc, unit="B", unit_scale=True, dynamic_ncols=True) as pbar:
         while True:
             chunk = fileobj.read(chunk_size)

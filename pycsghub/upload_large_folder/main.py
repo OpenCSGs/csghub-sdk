@@ -33,10 +33,10 @@ def upload_large_folder_internal(
 ):
     folder_path = Path(local_path).expanduser().resolve()
     if not folder_path.is_dir():
-        raise ValueError(f"Provided path: '{local_path}' is not a directory")
+        raise ValueError(f"provided path '{local_path}' is not a directory")
     
     if repo_type not in REPO_TYPES:
-        raise ValueError(f"Invalid repo type, must be one of {REPO_TYPES}")
+        raise ValueError(f"invalid repo type, must be one of {REPO_TYPES}")
     
     api_endpoint = get_endpoint(endpoint=endpoint)
 
@@ -95,7 +95,7 @@ def upload_large_folder_internal(
                 print(status.current_report())
             last_report_ts = time.time()
         if status.is_done():
-            logging.info("Is done: exiting main loop")
+            logging.info("all files are done and exiting main loop")
             break
 
     for thread in threads:
@@ -103,4 +103,4 @@ def upload_large_folder_internal(
         
     if print_report:
         print(status.current_report())
-    logging.info("Upload is complete!")
+    logging.info("large folder upload process is complete!")

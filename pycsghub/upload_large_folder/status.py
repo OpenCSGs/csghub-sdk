@@ -80,7 +80,7 @@ class LargeUploadStatus:
                 self.queue_commit.put(item)
             else:
                 num_uploaded_and_commited += 1
-                logger.debug(f"Skipping file {paths.path_in_repo} (already uploaded and committed)")
+                logger.debug(f"skipping file {paths.path_in_repo} because they are already uploaded and committed")
                 
         log_msg = "init upload status"
         if num_uploaded_and_commited > 0:

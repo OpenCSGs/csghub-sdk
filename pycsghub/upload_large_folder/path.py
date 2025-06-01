@@ -29,7 +29,7 @@ def filter_repo_objects(
                 return item
             if isinstance(item, Path):
                 return str(item)
-            raise ValueError(f"Please provide `key` argument in `filter_repo_objects`: `{item}` is not a string.")
+            raise ValueError(f"please provide `key` argument in `filter_repo_objects`: `{item}` is not a string.")
 
         key = _identity
 

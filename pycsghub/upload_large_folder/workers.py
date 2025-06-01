@@ -78,7 +78,7 @@ def _execute_job_compute_sha256(
     paths, metadata = item
     try:
         _compute_sha256(item)
-        logger.debug(f"computing sha256 for {item[0].file_path}")
+        logger.debug(f"computing sha256 for {item[0].file_path} successfully")
         status.queue_get_upload_mode.put(item)
     except KeyboardInterrupt:
         raise
@@ -105,7 +105,7 @@ def _execute_job_get_upload_model(
         _get_upload_mode(
             items, api=api, endpoint=endpoint, token=token,
             repo_id=repo_id, repo_type=repo_type, revision=revision)
-        logger.info(f"get upload mode for {len(items)} items")
+        logger.info(f"get upload modes for {len(items)} items successfully")
     except KeyboardInterrupt:
         raise
     except Exception as e:
@@ -138,7 +138,7 @@ def _execute_job_get_upload_model(
             status.queue_get_upload_mode.put(item)
 
     if ignore_num > 0:
-        logger.info(f"ignored {ignore_num} files because of should_ignore = true from remote server")
+        logger.info(f"ignored {ignore_num} files because of should_ignore is true from remote server")
     
     if same_with_remote_num > 0:
         logger.info(f"skipped {same_with_remote_num} files because they are identical to the remote server")
@@ -285,10 +285,10 @@ def _get_upload_mode(
         
     files_modes = modes_resp["data"]["files"]
     if not isinstance(files_modes, list):
-        raise ValueError("upload modes response files is not list")
+        raise ValueError("files is not list in upload modes response")
     
     if not files_modes and len(files_modes) != len(items):
-        raise ValueError(f"requested {len(items)} files do not match {len(files_modes)} files in response")
+        raise ValueError(f"requested {len(items)} files do not match {len(files_modes)} files in fetch upload modes response")
 
     remote_upload_modes: Dict[str, str] = {}
     remote_should_ignore: Dict[str, bool] = {}
@@ -320,7 +320,7 @@ def _preupload_lfs_done(
     slices_upload_verify(item=item)
     metadata.is_uploaded = True
     metadata.save(paths)
-    logger.info(f"lfs {paths.file_path} all slices upload success")
+    logger.info(f"LFS file {paths.file_path} - all {metadata.lfs_upload_part_count} slices uploaded successfully")
 
 def _preupload_lfs(
     item: JOB_ITEM_T,
@@ -357,12 +357,12 @@ def _preupload_lfs(
     
     objects = batch_resp.get("objects", None)
     if not isinstance(objects, list):
-        raise ValueError(f"lfs {paths.file_path} malformed batch response from server: {batch_resp}")
+        raise ValueError(f"LFS {paths.file_path} malformed batch response objects is not list from server: {batch_resp}")
 
     # metadata.is_uploaded = True
     object = objects[0]
     if not isinstance(object, dict) or "actions" not in object:
-        logger.warning(f"no actions info found for batch response of file {paths.file_path} from server: {object}")
+        logger.warning(f"no batch actions info found for response of file {paths.file_path} from server: {object}")
         metadata.is_uploaded = True
         return True
     
@@ -401,7 +401,7 @@ def _preupload_lfs(
         slice_metadata.lfs_upload_chunk_size = int(chunk_size)
         item_slice = [paths, slice_metadata]
         status.queue_uploading_lfs.put(item_slice)
-    logger.info(f"get lfs {paths.file_path} slices batch info success")
+    logger.info(f"get LFS {paths.file_path} slices batch info successfully")
     return False
 
 def _perform_lfs_slice_upload(item: JOB_ITEM_T):
@@ -410,7 +410,7 @@ def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     # ('eTag', '"c681604308d0749e988746229fc16b25"')
     etag = resp_header.get("etag")
     if etag is None or etag == "":
-        raise ValueError(f"invalid response etag: {etag}")
+        raise ValueError(f"invalid slice upload response header: {resp_header}, etag: {etag}")
     return etag.removeprefix('"').removesuffix('"')
 
 def _commit(

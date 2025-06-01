@@ -54,7 +54,7 @@ class CsgHubApi:
         params = {"upload_id": upload_id}
         response = requests.post(batch_url, headers=req_headers, params=params, json=payload)
         if response.status_code != 200:
-            logger.error(f"fetch lfs {local_file} batch info from {batch_url} response: {response.text}")
+            logger.error(f"fetch LFS {local_file} batch info from {batch_url} response: {response.text}")
         response.raise_for_status()
         return response.json()
     
@@ -75,6 +75,6 @@ class CsgHubApi:
         commit_url = f"{http_endpoint}/api/v1/{repo_type}s/{repo_id}/commit/{revision}"
         response = requests.post(url=commit_url, headers=req_headers, json=payload)
         if response.status_code != 200:
-            logger.error(f"create files commit {commit_url} response: {response.text}")
+            logger.error(f"create files commit on {commit_url} response: {response.text}")
         response.raise_for_status()
         return response.json()

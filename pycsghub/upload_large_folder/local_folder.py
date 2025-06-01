@@ -118,11 +118,11 @@ def read_upload_metadata(local_dir: Path, filename: str) -> LocalUploadFileMetad
                 )
             except Exception as e:
                 # remove the metadata file if it is corrupted / not the right format
-                logger.warning(f"Invalid metadata file {paths.metadata_path}: {e}. Removing it from disk and continue.")
+                logger.warning(f"invalid metadata file {paths.metadata_path}: {e}. Removing it from disk and continue.")
                 try:
                     paths.metadata_path.unlink()
                 except Exception as e:
-                    logger.warning(f"Could not remove corrupted metadata file {paths.metadata_path}: {e}")
+                    logger.warning(f"could not remove corrupted metadata file {paths.metadata_path}: {e}")
 
             if (
                 metadata.timestamp is not None
@@ -136,7 +136,7 @@ def read_upload_metadata(local_dir: Path, filename: str) -> LocalUploadFileMetad
             try:
                 if metadata.timestamp is not None and paths.file_path.stat().st_mtime <= metadata.timestamp:
                     return metadata
-                logger.info(f"Ignored metadata for '{filename}' (outdated). Will re-compute hash.")
+                logger.info(f"ignored metadata for '{filename}' (outdated) and will re-compute hash.")
             except FileNotFoundError:
                 # file does not exist => metadata is outdated
                 pass
