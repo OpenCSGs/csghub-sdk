@@ -2,12 +2,11 @@ import os
 import logging
 import threading
 import time
-import sys
 from pathlib import Path
 from tqdm.auto import tqdm
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List
 from pycsghub.cmd.repo_types import RepoType
-from pycsghub.constants import REPO_TYPES
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET
 from pycsghub.utils import get_endpoint
 from .path import filter_repo_objects
 from .local_folder import get_local_upload_paths, read_upload_metadata
@@ -15,6 +14,7 @@ from .workers import _worker_job
 from .status import LargeUploadStatus
 from .consts import DEFAULT_IGNORE_PATTERNS
 from pycsghub.csghub_api import CsgHubApi
+from pycsghub.constants import DEFAULT_REVISION
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +35,8 @@ def upload_large_folder_internal(
     if not folder_path.is_dir():
         raise ValueError(f"provided path '{local_path}' is not a directory")
     
-    if repo_type not in REPO_TYPES:
-        raise ValueError(f"invalid repo type, must be one of {REPO_TYPES}")
+    if repo_type not in [REPO_TYPE_MODEL, REPO_TYPE_DATASET]:
+        raise ValueError(f"invalid repo type, must be one of {REPO_TYPE_MODEL} or {REPO_TYPE_DATASET}")
     
     api_endpoint = get_endpoint(endpoint=endpoint)
 
@@ -50,6 +50,10 @@ def upload_large_folder_internal(
         nb_cores = os.cpu_count() or 1
         num_workers = max(nb_cores - 2, 2)
     
+    api = CsgHubApi()
+    
+    create_repo(api=api, repo_id=repo_id, repo_type=repo_type, revision=revision, endpoint=api_endpoint, token=token)
+
     filtered_paths_list = filter_repo_objects(
         (path.relative_to(folder_path).as_posix() for path in folder_path.glob("**/*") if path.is_file()),
         allow_patterns=allow_patterns,
@@ -65,7 +69,6 @@ def upload_large_folder_internal(
 
     logger.info(f"starting {num_workers} worker threads for upload tasks")
     status = LargeUploadStatus(items)
-    api = CsgHubApi()
     threads = [
         threading.Thread(
             target=_worker_job,
@@ -104,3 +107,28 @@ def upload_large_folder_internal(
     if print_report:
         print(status.current_report())
     logging.info("large folder upload process is complete!")
+
+def create_repo(
+    api: CsgHubApi,
+    repo_id: str,
+    repo_type: str,
+    revision: str,
+    endpoint: str,
+    token: str,
+):
+    repoExist, branchExist = api.repo_branch_exists(
+        repo_id=repo_id, repo_type=repo_type, revision=revision,
+        endpoint=endpoint, token=token)
+
+    if not repoExist:
+        api.create_new_repo(
+            repo_id=repo_id, repo_type=repo_type, revision=revision,
+            endpoint=endpoint, token=token)
+        logger.info(f"repo {repo_type} {repo_id} created")
+        if revision == DEFAULT_REVISION:
+            branchExist = True
+
+    if not branchExist:
+        api.create_new_branch(
+            repo_id=repo_id, repo_type=repo_type, revision=revision,
+            endpoint=endpoint, token=token)

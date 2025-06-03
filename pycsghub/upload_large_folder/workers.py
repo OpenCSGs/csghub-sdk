@@ -124,7 +124,8 @@ def _execute_job_get_upload_model(
         if metadata.should_ignore:
             ignore_num += 1
             continue
-        if metadata.upload_mode == REPO_REGULAR_TYPE and metadata.sha1 == metadata.remote_oid:
+        if ((metadata.upload_mode == REPO_REGULAR_TYPE and metadata.sha1 == metadata.remote_oid) or
+            (metadata.upload_mode == REPO_LFS_TYPE and metadata.sha256 == metadata.remote_oid)):
             metadata.is_uploaded = True
             metadata.is_committed = True
             metadata.save(paths)
@@ -255,7 +256,7 @@ def _compute_sha256(item: JOB_ITEM_T) -> None:
     metadata.save(paths)
 
 def _get_upload_mode(
-    items: List[JOB_ITEM_T], 
+    items: List[JOB_ITEM_T],
     api: CsgHubApi, 
     repo_id: str, 
     repo_type: str, 
@@ -356,23 +357,36 @@ def _preupload_lfs(
         upload_id=metadata.lfs_upload_id)
     
     objects = batch_resp.get("objects", None)
-    if not isinstance(objects, list):
+    if not isinstance(objects, list) or len(objects) < 1:
         raise ValueError(f"LFS {paths.file_path} malformed batch response objects is not list from server: {batch_resp}")
-
-    # metadata.is_uploaded = True
     object = objects[0]
-    if not isinstance(object, dict) or "actions" not in object:
-        logger.warning(f"no batch actions info found for response of file {paths.file_path} from server: {object}")
-        metadata.is_uploaded = True
-        return True
     
-    object_actions = object["actions"]
-    object_upload = object_actions["upload"]
-    object_verify = object_actions["verify"]
-    object_upload_header = object_upload["header"]
+    search_key = "actions"
+    if not isinstance(object, dict) or search_key not in object:
+        raise ValueError(f"no slices batch {search_key} info found for response of file {paths.file_path} from server: {object}")
+    object_actions = object[search_key]
+    
+    search_key = "upload"
+    if not isinstance(object_actions, dict) or search_key not in object_actions:
+        raise ValueError(f"no slices batch {search_key} info found for response of file {paths.file_path} from server: {object}")
+    object_upload = object_actions[search_key]
+    
+    search_key = "verify"
+    if not isinstance(object_actions, dict) or search_key not in object_actions:
+        raise ValueError(f"no slices batch {search_key} info found for response of file {paths.file_path} from server: {object}")
+    object_verify = object_actions[search_key]
+    
+    search_key = "header"
+    if not isinstance(object_upload, dict) or search_key not in object_upload:
+        raise ValueError(f"no slices batch {search_key} found for response of file {paths.file_path} from server: {object}")
+    object_upload_header = object_upload[search_key]
+    
+    href_key = "href"
+    if not isinstance(object_upload, dict) or search_key not in object_upload:
+        raise ValueError(f"no slices batch merge address found for response of file {paths.file_path} from server: {object}") 
     
     if not isinstance(object_upload_header, Dict):
-        raise ValueError(f"incorrect lfs {paths.file_path} slices upload address")
+        raise ValueError(f"incorrect lfs {paths.file_path} slices upload address from server: {object}")
     
     chunk_size = object_upload_header.pop("chunk_size")
     if chunk_size is None:
@@ -380,7 +394,7 @@ def _preupload_lfs(
     
     total_count = len(object_upload_header)
     metadata.lfs_upload_part_count = total_count
-    metadata.lfs_upload_complete_url = object_upload["href"]
+    metadata.lfs_upload_complete_url = object_upload[href_key]
     metadata.lfs_upload_verify = object_verify
     
     sorted_keys = sorted(object_upload_header.keys(), key=lambda x: int(x))
