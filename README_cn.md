@@ -46,7 +46,7 @@ pip install csghub-sdk
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSGHUB_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
+os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -296,7 +296,7 @@ CSGHub SDK v0.2版本为了兼容huggingface也提供用户最常用的功能，
 ```python
 # 注意首先要进行环境变量设置，因为下载需要token，下述api的调用，会直接在环境变量中查找相应的token。
 # import os 
-# os.environ['CSGHUB_TOKEN'] = 'token_to_set'
+# os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
