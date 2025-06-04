@@ -38,7 +38,6 @@ def _worker_job(
     If a task fails for any reason, the item(s) are put back in the queue for another worker to pick up.
     """
     while True:
-        # time.sleep(1)
         next_job: Optional[Tuple[WorkerJob, List[JOB_ITEM_T]]] = None
 
         # Determine next task

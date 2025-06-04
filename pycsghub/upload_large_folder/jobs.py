@@ -7,10 +7,6 @@ from .consts import WAITING_TIME_IF_NO_TASKS, MAX_NB_LFS_FILES_PER_COMMIT, MAX_N
 
 logger = logging.getLogger(__name__)
 
-def _determine_next_job_ex(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, List[JOB_ITEM_T]]]:
-    with status.lock:
-        return (WorkerJob.WAIT, [])
-
 def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, List[JOB_ITEM_T]]]:
     with status.lock:
         # Commit if more than 5 minutes since last commit attempt (and at least 1 file)
