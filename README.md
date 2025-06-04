@@ -46,7 +46,7 @@ After installation, you can begin using the SDK to connect to your CSGHub server
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = 'your_access_token'
+os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -62,7 +62,7 @@ print('result: ',tokenizer.batch_decode(outputs))
 By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token, you can seamlessly and quickly switch the model download URL.
 
 ```python
-os.environ['CSG_TOKEN'] = 'token-of-your'
+os.environ['CSGHUB_TOKEN'] = 'token-of-your'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
 
@@ -83,7 +83,7 @@ pip install '.[train]'
 ## Use cases of command line
 
 ```shell
-export CSG_TOKEN=your_access_token
+export CSGHUB_TOKEN=your_access_token
 
 # download model
 csghub-cli download wanghh2000/myprivate1
@@ -135,6 +135,8 @@ csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
 ```
 
 Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 
+
+When using the `upload-large-folder` command to upload a folder, the upload progress will be recorded in the `.cache` folder within the upload directory to support resumable uploads. Do not delete the `.cache` folder before the upload is complete.
 
 Download location is `~/.cache/csg/` by default.
 
@@ -293,7 +295,7 @@ To ensure compatibility with Hugging Face, version 0.2 of the CSGHub SDK now inc
 
 ```python
 # import os 
-# os.environ['CSG_TOKEN'] = 'token_to_set'
+# os.environ['CSGHUB_TOKEN'] = 'token_to_set'
 from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```

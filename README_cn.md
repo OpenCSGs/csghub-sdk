@@ -46,7 +46,7 @@ pip install csghub-sdk
 import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSG_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
+os.environ['CSGHUB_TOKEN'] = '3b77c98077b415ca381ded189b86d5df226e3776'
 
 mid = 'OpenCSG/csg-wukong-1B'
 model = AutoModelForCausalLM.from_pretrained(mid)
@@ -62,7 +62,7 @@ print('result: ',tokenizer.batch_decode(outputs))
 通过如下方式仅需将导入包名`transformers`修改为`pycsghub.repo_reader`并设置下载token，即可实现无缝快速切换模型下载地址
 
 ```python
-os.environ['CSG_TOKEN'] = 'token-of-your'
+os.environ['CSGHUB_TOKEN'] = 'token-of-your'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
 
@@ -82,7 +82,7 @@ pip install '.[train]'
 ## 命令行使用示例
 
 ```shell
-export CSG_TOKEN=your_access_token
+export CSGHUB_TOKEN=your_access_token
 
 # 模型下载
 csghub-cli download wanghh2000/myprivate1 
@@ -134,6 +134,8 @@ csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
 ```
 
 注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
+
+当使用`upload-large-folder`命令上传文件夹时，上传进度会在记录在上传目录`.cache`文件夹中用于支持断点续传，在上传完成前勿删除`.cache`文件夹。
 
 文件默认下载路径为`~/.cache/csg/`
 
@@ -294,7 +296,7 @@ CSGHub SDK v0.2版本为了兼容huggingface也提供用户最常用的功能，
 ```python
 # 注意首先要进行环境变量设置，因为下载需要token，下述api的调用，会直接在环境变量中查找相应的token。
 # import os 
-# os.environ['CSG_TOKEN'] = 'token_to_set'
+# os.environ['CSGHUB_TOKEN'] = 'token_to_set'
 from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```

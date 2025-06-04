@@ -23,7 +23,7 @@ def version_callback(value: bool):
 
 OPTIONS = {
     "repoID": typer.Argument(help="The ID of the repo. (e.g. `username/repo-name`)."),
-    "localPath": typer.Argument(help="Local path to the file or folder to upload. Defaults to the relative path of the file of repo of OpenCSG Hub."),
+    "localPath": typer.Argument(help="Local path to the file to upload. Defaults to the relative path of the file of repo of OpenCSG Hub."),
     "pathInRepo": typer.Argument(help="Path of the folder in the repo. Defaults to the relative path of the file or folder."),
     "repoType": typer.Option("-t", "--repo-type", help="Specify the repository type."),
     "revision": typer.Option("-r", "--revision", help="An optional Git revision id which can be a branch name"),
@@ -67,7 +67,7 @@ def download(
         ignore_patterns=ignore_patterns,
     )
 
-@app.command(name="upload", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
+@app.command(name="upload-files", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
 def upload(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         local_path: Annotated[str, OPTIONS["localPath"]],
