@@ -5,7 +5,7 @@ from pycsghub.constants import CSGHUB_TOKEN_PATH
 
 
 def _get_token_from_environment() -> Optional[str]:
-    return _clean_token(os.environ.get("CSGHUB_TOKEN")) # apk key 直接写入环境
+    return _clean_token(os.environ.get("CSGHUB_TOKEN")) # apk key
 
 
 def _get_token_from_file() -> Optional[str]:
