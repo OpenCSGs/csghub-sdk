@@ -62,7 +62,7 @@ print('result: ',tokenizer.batch_decode(outputs))
 By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token, you can seamlessly and quickly switch the model download URL.
 
 ```python
-os.environ['CSGHUB_TOKEN'] = 'token-of-your'
+os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 ```
 
@@ -295,7 +295,7 @@ To ensure compatibility with Hugging Face, version 0.2 of the CSGHub SDK now inc
 
 ```python
 # import os 
-# os.environ['CSGHUB_TOKEN'] = 'token_to_set'
+# os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 from pycsghub.repo_reader import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
