@@ -312,8 +312,10 @@ def _preupload_lfs_done(
     paths, metadata = item
     uploaded_ids = status.get_lfs_uploaded_slice_ids(paths.file_path)
     uploaded_ids_map = status.convert_uploaded_ids_to_map(uploaded_ids)
-    slices_upload_complete(item=item, uploaded_ids_map=uploaded_ids_map)
-    slices_upload_verify(item=item)
+    complete_resp = slices_upload_complete(item=item, uploaded_ids_map=uploaded_ids_map)
+    logger.debug(f"LFS file {paths.file_path} merge {metadata.lfs_upload_part_count} uploaded slices complete response: {complete_resp}")
+    verify_resp = slices_upload_verify(item=item)
+    logger.debug(f"LFS file {paths.file_path} uploaded verify response: {verify_resp}")
     metadata.is_uploaded = True
     metadata.save(paths)
     logger.debug(f"LFS file {paths.file_path} - all {metadata.lfs_upload_part_count} slices uploaded successfully")
