@@ -58,9 +58,9 @@ def slices_upload_complete(item: JOB_ITEM_T, uploaded_ids_map: Dict):
         ]
     }
     response = requests.post(metadata.lfs_upload_complete_url, json=payload)
-    if response.status_code != 200 and response.status_code != 404:
+    if response.status_code != 200 and response.status_code != 400:
         logger.error(f"LFS {paths.file_path} merge all uploaded slices complete on {metadata.lfs_upload_complete_url} response: {response.text}")
-    if response.status_code != 404:
+    if response.status_code != 400:
         response.raise_for_status()
     return response.json()
 
