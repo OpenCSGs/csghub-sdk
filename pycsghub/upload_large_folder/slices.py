@@ -43,7 +43,7 @@ def slice_upload(item: JOB_ITEM_T):
             data=upload_data,
         )
         if response.status_code != 200:
-            logger.error(f"LFS slice {paths.file_path}({metadata.lfs_upload_part_index}/{metadata.lfs_upload_part_count}) upload response: {response.text}")
+            logger.error(f"LFS slice {paths.file_path}({metadata.lfs_upload_part_index}/{metadata.lfs_upload_part_count}) upload on {metadata.lfs_upload_part_url} response: {response.text}")
         response.raise_for_status()
         return response.headers
 
@@ -59,7 +59,7 @@ def slices_upload_complete(item: JOB_ITEM_T, uploaded_ids_map: Dict):
     }
     response = requests.post(metadata.lfs_upload_complete_url, json=payload)
     if response.status_code != 200:
-        logger.error(f"LFS {paths.file_path} slices merge complete response: {response.text}")
+        logger.error(f"LFS {paths.file_path} slices merge complete on {metadata.lfs_upload_complete_url} response: {response.text}")
     response.raise_for_status()
 
 def slices_upload_verify(item: JOB_ITEM_T):
@@ -72,5 +72,5 @@ def slices_upload_verify(item: JOB_ITEM_T):
     verify_header = metadata.lfs_upload_verify.get("header")
     response = requests.post(verify_url, headers=verify_header, json=payload)
     if response.status_code != 200:
-        logger.error(f"LFS {paths.file_path} slices upload verify response: {response.text}")
+        logger.error(f"LFS {paths.file_path} slices upload verify on {verify_url} response: {response.text}")
     response.raise_for_status()
