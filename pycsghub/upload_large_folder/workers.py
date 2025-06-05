@@ -56,7 +56,7 @@ def _worker_job(
                 repo_id=repo_id, repo_type=repo_type, revision=revision)
         elif job == WorkerJob.PREUPLOAD_LFS:
             _execute_job_pre_upload_lfs(
-                items=items, status=status, 
+                items=items, status=status,
                 api=api, endpoint=endpoint, token=token,
                 repo_id=repo_id, repo_type=repo_type, revision=revision)
         elif job == WorkerJob.UPLOADING_LFS:
@@ -138,7 +138,7 @@ def _execute_job_get_upload_model(
             status.queue_get_upload_mode.put(item)
 
     if ignore_num > 0:
-        logger.info(f"ignored {ignore_num} files because of should_ignore is true from remote server")
+        logger.info(f"ignored {ignore_num} files because should_ignore is true from remote server")
     
     if same_with_remote_num > 0:
         logger.info(f"skipped {same_with_remote_num} files because they are identical to the remote server")
@@ -316,7 +316,7 @@ def _preupload_lfs_done(
     slices_upload_verify(item=item)
     metadata.is_uploaded = True
     metadata.save(paths)
-    logger.info(f"LFS file {paths.file_path} - all {metadata.lfs_upload_part_count} slices uploaded successfully")
+    logger.debug(f"LFS file {paths.file_path} - all {metadata.lfs_upload_part_count} slices uploaded successfully")
 
 def _preupload_lfs(
     item: JOB_ITEM_T,

@@ -122,7 +122,7 @@ class LargeUploadStatus:
                     nb_lfs += 1
                 if metadata.upload_mode is None:
                     nb_lfs_unsure += 1
-                if metadata.is_uploaded:
+                if metadata.is_uploaded and metadata.upload_mode == REPO_LFS_TYPE:
                     nb_preuploaded += 1
                     size_preuploaded += metadata.size
                 if metadata.is_committed:
