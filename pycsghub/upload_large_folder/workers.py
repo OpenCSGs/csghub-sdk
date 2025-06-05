@@ -104,7 +104,7 @@ def _execute_job_get_upload_model(
         _get_upload_mode(
             items, api=api, endpoint=endpoint, token=token,
             repo_id=repo_id, repo_type=repo_type, revision=revision)
-        logger.info(f"get upload modes for {len(items)} items successfully")
+        logger.debug(f"get upload modes for {len(items)} items successfully")
     except KeyboardInterrupt:
         raise
     except Exception as e:
