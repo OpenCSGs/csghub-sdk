@@ -113,7 +113,7 @@ def upload_large_folder(
     allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
     ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
     num_workers: Annotated[int, OPTIONS["num_workers"]] = None,
-    print_report: Annotated[bool, OPTIONS["print_report"]] = True,
+    print_report: Annotated[bool, OPTIONS["print_report"]] = False,
     print_report_every: Annotated[int, OPTIONS["print_report_every"]] = 60,
 ):
     upload_large_folder_internal(

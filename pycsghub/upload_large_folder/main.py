@@ -103,9 +103,8 @@ def upload_large_folder_internal(
 
     for thread in threads:
         thread.join()
-        
-    if print_report:
-        print(status.current_report())
+
+    print(status.current_report())
     logging.info("large folder upload process is complete!")
 
 def create_repo(

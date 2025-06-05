@@ -63,7 +63,7 @@ def _worker_job(
             _execute_job_uploading_lfs(items=items, status=status)
         elif job == WorkerJob.COMMIT:
             _execute_job_commit(
-                items=items, status=status, 
+                items=items, status=status,
                 api=api, endpoint=endpoint, token=token,
                 repo_id=repo_id, repo_type=repo_type, revision=revision)
         elif job == WorkerJob.WAIT:
@@ -166,15 +166,12 @@ def _execute_job_pre_upload_lfs(
             status.queue_commit.put(item)
         else:
             action = f"{action} fetch batch info"
-            is_uploaded = _preupload_lfs(
+            _preupload_lfs(
                 item=item, status=status,
                 api=api, endpoint=endpoint, token=token,
                 repo_id=repo_id, repo_type=repo_type, revision=revision)
-            if is_uploaded:
-                status.queue_commit.put(item)
-            else:
-                # keep in queue preupload
-                status.queue_preupload_lfs.put(item)
+            # keep in queue preupload
+            status.queue_preupload_lfs.put(item)
     except KeyboardInterrupt:
         raise
     except Exception as e:
@@ -238,7 +235,6 @@ def _execute_job_commit(
 def _execute_job_waiting(
     status: LargeUploadStatus,
 ):
-    logger.info(f"no tasks available, waiting for {WAITING_TIME_IF_NO_TASKS} seconds")
     time.sleep(WAITING_TIME_IF_NO_TASKS)
     with status.lock:
         status.nb_workers_waiting -= 1    
@@ -331,9 +327,12 @@ def _preupload_lfs(
     revision: str,
     endpoint: str,
     token: str,
-) -> bool:
+):
     """Preupload LFS file and update metadata."""
     paths, metadata = item
+    
+    if metadata.lfs_upload_part_count is not None and metadata.lfs_upload_part_count > 0:
+        return
     
     payload: Dict = {
         "operation": "upload",
@@ -415,7 +414,6 @@ def _preupload_lfs(
         item_slice = [paths, slice_metadata]
         status.queue_uploading_lfs.put(item_slice)
     logger.info(f"get LFS {paths.file_path} slices batch info successfully")
-    return False
 
 def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     resp_header = slice_upload(item=item)

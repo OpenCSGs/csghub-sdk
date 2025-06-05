@@ -34,7 +34,10 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"fetch upload modes from {fetch_url} response: {response.text}")
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for fetch upload modes from {fetch_url} response: {response.text}")
 
     def fetch_lfs_batch_info(
         self,
@@ -58,7 +61,10 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"fetch LFS {local_file} batch info from {batch_url} response: {response.text}")
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for fetch LFS {local_file} batch info from {batch_url} response: {response.text}")
     
     def create_commit(
         self,
@@ -79,7 +85,10 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"create files commit on {commit_url} response: {response.text}")
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for create files commit on {commit_url} response: {response.text}")
 
     def repo_branch_exists(
         self,
@@ -142,7 +151,10 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"create new branch {revision} for {repo_type} {repo_id} on {action_endpoint} response: {response.text}")
         response.raise_for_status()
-        return response
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for create new branch {revision} for {repo_type} {repo_id} on {action_url} response: {response.text}")
 
     def create_new_repo(
         self,
@@ -183,7 +195,10 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"create new {repo_type} {repo_id} on {action_endpoint} response: {response.text}")
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for create new {repo_type} {repo_id} on {action_url} response: {response.text}")
 
     def get_space_resources(
         self,
@@ -202,4 +217,7 @@ class CsgHubApi:
         if response.status_code != 200:
             logger.error(f"query space resources on {action_endpoint} response: {response.text}")
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            raise ValueError(f"invalid json data for query space resources on {action_url} response: {response.text}")

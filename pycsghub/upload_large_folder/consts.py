@@ -27,7 +27,7 @@ FORBIDDEN_FOLDERS = [".git", ".cache"]
 # Timeout of aquiring file lock and logging the attempt
 FILELOCK_LOG_EVERY_SECONDS = 10
 
-WAITING_TIME_IF_NO_TASKS = 10  # seconds
+WAITING_TIME_IF_NO_TASKS = 3  # seconds
 MAX_NB_REGULAR_FILES_PER_COMMIT = 75
 MAX_NB_LFS_FILES_PER_COMMIT = 150
 

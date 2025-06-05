@@ -198,8 +198,8 @@ class LargeUploadStatus:
             uploaded_ids = self._lfs_uploaded_ids.get(paths.file_path)
             if (uploaded_ids is not None and
                 metadata.lfs_upload_id is not None and
-                metadata.lfs_upload_part_count is not None):
-                if len(uploaded_ids.split(",")) == metadata.lfs_upload_part_count:
+                metadata.lfs_upload_part_count is not None and 
+                len(uploaded_ids.split(",")) == metadata.lfs_upload_part_count):
                     metadata.lfs_uploaded_ids = uploaded_ids
                     return True
         return False
