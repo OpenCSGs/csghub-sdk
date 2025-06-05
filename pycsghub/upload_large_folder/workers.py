@@ -413,7 +413,7 @@ def _preupload_lfs(
         slice_metadata.lfs_upload_chunk_size = int(chunk_size)
         item_slice = [paths, slice_metadata]
         status.queue_uploading_lfs.put(item_slice)
-    logger.info(f"get LFS {paths.file_path} slices batch info successfully")
+    logger.debug(f"get LFS {paths.file_path} slices batch info successfully")
 
 def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     resp_header = slice_upload(item=item)
