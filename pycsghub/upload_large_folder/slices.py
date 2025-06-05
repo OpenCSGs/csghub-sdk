@@ -58,9 +58,11 @@ def slices_upload_complete(item: JOB_ITEM_T, uploaded_ids_map: Dict):
         ]
     }
     response = requests.post(metadata.lfs_upload_complete_url, json=payload)
-    if response.status_code != 200:
-        logger.error(f"LFS {paths.file_path} slices merge complete on {metadata.lfs_upload_complete_url} response: {response.text}")
-    response.raise_for_status()
+    if response.status_code != 200 and response.status_code != 404:
+        logger.error(f"LFS {paths.file_path} merge all slices complete on {metadata.lfs_upload_complete_url} response: {response.text}")
+    if response.status_code != 404:
+        response.raise_for_status()
+    return response.json()
 
 def slices_upload_verify(item: JOB_ITEM_T):
     paths, metadata = item
@@ -72,5 +74,6 @@ def slices_upload_verify(item: JOB_ITEM_T):
     verify_header = metadata.lfs_upload_verify.get("header")
     response = requests.post(verify_url, headers=verify_header, json=payload)
     if response.status_code != 200:
-        logger.error(f"LFS {paths.file_path} slices upload verify on {verify_url} response: {response.text}")
+        logger.error(f"LFS {paths.file_path} slices upload verify on {verify_url} response: {response.text}, delete file {paths.metadata_path} and retry")
     response.raise_for_status()
+    return response.json()
