@@ -62,7 +62,7 @@ def slices_upload_complete(item: JOB_ITEM_T, uploaded_ids_map: Dict):
         logger.error(f"LFS {paths.file_path} merge all uploaded slices complete on {metadata.lfs_upload_complete_url} response: {response.text}")
     if response.status_code < 400 or response.status_code >= 500:
         response.raise_for_status()
-    return response.json()
+    return response.text
 
 def slices_upload_verify(item: JOB_ITEM_T):
     paths, metadata = item
@@ -76,4 +76,4 @@ def slices_upload_verify(item: JOB_ITEM_T):
     if response.status_code != 200:
         logger.error(f"LFS {paths.file_path} slices uploaded verify on {verify_url} response: {response.text}, delete file {paths.metadata_path} and retry")
     response.raise_for_status()
-    return response.json()
+    return response.text
