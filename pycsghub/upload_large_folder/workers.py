@@ -193,8 +193,6 @@ def _execute_job_uploading_lfs(
         status.append_lfs_uploaded_slice_id(paths.file_path, metadata.lfs_upload_part_index, etag)
         metadata.lfs_uploaded_ids = status.get_lfs_uploaded_slice_ids(paths.file_path)
         metadata.save(paths)
-    except KeyboardInterrupt:
-        raise
     except Exception as e:
         logger.error(f"failed to preupload LFS {paths.file_path} slice {metadata.lfs_upload_part_index}/{metadata.lfs_upload_part_count}: {e}")
         traceback.format_exc()
