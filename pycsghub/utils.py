@@ -386,15 +386,10 @@ def get_endpoint(endpoint: Optional[str] = None, operation: Optional[str] = OPER
     Returns:
         str: The formatted endpoint url.
     """
-    env_csghub_domain = os.getenv('CSGHUB_DOMAIN', None)
-    correct_endpoint = None
-    if bool(endpoint) and endpoint != DEFAULT_CSGHUB_DOMAIN:
-        correct_endpoint = endpoint
-    elif bool(env_csghub_domain) and env_csghub_domain != DEFAULT_CSGHUB_DOMAIN:
-        correct_endpoint = env_csghub_domain
-    else:
-        correct_endpoint = DEFAULT_CSGHUB_DOMAIN
-        
+
+    csghub_domain = os.getenv('CSGHUB_DOMAIN', DEFAULT_CSGHUB_DOMAIN)
+    correct_endpoint = csghub_domain if csghub_domain is not None else endpoint
+
     if operation == OPERATION_ACTION_GIT:
         scheme = urlparse(correct_endpoint).scheme
         correct_endpoint = correct_endpoint.replace(f"{scheme}://hub.", f"{scheme}://")
