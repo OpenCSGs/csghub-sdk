@@ -1,10 +1,14 @@
 import typer
 import os
+import logging
 from typing import Annotated, List, Optional
 from pycsghub.cmd import repo, inference, finetune
 from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
+from .upload_large_folder.main import upload_large_folder_internal
+
+logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     add_completion=False,
@@ -19,7 +23,7 @@ def version_callback(value: bool):
 
 OPTIONS = {
     "repoID": typer.Argument(help="The ID of the repo. (e.g. `username/repo-name`)."),
-    "localPath": typer.Argument(help="Local path to the file or folder to upload. Defaults to the relative path of the file of repo of OpenCSG Hub."),
+    "localPath": typer.Argument(help="Local path to the file to upload. Defaults to the relative path of the file of repo of OpenCSG Hub."),
     "pathInRepo": typer.Argument(help="Path of the folder in the repo. Defaults to the relative path of the file or folder."),
     "repoType": typer.Option("-t", "--repo-type", help="Specify the repository type."),
     "revision": typer.Option("-r", "--revision", help="An optional Git revision id which can be a branch name"),
@@ -31,9 +35,17 @@ OPTIONS = {
     "ignore_patterns": typer.Option("--ignore-patterns", help="Ignore patterns for files to be downloaded."),
     "version": typer.Option(None, "-V", "--version", callback=version_callback, is_eager=True, help="Show the version and exit."),
     "limit": typer.Option("--limit", help="Number of items to list"),
+    "localFolder": typer.Argument(help="Local path to the folder to upload."),
+    "num_workers": typer.Option("-n","--num-workers", help="Number of concurrent upload workers."),
+    "print_report": typer.Option("--print-report", help="Whether to print a report of the upload progress. Defaults to True."),
+    "print_report_every": typer.Option("--print-report-every", help="Frequency at which the report is printed. Defaults to 60 seconds."),
+    "log_level": typer.Option("INFO", "-L", "--log-level",
+        help="set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
+        case_sensitive=False,
+    ),
 }
 
-@app.command(name="download", help="Download model/dataset from OpenCSG Hub")
+@app.command(name="download", help="Download model/dataset from OpenCSG Hub", no_args_is_help=True)
 def download(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         repo_type: Annotated[RepoType, OPTIONS["repoType"]] = RepoType.MODEL, 
@@ -55,7 +67,7 @@ def download(
         ignore_patterns=ignore_patterns,
     )
 
-@app.command(name="upload", help="Upload repository files to OpenCSG Hub")
+@app.command(name="upload-files", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
 def upload(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         local_path: Annotated[str, OPTIONS["localPath"]],
@@ -89,6 +101,35 @@ def upload(
             token=token,
             user_name=user_name
         )
+        
+@app.command(name="upload-large-folder", help="Upload large folders to OpenCSG Hub using multiple workers", no_args_is_help=True)
+def upload_large_folder(
+    repo_id: Annotated[str, OPTIONS["repoID"]],
+    local_path: Annotated[str, OPTIONS["localFolder"]],
+    repo_type: Annotated[RepoType, OPTIONS["repoType"]] = RepoType.MODEL,
+    revision: Annotated[Optional[str], OPTIONS["revision"]] = DEFAULT_REVISION,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
+    ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
+    num_workers: Annotated[int, OPTIONS["num_workers"]] = None,
+    print_report: Annotated[bool, OPTIONS["print_report"]] = False,
+    print_report_every: Annotated[int, OPTIONS["print_report_every"]] = 60,
+):
+    upload_large_folder_internal(
+        repo_id=repo_id,
+        local_path=local_path,
+        repo_type=repo_type,
+        revision=revision,
+        endpoint=endpoint,
+        token=token,
+        allow_patterns=allow_patterns,
+        ignore_patterns=ignore_patterns,
+        num_workers=num_workers,
+        print_report=print_report,
+        print_report_every=print_report_every,
+    )
+
 
 inference_app = typer.Typer(
     no_args_is_help=True,
@@ -96,7 +137,7 @@ inference_app = typer.Typer(
 )
 app.add_typer(inference_app, name="inference")
 
-@inference_app.command(name="list", help="List inference instances")
+@inference_app.command(name="list", help="List inference instances", no_args_is_help=True)
 def list_inferences(
     user_name: Annotated[str, OPTIONS["username"]],
     token: Annotated[str, OPTIONS["token"]] = None,
@@ -110,7 +151,7 @@ def list_inferences(
         limit=limit,
     )
 
-@inference_app.command(name="start", help="Start inference instance")
+@inference_app.command(name="start", help="Start inference instance", no_args_is_help=True)
 def start_inference(
     model: str = typer.Argument(..., help="model to use for inference"),
     id: int = typer.Argument(..., help="ID of the inference instance to start"),
@@ -125,7 +166,7 @@ def start_inference(
     )
 
 
-@inference_app.command(name="stop", help="Stop inference instance")
+@inference_app.command(name="stop", help="Stop inference instance", no_args_is_help=True)
 def stop_inference(
     model: str = typer.Argument(..., help="model to use for inference"),
     id: int = typer.Argument(..., help="ID of the inference instance to start"),
@@ -145,7 +186,7 @@ finetune_app = typer.Typer(
 )
 app.add_typer(finetune_app, name="finetune")
 
-@finetune_app.command(name="list", help="List fine-tuning instances")
+@finetune_app.command(name="list", help="List fine-tuning instances", no_args_is_help=True)
 def list_finetune(
     user_name: Annotated[str, OPTIONS["username"]],
     token: Annotated[str, OPTIONS["token"]] = None,
@@ -159,7 +200,7 @@ def list_finetune(
         limit=limit,
     )
 
-@finetune_app.command(name="start", help="Start fine-tuning instance")
+@finetune_app.command(name="start", help="Start fine-tuning instance", no_args_is_help=True)
 def start_finetune(
     model: str = typer.Argument(..., help="model to use for fine-tuning"),
     id: int = typer.Argument(..., help="ID of the fine-tuning instance to start"),
@@ -173,7 +214,7 @@ def start_finetune(
         endpoint=endpoint,
     )
 
-@finetune_app.command(name="stop", help="Stop fine-tuning instance")
+@finetune_app.command(name="stop", help="Stop fine-tuning instance", no_args_is_help=True)
 def stop_finetune(
     model: str = typer.Argument(..., help="model to use for fine-tuning"),
     id: int = typer.Argument(..., help="ID of the fine-tuning instance to stop"),
@@ -195,7 +236,17 @@ def stop_finetune(
         "help_option_names": ["-h", "--help"],
     }
 )
-def main(version: bool = OPTIONS["version"]):
+def main(
+    version: bool = OPTIONS["version"],
+    log_level: str = OPTIONS["log_level"]
+):
+    # for example: format='%(asctime)s - %(name)s:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s',
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[logging.StreamHandler()]
+    )
     pass
 
 
