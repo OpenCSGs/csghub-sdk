@@ -130,8 +130,8 @@ csghub-cli finetune start OpenCSG/csg-wukong-1B 326
 # stop fine-tuning instance for model repo 'OpenCSG/csg-wukong-1B' with ID '326'
 csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 
-# upload local large folder '/Users/hhwang/temp/abc' to model repo 'wanghh2003/model05'
-csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
+# upload local large folder '/Users/hhwang/temp/abc' to model repo 'wanghh2000/model05'
+csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
 Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 

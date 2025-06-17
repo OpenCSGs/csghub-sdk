@@ -3,8 +3,8 @@ from pycsghub.file_upload import http_upload_file
 from pathlib import Path
 from typing import Optional, Union, List
 from pycsghub.constants import DEFAULT_REVISION
-import requests
 from pycsghub.repository import Repository
+from pycsghub.utils import get_token_to_send
 
 def download(
         repo_id: str,
@@ -73,7 +73,7 @@ def upload_folder(
         branch_name=revision,
         endpoint=endpoint,
         user_name=user_name,
-        token=token,
+        token=get_token_to_send(token),
         auto_create=auto_create,
     )
     r.upload()

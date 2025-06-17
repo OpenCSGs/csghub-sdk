@@ -129,8 +129,8 @@ csghub-cli finetune start OpenCSG/csg-wukong-1B 326
 # 停止ID为326使用模型OpenCSG/csg-wukong-1B的微调实例
 csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 
-# 上传本地目录/Users/hhwang/temp/abc中的所有文件到远程仓库wanghh2003/model05
-csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
+# 上传本地目录/Users/hhwang/temp/abc中的所有文件到远程仓库wanghh2000/model05
+csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
 注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
