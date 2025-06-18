@@ -38,6 +38,9 @@ To get started with the CSGHub SDK, ensure you have Python installed on your sys
 
 ```python
 pip install csghub-sdk
+
+# install with train dependencies
+pip install "csghub-sdk[train]"
 ```
 
 After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python script:
@@ -86,16 +89,16 @@ pip install '.[train]'
 export CSGHUB_TOKEN=your_access_token
 
 # download model
-csghub-cli download wanghh2000/myprivate1
+csghub-cli download OpenCSG/csg-wukong-1B
 
 # download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
-csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
 # download dataset
-csghub-cli download wanghh2000/myds1 -t dataset
+csghub-cli download OpenCSG/GitLab-DataSets-V1 -t dataset
 
 # download space
-csghub-cli download wanghh2000/space1 -t space
+csghub-cli download OpenCSG/csg-wukong-1B -t space
 
 # upload a single file to folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
@@ -130,8 +133,8 @@ csghub-cli finetune start OpenCSG/csg-wukong-1B 326
 # stop fine-tuning instance for model repo 'OpenCSG/csg-wukong-1B' with ID '326'
 csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 
-# upload local large folder '/Users/hhwang/temp/abc' to model repo 'wanghh2003/model05'
-csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
+# upload local large folder '/Users/hhwang/temp/abc' to model repo 'wanghh2000/model05'
+csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
 Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 
@@ -310,9 +313,7 @@ This code:
 
 ## Roadmap
 
-1. Download repo file by CLI
-2. Interacting with CSGHub via command-line tools
-3. Management operations such as creation and modification of CSGHub repositories
-4. Model deployment locally or online
-5. Model fine-tuning locally or online
-6. Quick upload large folder to CSGHub
+1. Interacting with CSGHub via command-line tools
+2. Management operations such as creation and modification of CSGHub repositories
+3. Model deployment locally or online
+4. Model fine-tuning locally or online

@@ -164,7 +164,7 @@ class LargeUploadStatus:
         with self.lock:
             return all(metadata.is_committed or metadata.should_ignore for _, metadata in self.items)
 
-    def get_lfs_uploaded_slice_ids(self, file_path: str) -> str|None:
+    def get_lfs_uploaded_slice_ids(self, file_path: str) -> str:
         with self.lock:
             return self._lfs_uploaded_ids.get(file_path)
 
@@ -182,7 +182,7 @@ class LargeUploadStatus:
                     new_ids = old_ids
             self._lfs_uploaded_ids[file_path] = new_ids
     
-    def convert_uploaded_ids_to_map(self, ids: str | None):
+    def convert_uploaded_ids_to_map(self, ids: str):
         id_map = {}
         if ids is None or ids == "":
             return id_map

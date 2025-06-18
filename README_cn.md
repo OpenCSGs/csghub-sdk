@@ -38,6 +38,9 @@ CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub �
 
 ```python
 pip install csghub-sdk
+
+# 使用pip安装训练相关的依赖
+pip install "csghub-sdk[train]"
 ```
 
 安装后，您可以开始将 SDK 导入到您的 Python 脚本中，以连接到您的 CSGHub 服务器：
@@ -85,16 +88,16 @@ pip install '.[train]'
 export CSGHUB_TOKEN=your_access_token
 
 # 模型下载
-csghub-cli download wanghh2000/myprivate1 
+csghub-cli download OpenCSG/csg-wukong-1B
 
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
-csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
 # 数据集下载
-csghub-cli download wanghh2000/myds1 -t dataset
+csghub-cli download OpenCSG/chinese-fineweb-edu-v2 -t dataset
 
 # 应用下载
-csghub-cli download wanghh2000/space1 -t space
+csghub-cli download OpenCSG/csg-wukong-1B -t space
 
 # 上传单个文件到仓库目录folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
@@ -129,8 +132,8 @@ csghub-cli finetune start OpenCSG/csg-wukong-1B 326
 # 停止ID为326使用模型OpenCSG/csg-wukong-1B的微调实例
 csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 
-# 上传本地目录/Users/hhwang/temp/abc中的所有文件到远程仓库wanghh2003/model05
-csghub-cli upload-large-folder wanghh2003/model05 /Users/hhwang/temp/abc
+# 上传本地目录/Users/hhwang/temp/abc中的所有文件到远程仓库wanghh2000/model05
+csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
 注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
@@ -312,9 +315,7 @@ model = AutoModelForCausalLM.from_pretrained('model/repoid')
 
 ## 功能计划
 
-1. 使用命令行工具下载仓库文件
-2. 使用命令行工具的方式与CSGHub交互
-3. CSGHub仓库的创建、修改等管理操作
-4. 模型本地或在线部署
-5. 模型本地或在线微调
-6. 快速上传大文件夹到CSGHub仓库
+1. 使用命令行工具的方式与CSGHub交互
+2. CSGHub仓库的创建、修改等管理操作
+3. 模型本地或在线部署
+4. 模型本地或在线微调

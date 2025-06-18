@@ -1,7 +1,8 @@
 import typer
 import os
 import logging
-from typing import Annotated, List, Optional
+from typing import List, Optional
+from typing_extensions import Annotated
 from pycsghub.cmd import repo, inference, finetune
 from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version
@@ -58,7 +59,7 @@ def download(
     ):
     repo.download(
         repo_id=repo_id,
-        repo_type=repo_type, 
+        repo_type=repo_type.value, 
         revision=revision, 
         cache_dir=cache_dir,
         endpoint=endpoint,
@@ -67,7 +68,7 @@ def download(
         ignore_patterns=ignore_patterns,
     )
 
-@app.command(name="upload-files", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
+@app.command(name="upload", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
 def upload(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         local_path: Annotated[str, OPTIONS["localPath"]],
@@ -82,7 +83,7 @@ def upload(
     if os.path.isfile(local_path):
         repo.upload_files(
             repo_id=repo_id, 
-            repo_type=repo_type, 
+            repo_type=repo_type.value, 
             repo_file=local_path,
             path_in_repo=path_in_repo,
             revision=revision, 
@@ -93,7 +94,7 @@ def upload(
     else:
         repo.upload_folder(
             repo_id=repo_id, 
-            repo_type=repo_type,
+            repo_type=repo_type.value,
             local_path=local_path,
             path_in_repo=path_in_repo,
             revision=revision,
@@ -119,7 +120,7 @@ def upload_large_folder(
     upload_large_folder_internal(
         repo_id=repo_id,
         local_path=local_path,
-        repo_type=repo_type,
+        repo_type=repo_type.value,
         revision=revision,
         endpoint=endpoint,
         token=token,
