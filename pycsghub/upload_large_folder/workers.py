@@ -422,7 +422,7 @@ def _perform_lfs_slice_upload(item: JOB_ITEM_T):
     etag = resp_header.get("etag")
     if etag is None or etag == "":
         raise ValueError(f"invalid slice upload response header: {resp_header}, etag: {etag}")
-    return etag.removeprefix('"').removesuffix('"')
+    return etag.strip('"')
 
 def _commit(
     items: List[JOB_ITEM_T],

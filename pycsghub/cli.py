@@ -1,7 +1,8 @@
 import typer
 import os
 import logging
-from typing import Annotated, List, Optional
+from typing import List, Optional
+from typing_extensions import Annotated
 from pycsghub.cmd import repo, inference, finetune
 from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version

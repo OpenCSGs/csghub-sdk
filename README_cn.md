@@ -38,6 +38,9 @@ CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub �
 
 ```python
 pip install csghub-sdk
+
+# 使用pip安装训练相关的依赖
+pip install "csghub-sdk[train]"
 ```
 
 安装后，您可以开始将 SDK 导入到您的 Python 脚本中，以连接到您的 CSGHub 服务器：
@@ -85,16 +88,16 @@ pip install '.[train]'
 export CSGHUB_TOKEN=your_access_token
 
 # 模型下载
-csghub-cli download wanghh2000/myprivate1 
+csghub-cli download OpenCSG/csg-wukong-1B
 
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
-csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
 # 数据集下载
-csghub-cli download wanghh2000/myds1 -t dataset
+csghub-cli download OpenCSG/chinese-fineweb-edu-v2 -t dataset
 
 # 应用下载
-csghub-cli download wanghh2000/space1 -t space
+csghub-cli download OpenCSG/csg-wukong-1B -t space
 
 # 上传单个文件到仓库目录folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
@@ -312,9 +315,7 @@ model = AutoModelForCausalLM.from_pretrained('model/repoid')
 
 ## 功能计划
 
-1. 使用命令行工具下载仓库文件
-2. 使用命令行工具的方式与CSGHub交互
-3. CSGHub仓库的创建、修改等管理操作
-4. 模型本地或在线部署
-5. 模型本地或在线微调
-6. 快速上传大文件夹到CSGHub仓库
+1. 使用命令行工具的方式与CSGHub交互
+2. CSGHub仓库的创建、修改等管理操作
+3. 模型本地或在线部署
+4. 模型本地或在线微调

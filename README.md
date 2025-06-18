@@ -38,6 +38,9 @@ To get started with the CSGHub SDK, ensure you have Python installed on your sys
 
 ```python
 pip install csghub-sdk
+
+# install with train dependencies
+pip install "csghub-sdk[train]"
 ```
 
 After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python script:
@@ -86,16 +89,16 @@ pip install '.[train]'
 export CSGHUB_TOKEN=your_access_token
 
 # download model
-csghub-cli download wanghh2000/myprivate1
+csghub-cli download OpenCSG/csg-wukong-1B
 
 # download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
-csghub-cli download wanghh2000/myprivate1 --allow-patterns "*.json" --ignore-patterns "*_config.json"
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
 # download dataset
-csghub-cli download wanghh2000/myds1 -t dataset
+csghub-cli download OpenCSG/GitLab-DataSets-V1 -t dataset
 
 # download space
-csghub-cli download wanghh2000/space1 -t space
+csghub-cli download OpenCSG/csg-wukong-1B -t space
 
 # upload a single file to folder1
 csghub-cli upload wanghh2000/myprivate1 abc/3.txt folder1
@@ -310,9 +313,7 @@ This code:
 
 ## Roadmap
 
-1. Download repo file by CLI
-2. Interacting with CSGHub via command-line tools
-3. Management operations such as creation and modification of CSGHub repositories
-4. Model deployment locally or online
-5. Model fine-tuning locally or online
-6. Quick upload large folder to CSGHub
+1. Interacting with CSGHub via command-line tools
+2. Management operations such as creation and modification of CSGHub repositories
+3. Model deployment locally or online
+4. Model fine-tuning locally or online
