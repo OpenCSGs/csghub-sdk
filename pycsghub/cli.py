@@ -8,6 +8,7 @@ from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
 from .upload_large_folder.main import upload_large_folder_internal
+from pycsghub.constants import REPO_SOURCE_CSG
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ OPTIONS = {
         help="set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
         case_sensitive=False,
     ),
+    "source": typer.Option("--source", help="Specify the source of the repository (e.g. 'csg', 'hf', 'ms')."),
 }
 
 @app.command(name="download", help="Download model/dataset from OpenCSG Hub", no_args_is_help=True)
@@ -56,16 +58,18 @@ def download(
         cache_dir: Annotated[Optional[str], OPTIONS["cache_dir"]] = None,
         allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
         ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
+        source: Annotated[str, OPTIONS["source"]] = REPO_SOURCE_CSG,
     ):
     repo.download(
         repo_id=repo_id,
-        repo_type=repo_type.value, 
-        revision=revision, 
+        repo_type=repo_type.value,
+        revision=revision,
         cache_dir=cache_dir,
         endpoint=endpoint,
         token=token,
         allow_patterns=allow_patterns,
         ignore_patterns=ignore_patterns,
+        source=source,
     )
 
 @app.command(name="upload", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
@@ -103,7 +107,7 @@ def upload(
             user_name=user_name
         )
         
-@app.command(name="upload-large-folder", help="Upload large folders to OpenCSG Hub using multiple workers", no_args_is_help=True)
+@app.command(name="upload-large-folder", help="Upload large folder to OpenCSG Hub using multiple workers", no_args_is_help=True)
 def upload_large_folder(
     repo_id: Annotated[str, OPTIONS["repoID"]],
     local_path: Annotated[str, OPTIONS["localFolder"]],

@@ -28,7 +28,8 @@ def snapshot_download(
         ignore_patterns: Optional[Union[List[str], str]] = None,
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None
+        token: Optional[str] = None,
+        source: Optional[str] = None,
 ) -> str:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
@@ -61,7 +62,8 @@ def snapshot_download(
                                         repo_type=repo_type,
                                         revision=revision,
                                         token=token,
-                                        endpoint=download_endpoint)
+                                        endpoint=download_endpoint,
+                                        source=source)
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
@@ -87,7 +89,8 @@ def snapshot_download(
                     file_path=repo_file,
                     repo_type=repo_type,
                     revision=revision,
-                    endpoint=download_endpoint)
+                    endpoint=download_endpoint,
+                    source=source)
                 # todo support parallel download api
                 http_get(
                     url=url,

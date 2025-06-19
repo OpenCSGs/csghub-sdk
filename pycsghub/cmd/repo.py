@@ -15,6 +15,7 @@ def download(
         token: Optional[str] = None,
         allow_patterns: Optional[Union[List[str], str]] = None,
         ignore_patterns: Optional[Union[List[str], str]] = None,
+        source: str = None,
     ):
     snapshot_download(
         repo_id=repo_id,
@@ -25,6 +26,7 @@ def download(
         token=token,
         allow_patterns=allow_patterns,
         ignore_patterns=ignore_patterns,
+        source=source,
     )
 
 def upload_files(
