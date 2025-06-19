@@ -404,10 +404,10 @@ def get_file_download_url(
     
     return download_url_template.format(
         endpoint=endpoint,
+        src_prefix=src_prefix,
         model_id=model_id,
         revision=revision,
         file_path=file_path,
-        src_prefix=src_prefix,
     )
 
 
