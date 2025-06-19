@@ -5,6 +5,7 @@ import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
 from pycsghub.constants import OPERATION_ACTION_API, OPERATION_ACTION_GIT
 from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
+from pycsghub.constants import REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
@@ -79,7 +80,7 @@ def get_cache_dir(model_id: Optional[str] = None, repo_type: Optional[str] = Non
     """
     default_cache_dir = get_default_cache_dir()
     sub_dir = 'hub'
-    if repo_type == "dataset":
+    if repo_type == REPO_TYPE_DATASET:
         sub_dir = 'dataset'
     base_path = os.getenv('CSGHUB_CACHE', os.path.join(default_cache_dir, sub_dir))
     return base_path if model_id is None else os.path.join(
@@ -102,7 +103,8 @@ def get_repo_info(
     timeout: Optional[float] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None
+    endpoint: Optional[str] = None,
+    source: Optional[str] = None,
 ) -> Union[ModelInfo, DatasetInfo, SpaceInfo]:
     """
     Get the info object for a given repo of a given type.
@@ -157,7 +159,8 @@ def get_repo_info(
         token=token,
         timeout=timeout,
         files_metadata=files_metadata,
-        endpoint=endpoint
+        endpoint=endpoint,
+        source=source,
     )
 
 
@@ -169,6 +172,7 @@ def dataset_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
+    source: Optional[str] = None,
 ) -> DatasetInfo:
     """
     Get info on one specific dataset on opencsg.com.
@@ -208,7 +212,11 @@ def dataset_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = get_repo_meta_path(repo_type=REPO_TYPE_DATASET, repo_id=repo_id, revision=revision, endpoint=endpoint)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_DATASET, 
+                              repo_id=repo_id, 
+                              revision=revision, 
+                              endpoint=endpoint,
+                              source=source)
     params = {}
     if files_metadata:
         params["blobs"] = True
@@ -225,6 +233,7 @@ def space_info(
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
     endpoint: Optional[str] = None,
+    source: Optional[str] = None,
 ) -> SpaceInfo:
     """
     Get info on one specific space on opencsg.com.
@@ -264,7 +273,11 @@ def space_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = get_repo_meta_path(repo_type=REPO_TYPE_SPACE, repo_id=repo_id, revision=revision, endpoint=endpoint)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_SPACE, 
+                              repo_id=repo_id, 
+                              revision=revision, 
+                              endpoint=endpoint,
+                              source=source)
     params = {}
     if files_metadata:
         params["blobs"] = True
@@ -281,7 +294,8 @@ def model_info(
     securityStatus: Optional[bool] = None,
     files_metadata: bool = False,
     token: Union[bool, str, None] = None,
-    endpoint: Optional[str] = None
+    endpoint: Optional[str] = None,
+    source: Optional[str] = None,
 ) -> ModelInfo:
     """
     Note: It is a huggingface method moved here to adjust csghub server response.
@@ -324,7 +338,11 @@ def model_info(
     </Tip>
     """
     headers = build_csg_headers(token=token)
-    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, repo_id=repo_id, revision=revision, endpoint=endpoint)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_MODEL, 
+                              repo_id=repo_id, 
+                              revision=revision, 
+                              endpoint=endpoint,
+                              source=source)
     params = {}
     if securityStatus:
         params["securityStatus"] = True
@@ -335,15 +353,25 @@ def model_info(
     data = r.json()
     return ModelInfo(**data)
 
-def get_repo_meta_path(repo_type: str, repo_id: str, revision: Optional[str] = None, endpoint: Optional[str] = None) -> str:
-    if repo_type == REPO_TYPE_MODEL or repo_type == REPO_TYPE_DATASET or repo_type == REPO_TYPE_SPACE:
-        path = (
-            f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/main"
-            if revision is None
-            else f"{endpoint}/hf/api/{repo_type}s/{repo_id}/revision/{quote(revision, safe='')}"
-        )
-    else:
+def get_repo_meta_path(
+    repo_type: str, 
+    repo_id: str, 
+    revision: Optional[str] = None, 
+    endpoint: Optional[str] = None,
+    source: Optional[str] = None,
+) -> str:
+    if repo_type != REPO_TYPE_MODEL and repo_type != REPO_TYPE_DATASET and repo_type != REPO_TYPE_SPACE:
         raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
+    
+    if source != REPO_SOURCE_CSG and source != REPO_SOURCE_HF and source != REPO_SOURCE_MS and source is not None:
+        raise ValueError("source must be one of 'csg', 'hf' or 'ms'")
+    
+    src_prefix = "csg" if source is None else source
+    path = (
+        f"{endpoint}/{src_prefix}/api/{repo_type}s/{repo_id}/revision/main"
+        if revision is None
+        else f"{endpoint}/{src_prefix}/api/{repo_type}s/{repo_id}/revision/{quote(revision, safe='')}"
+    )
     return path
 
 
@@ -353,6 +381,7 @@ def get_file_download_url(
     revision: str,
     repo_type: Optional[str] = None,
     endpoint: Optional[str] = None,
+    source: Optional[str] = None,
 ) -> str:
     """Format file download url according to `model_id`, `revision` and `file_path`.
     Args:
@@ -365,16 +394,20 @@ def get_file_download_url(
     """
     file_path = urllib.parse.quote(file_path)
     revision = urllib.parse.quote(revision)
-    download_url_template = '{endpoint}/hf/{model_id}/resolve/{revision}/{file_path}'
+    src_prefix = "csg" if source is None else source
+    
+    download_url_template = '{endpoint}/{src_prefix}/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
-        download_url_template = '{endpoint}/hf/datasets/{model_id}/resolve/{revision}/{file_path}'
+        download_url_template = '{endpoint}/{src_prefix}/datasets/{model_id}/resolve/{revision}/{file_path}'
     elif repo_type == REPO_TYPE_SPACE:
-        download_url_template = '{endpoint}/hf/spaces/{model_id}/resolve/{revision}/{file_path}'
+        download_url_template = '{endpoint}/{src_prefix}/spaces/{model_id}/resolve/{revision}/{file_path}'
+    
     return download_url_template.format(
         endpoint=endpoint,
         model_id=model_id,
         revision=revision,
         file_path=file_path,
+        src_prefix=src_prefix,
     )
 
 
