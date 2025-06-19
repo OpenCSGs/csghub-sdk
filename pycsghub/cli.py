@@ -8,6 +8,7 @@ from pycsghub.cmd.repo_types import RepoType
 from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
 from .upload_large_folder.main import upload_large_folder_internal
+from pycsghub.constants import REPO_SOURCE_CSG
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def download(
         cache_dir: Annotated[Optional[str], OPTIONS["cache_dir"]] = None,
         allow_patterns: Annotated[Optional[List[str]], OPTIONS["allow_patterns"]] = None,
         ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
-        source: Annotated[str, OPTIONS["source"]] = "csg",
+        source: Annotated[str, OPTIONS["source"]] = REPO_SOURCE_CSG,
     ):
     repo.download(
         repo_id=repo_id,

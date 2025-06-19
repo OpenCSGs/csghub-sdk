@@ -366,7 +366,7 @@ def get_repo_meta_path(
     if source != REPO_SOURCE_CSG and source != REPO_SOURCE_HF and source != REPO_SOURCE_MS and source is not None:
         raise ValueError("source must be one of 'csg', 'hf' or 'ms'")
     
-    src_prefix = "csg" if source is None else source
+    src_prefix = REPO_SOURCE_CSG if source is None else source
     path = (
         f"{endpoint}/{src_prefix}/api/{repo_type}s/{repo_id}/revision/main"
         if revision is None
@@ -394,7 +394,7 @@ def get_file_download_url(
     """
     file_path = urllib.parse.quote(file_path)
     revision = urllib.parse.quote(revision)
-    src_prefix = "csg" if source is None else source
+    src_prefix = REPO_SOURCE_CSG if source is None else source
     
     download_url_template = '{endpoint}/{src_prefix}/{model_id}/resolve/{revision}/{file_path}'
     if repo_type == REPO_TYPE_DATASET:
