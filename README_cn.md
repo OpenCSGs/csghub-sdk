@@ -93,6 +93,9 @@ csghub-cli download OpenCSG/csg-wukong-1B
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
+# 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件到本地目录'/Users/hhwang/temp/wukong'
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "tokenizer.json" --local-dir /Users/hhwang/temp/wukong
+
 # 数据集下载
 csghub-cli download OpenCSG/chinese-fineweb-edu-v2 -t dataset
 

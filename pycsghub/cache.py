@@ -3,7 +3,7 @@ import os
 import pickle
 import tempfile
 from shutil import move, rmtree
-from typing import Dict
+from typing import Dict, Union
 
 class FileSystemCache(object):
     KEY_FILE_NAME = '.msc'
@@ -108,7 +108,7 @@ class ModelFileSystemCache(FileSystemCache):
        Save only one version for each file.
     """
 
-    def __init__(self, cache_root, owner=None, name=None):
+    def __init__(self, cache_root, owner=None, name=None, local_dir: Union[str, None] = None):
         """Put file to the cache
         Args:
             cache_root(`str`): The csghub local cache root(default: ~/.cache/csghub/)
@@ -132,6 +132,13 @@ class ModelFileSystemCache(FileSystemCache):
             }
             self.save_model_meta()
         self.cached_model_revision = self.load_model_version()
+        self.local_dir = local_dir
+
+    def get_root_location(self):
+        if self.local_dir is not None:
+            return self.local_dir
+        else:
+            return self.cache_root_location
 
     def load_model_meta(self):
         meta_file_path = os.path.join(self.cache_root_location,
@@ -256,14 +263,14 @@ class ModelFileSystemCache(FileSystemCache):
                     or key['Revision'].startswith(cached_key['Revision'])):
                 is_exists = True
                 break
-        file_path = os.path.join(self.cache_root_location,
-                                 model_file_info['Path'])
+        file_path = os.path.join(self.cache_root_location, model_file_info['Path'])
+        if self.local_dir is not None:
+            file_path = os.path.join(self.local_dir, model_file_info['Path'])
         if is_exists:
             if os.path.exists(file_path):
                 return True
             else:
-                self.remove_key(
-                    model_file_info)  # someone may manual delete the file
+                self.remove_key(model_file_info)  # someone may manual delete the file
         return False
 
     def remove_if_exists(self, model_file_info):
@@ -275,8 +282,9 @@ class ModelFileSystemCache(FileSystemCache):
         for cached_file in self.cached_files:
             if cached_file['Path'] == model_file_info['Path']:
                 self.remove_key(cached_file)
-                file_path = os.path.join(self.cache_root_location,
-                                         cached_file['Path'])
+                file_path = os.path.join(self.cache_root_location, cached_file['Path'])
+                if self.local_dir is not None:
+                    file_path = os.path.join(self.local_dir, cached_file['Path'])
                 if os.path.exists(file_path):
                     os.remove(file_path)
                 break
@@ -291,11 +299,11 @@ class ModelFileSystemCache(FileSystemCache):
         Returns:
             str: The location of the cached file.
         """
-        self.remove_if_exists(model_file_info)  # backup old revision
-        cache_key = self.__get_cache_key(model_file_info)
-        cache_full_path = os.path.join(
-            self.cache_root_location,
-            cache_key['Path'])  # Branch and Tag do not have same name.
+        self.remove_if_exists(model_file_info)
+        cache_key = self.__get_cache_key(model_file_info)  
+        cache_full_path = os.path.join(self.cache_root_location, cache_key['Path'])
+        if self.local_dir is not None:
+            cache_full_path = os.path.join(self.local_dir, cache_key['Path'])
         cache_file_dir = os.path.dirname(cache_full_path)
         if not os.path.exists(cache_file_dir):
             os.makedirs(cache_file_dir, exist_ok=True)

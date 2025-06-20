@@ -92,7 +92,10 @@ export CSGHUB_TOKEN=your_access_token
 csghub-cli download OpenCSG/csg-wukong-1B
 
 # download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
-csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "tokenizer.json"
+
+# download model with ignore patterns '*.json' and '*.bin' pattern of files to /Users/hhwang/temp/wukong
+csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "tokenizer.json" --local-dir /Users/hhwang/temp/wukong
 
 # download dataset
 csghub-cli download OpenCSG/GitLab-DataSets-V1 -t dataset
