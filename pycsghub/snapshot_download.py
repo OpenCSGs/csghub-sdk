@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 from http.cookiejar import CookieJar
@@ -22,6 +21,7 @@ def snapshot_download(
         repo_type: Optional[str] = None,
         revision: Optional[str] = DEFAULT_REVISION,
         cache_dir: Union[str, Path, None] = None,
+        local_dir: Union[str, Path, None] = None,
         local_files_only: Optional[bool] = False,
         cookies: Optional[CookieJar] = None,
         allow_patterns: Optional[Union[List[str], str]] = None,
@@ -41,11 +41,14 @@ def snapshot_download(
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
     os.makedirs(temporary_cache_dir, exist_ok=True)
+    
+    if local_dir is not None and isinstance(local_dir, Path):
+        local_dir = str(local_dir)
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
     # name = name.replace('.', '___')
 
-    cache = ModelFileSystemCache(cache_dir, group_or_owner, name)
+    cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
     if local_files_only:
         if len(cache.cached_files) == 0:
@@ -80,7 +83,7 @@ def snapshot_download(
                 repo_file_info = pack_repo_file_info(repo_file, revision)
                 if cache.exists(repo_file_info):
                     file_name = os.path.basename(repo_file_info['Path'])
-                    print(f"File {file_name} already in cache '{cache.get_root_location()}', skip downloading!")
+                    print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
                     continue
 
                 # get download url

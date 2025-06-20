@@ -46,6 +46,7 @@ def file_download(
         file_name: str = None,
         revision: Optional[str] = DEFAULT_REVISION,
         cache_dir: Union[str, Path, None] = None,
+        local_dir: Union[str, Path, None] = None,
         local_files_only: Optional[bool] = False,
         cookies: Optional[CookieJar] = None,
         allow_patterns: Optional[Union[List[str], str]] = None,
@@ -62,15 +63,17 @@ def file_download(
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
     os.makedirs(temporary_cache_dir, exist_ok=True)
+    
+    if local_dir is not None and isinstance(local_dir, Path):
+        local_dir = str(local_dir)
 
     if file_name is None:
-        raise InvalidParameter('file_name cannot be None, if you want '
-                               'to load single file from repo {}'.format(repo_id))
+        raise InvalidParameter('file_name cannot be None, if you want to load single file from repo {}'.format(repo_id))
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
     name = name.replace('.', '___')
 
-    cache = ModelFileSystemCache(cache_dir, group_or_owner, name)
+    cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
     if local_files_only:
         if len(cache.cached_files) == 0:
@@ -102,8 +105,7 @@ def file_download(
         if file_name not in model_files:
             raise InvalidParameter('file {} not in repo {}'.format(file_name, repo_id))
 
-        with tempfile.TemporaryDirectory(
-                dir=temporary_cache_dir) as temp_cache_dir:
+        with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
             repo_file_info = pack_repo_file_info(file_name, revision)
             if not cache.exists(repo_file_info):
                 file_name = os.path.basename(repo_file_info['Path'])
@@ -127,13 +129,11 @@ def file_download(
                 # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, file_name)
                 cache.put_file(repo_file_info, temp_file)
+                print(f"Saved file to '{temp_file}'")
             else:
-                print(
-                    f'File {file_name} already in cache {cache.get_root_location()}, skip downloading!'
-                )
+                print(f'File {file_name} already in {cache.get_root_location()}, skip downloading!')
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location(), file_name)
-
 
 def http_get(*,
              url: str,
