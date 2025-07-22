@@ -11,3 +11,4 @@ dist/
 .idea
 .pypirc
 .vscode/
+.DS_Store
