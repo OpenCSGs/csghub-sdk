@@ -225,11 +225,13 @@ class Repository:
         repo_url: str
     ) -> subprocess.CompletedProcess:
         try:
+            env = os.environ.copy()
+            env.update({"GIT_LFS_SKIP_SMUDGE": "1"})
             result = self.run_subprocess(
                 command=f"git clone -b {branch_name} {repo_url}", 
                 folder=self.work_dir,
                 check=True,
-                env={"GIT_LFS_SKIP_SMUDGE": "1"}
+                env=env
             ).stdout.strip()
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
