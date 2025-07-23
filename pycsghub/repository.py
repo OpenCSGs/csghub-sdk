@@ -175,7 +175,7 @@ class Repository:
         GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
-            "message": f"create new branch {self.branch_name} by data flow",
+            "message": f"create new branch {self.branch_name}",
             "new_branch": self.branch_name,
             "content": GIT_ATTRIBUTES_CONTENT_BASE64
         }
@@ -184,6 +184,8 @@ class Repository:
             "Content-Type": "application/json"
         })
         response = requests.post(url, json=data, headers=headers)
+        if response.status_code != 200:
+            print(f"create branch on {url} response: {response.text}")
         response.raise_for_status()
         return response
 
@@ -205,6 +207,8 @@ class Repository:
             "Content-Type": "application/json"
         })
         response = requests.post(url, json=data, headers=headers)
+        if response.status_code != 200:
+            print(f"create repo on {url} response: {response.text}")
         response.raise_for_status()
         return response
 
