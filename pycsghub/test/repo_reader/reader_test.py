@@ -1,6 +1,7 @@
 import unittest
+
 from pycsghub.repo_reader import AutoModelForCausalLM
-from pathlib import Path
+
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):

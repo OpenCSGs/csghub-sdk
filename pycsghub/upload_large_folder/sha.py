@@ -2,9 +2,11 @@
 
 from typing import BinaryIO, Optional, Tuple
 
-from .hashlib import sha1, sha256
 from tqdm import tqdm
+
+from .hashlib import sha1, sha256
 from .status import JOB_ITEM_T
+
 
 def sha_fileobj(fileobj: BinaryIO, item: JOB_ITEM_T, chunk_size: Optional[int] = None) -> Tuple[str, str]:
     """
@@ -26,7 +28,7 @@ def sha_fileobj(fileobj: BinaryIO, item: JOB_ITEM_T, chunk_size: Optional[int] =
     sha_1 = sha1()
     header = f'blob {meta.size}\0'.encode('utf-8')
     sha_1.update(header)
-    
+
     desc = f"computing sha256 for {paths.file_path}"
     with tqdm(initial=0, total=meta.size, desc=desc, unit="B", unit_scale=True, dynamic_ncols=True) as pbar:
         while True:

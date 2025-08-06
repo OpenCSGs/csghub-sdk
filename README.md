@@ -3,19 +3,26 @@
 </p>
 
 # CSGHub SDK
+
 ## Introduction
 
-The CSGHub SDK is a powerful Python client specifically designed to interact seamlessly with the CSGHub server. This toolkit is engineered to provide Python developers with an efficient and straightforward method to operate and manage remote CSGHub instances. Whether you're looking to automate tasks, manage data, or integrate CSGHub functionalities into your Python applications, the CSGHub SDK offers a comprehensive set of features to accomplish your goals with ease.
+The CSGHub SDK is a powerful Python client specifically designed to interact seamlessly with the CSGHub server. This
+toolkit is engineered to provide Python developers with an efficient and straightforward method to operate and manage
+remote CSGHub instances. Whether you're looking to automate tasks, manage data, or integrate CSGHub functionalities into
+your Python applications, the CSGHub SDK offers a comprehensive set of features to accomplish your goals with ease.
 
 ## Key Features
 
-With just a few lines of code, you can seamlessly and quickly switch the model download URL to [OpenCSG](https://opencsg.com/), [enhancing the download speed of models](#quickly-switch-download-urls).
+With just a few lines of code, you can seamlessly and quickly switch the model download URL
+to [OpenCSG](https://opencsg.com/), [enhancing the download speed of models](#quickly-switch-download-urls).
 
 Effortlessly connect and interact with CSGHub server instances from your Python code.
 
-Comprehensive API Coverage: Full access to the wide array of functionalities provided by the CSGHub server, ensuring you can perform a broad spectrum of operations.
+Comprehensive API Coverage: Full access to the wide array of functionalities provided by the CSGHub server, ensuring you
+can perform a broad spectrum of operations.
 
-User-Friendly: Designed with simplicity in mind, making it accessible for beginners while powerful enough for advanced users.
+User-Friendly: Designed with simplicity in mind, making it accessible for beginners while powerful enough for advanced
+users.
 
 Efficient Data Management: Streamline the process of managing and manipulating data on your CSGHub server.
 
@@ -30,23 +37,31 @@ The main functions are:
 
 ## Get My Token
 
-Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.
+Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration
+process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After
+logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.
 
 ## Getting Started
 
-To get started with the CSGHub SDK, ensure you have Python installed on your system. Then, you can install the SDK using pip:
+To get started with the CSGHub SDK, ensure you have Python installed on your system. Then, you can install the SDK using
+pip:
 
 ```python
-pip install csghub-sdk
+pip
+install
+csghub - sdk
 
 # install with train dependencies
-pip install "csghub-sdk[train]"
+pip
+install
+"csghub-sdk[train]"
 ```
 
-After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python script:
+After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python
+script:
 
 ```python
-import os 
+import os
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
 os.environ['CSGHUB_TOKEN'] = 'your_access_token'
@@ -57,12 +72,13 @@ tokenizer = AutoTokenizer.from_pretrained(mid)
 
 inputs = tokenizer.encode("Write a short story", return_tensors="pt")
 outputs = model.generate(inputs)
-print('result: ',tokenizer.batch_decode(outputs))
+print('result: ', tokenizer.batch_decode(outputs))
 ```
 
 ### Quickly switch download URLs
 
-By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token, you can seamlessly and quickly switch the model download URL.
+By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token,
+you can seamlessly and quickly switch the model download URL.
 
 ```python
 os.environ['CSGHUB_TOKEN'] = 'your_access_token'
@@ -140,11 +156,15 @@ csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
-Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be created. If the branch already exists, the files will be uploaded to that branch. 
+Notes: `csghub-cli upload` will create repo and its branch if they do not exist. The default branch is `main`. If you
+want to upload to a specific branch, you can use the `--revision` option. If the branch does not exist, it will be
+created. If the branch already exists, the files will be uploaded to that branch.
 
-When using the `upload-large-folder` command to upload a folder, the upload progress will be recorded in the `.cache` folder within the upload directory to support resumable uploads. Do not delete the `.cache` folder before the upload is complete.
+When using the `upload-large-folder` command to upload a folder, the upload progress will be recorded in the `.cache`
+folder within the upload directory to support resumable uploads. Do not delete the `.cache` folder before the upload is
+complete.
 
-Download location is `~/.cache/csg/` by default.
+Download location is current directory by default.
 
 ## Use cases of SDK
 
@@ -154,18 +174,21 @@ For more detailed instructions, including API documentation and usage examples, 
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
+
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
-result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token)
+allow_patterns = ["*.json"]
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns)
 ```
 
 ### Download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
+
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
@@ -173,19 +196,57 @@ repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
 allow_patterns = ["*.json"]
 ignore_patterns = ["*_config.json"]
-result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns,
+                           ignore_patterns=ignore_patterns)
 ```
 
-### Download dataset 
+### Download dataset
+
 ```python
 from pycsghub.snapshot_download import snapshot_download
-token="xxxx"
+
+token = "xxxx"
 endpoint = "https://hub.opencsg.com"
 repo_id = 'AIWizards/tmmluplus'
-repo_type="dataset"
+repo_type = "dataset"
 cache_dir = '/Users/xiangzhen/Downloads/'
-result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
+allow_patterns = ["*.json"]
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,
+                           allow_patterns=allow_patterns)
 ```
+
+### Download with progress callback
+
+You can use the `progress_callback` parameter to track download progress in real-time:
+
+```python
+from pycsghub.snapshot_download import snapshot_download
+
+def progress_callback(progress_info):
+    """Callback function to track download progress"""
+    print(f"Progress: {progress_info['current_downloaded']}/{progress_info['total_files']} files")
+    print(f"Success: {progress_info['success_count']}, Failed: {progress_info['failed_count']}")
+    print(f"Remaining: {progress_info['remaining_count']} files")
+    if progress_info['successful_files']:
+        print(f"Last successful: {progress_info['successful_files'][-1]}")
+
+# Download with progress tracking
+result = snapshot_download(
+    repo_id='OpenCSG/csg-wukong-1B',
+    progress_callback=progress_callback,
+    token="your_access_token",
+    endpoint="https://hub.opencsg.com"
+)
+```
+
+The progress callback provides the following information:
+- `total_files`: Total number of files to download
+- `current_downloaded`: Number of files currently processed
+- `success_count`: Number of successfully downloaded files
+- `failed_count`: Number of failed downloads
+- `successful_files`: List of successfully downloaded file names
+- `remaining_count`: Number of files remaining to download
+- `remaining_files`: List of files still to be downloaded
 
 ### Download single file
 
@@ -193,6 +254,7 @@ Use `http_get` function to download single file
 
 ```python
 from pycsghub.file_download import http_get
+
 token = "your_access_token"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
@@ -207,6 +269,7 @@ use `file_download` function to download single file from a repository
 
 ```python
 from pycsghub.file_download import file_download
+
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
@@ -246,7 +309,8 @@ for item in repo_files:
 
 ### Upload the local path to repo
 
-Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
+Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation
+instructions).
 
 ```python
 from pycsghub.repository import Repository
@@ -266,7 +330,8 @@ r.upload()
 
 ### Upload the local path to the specified path in the repo
 
-Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation instructions).
+Before starting, please make sure you have Git-LFS installed (see [here](https://git-lfs.github.com/) for installation
+instructions).
 
 ```python
 from pycsghub.repository import Repository
@@ -288,29 +353,35 @@ r.upload()
 
 ### Model loading compatible with huggingface
 
-The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models, as shown below:
+The transformers library supports directly inputting the repo_id from Hugging Face to download and load related models,
+as shown below:
 
 ```python
 from transformers import AutoModelForCausalLM
+
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
-In this code, the Hugging Face Transformers library first downloads the model to a local cache folder, then reads the configuration, and loads the model by dynamically selecting the relevant class for instantiation.
+In this code, the Hugging Face Transformers library first downloads the model to a local cache folder, then reads the
+configuration, and loads the model by dynamically selecting the relevant class for instantiation.
 
-To ensure compatibility with Hugging Face, version 0.2 of the CSGHub SDK now includes the most commonly features: downloading and loading models. Models can be downloaded and loaded as follows:
+To ensure compatibility with Hugging Face, version 0.2 of the CSGHub SDK now includes the most commonly features:
+downloading and loading models. Models can be downloaded and loaded as follows:
 
 ```python
 # import os 
 # os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 from pycsghub.repo_reader import AutoModelForCausalLM
+
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
-This code: 
+This code:
 
 1. Use the `snapshot_download` from the CSGHub SDK library to download the related files.
 
-2. By generating batch classes dynamically and using class name reflection mechanism, a large number of classes with the same names as those automatically loaded by transformers are created in batches.
+2. By generating batch classes dynamically and using class name reflection mechanism, a large number of classes with the
+   same names as those automatically loaded by transformers are created in batches.
 
 3. Assign it with the from_pretrained method, so the model read out will be an hf-transformers model.
 

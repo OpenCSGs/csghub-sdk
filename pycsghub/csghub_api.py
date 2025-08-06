@@ -1,11 +1,14 @@
+import base64
 import logging
 from typing import Dict
-from pycsghub.utils import (build_csg_headers, get_endpoint, model_id_to_group_owner_name)
+
 import requests
-import base64
+
 from pycsghub.constants import GIT_ATTRIBUTES_CONTENT, DEFAULT_REVISION, DEFAULT_LICENCE, REPO_TYPE_SPACE
+from pycsghub.utils import (build_csg_headers, get_endpoint, model_id_to_group_owner_name)
 
 logger = logging.getLogger(__name__)
+
 
 class CsgHubApi:
     '''
@@ -16,13 +19,13 @@ class CsgHubApi:
         pass
 
     def fetch_upload_modes(
-        self,
-        payload: Dict,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
+            self,
+            payload: Dict,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
     ):
         """
         Requests repo files upload modes
@@ -40,15 +43,15 @@ class CsgHubApi:
             raise ValueError(f"invalid json data for fetch upload modes from {fetch_url} response: {response.text}")
 
     def fetch_lfs_batch_info(
-        self,
-        payload: Dict,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
-        local_file: str,
-        upload_id: str,
+            self,
+            payload: Dict,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
+            local_file: str,
+            upload_id: str,
     ):
         """
         Requests the LFS batch endpoint to retrieve upload instructions
@@ -64,16 +67,17 @@ class CsgHubApi:
         try:
             return response.json()
         except ValueError:
-            raise ValueError(f"invalid json data for fetch LFS {local_file} batch info from {batch_url} response: {response.text}")
-    
+            raise ValueError(
+                f"invalid json data for fetch LFS {local_file} batch info from {batch_url} response: {response.text}")
+
     def create_commit(
-        self,
-        payload: Dict,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
+            self,
+            payload: Dict,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
     ):
         """
         Creates a commit in the given repo, deleting & uploading files as needed.
@@ -91,12 +95,12 @@ class CsgHubApi:
             raise ValueError(f"invalid json data for create files commit on {commit_url} response: {response.text}")
 
     def repo_branch_exists(
-        self,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
+            self,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
     ):
         """
         Check if repo and branch exists
@@ -108,7 +112,7 @@ class CsgHubApi:
         action_url = f"{action_endpoint}/api/v1/{repo_type}s/{repo_id}/branches"
         response = requests.get(action_url, headers=req_headers)
         logger.debug(f"fetch {repo_type} {repo_id} branches on {action_url} response: {response.text}")
-        
+
         if response.status_code != 200:
             return False, False
         jsonRes = response.json()
@@ -119,16 +123,16 @@ class CsgHubApi:
         for b in branches:
             if b["name"] == revision:
                 return True, True
-        
+
         return True, False
-        
+
     def create_new_branch(
-        self,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
+            self,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
     ):
         """
         Create branch
@@ -138,7 +142,7 @@ class CsgHubApi:
             "Content-Type": "application/json"
         })
         action_url = f"{action_endpoint}/api/v1/{repo_type}s/{repo_id}/raw/.gitattributes"
-        
+
         GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
@@ -146,27 +150,29 @@ class CsgHubApi:
             "new_branch": revision,
             "content": GIT_ATTRIBUTES_CONTENT_BASE64
         }
-        
+
         response = requests.post(action_url, json=data, headers=req_headers)
         if response.status_code != 200:
-            logger.error(f"create new branch {revision} for {repo_type} {repo_id} on {action_endpoint} response: {response.text}")
+            logger.error(
+                f"create new branch {revision} for {repo_type} {repo_id} on {action_endpoint} response: {response.text}")
         response.raise_for_status()
         try:
             return response.json()
         except ValueError:
-            raise ValueError(f"invalid json data for create new branch {revision} for {repo_type} {repo_id} on {action_url} response: {response.text}")
+            raise ValueError(
+                f"invalid json data for create new branch {revision} for {repo_type} {repo_id} on {action_url} response: {response.text}")
 
     def create_new_repo(
-        self,
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        endpoint: str,
-        token: str,
+            self,
+            repo_id: str,
+            repo_type: str,
+            revision: str,
+            endpoint: str,
+            token: str,
     ):
         """
         Create new repo
-        """        
+        """
         action_endpoint = get_endpoint(endpoint=endpoint)
         req_headers = build_csg_headers(token=token, headers={
             "Content-Type": "application/json"
@@ -181,7 +187,7 @@ class CsgHubApi:
             "private": True,
             "license": DEFAULT_LICENCE,
         }
-        
+
         if repo_type == REPO_TYPE_SPACE:
             resource_resp = self.get_space_resources(endpoint=endpoint)
             resources = resource_resp["data"]
@@ -190,7 +196,7 @@ class CsgHubApi:
                 data["resource_id"] = resource_id
             else:
                 raise ValueError(f"no any space resource found for create {repo_type} {repo_id}")
-        
+
         response = requests.post(action_url, json=data, headers=req_headers)
         if response.status_code != 200:
             logger.error(f"create new {repo_type} {repo_id} on {action_endpoint} response: {response.text}")
@@ -198,11 +204,12 @@ class CsgHubApi:
         try:
             return response.json()
         except ValueError:
-            raise ValueError(f"invalid json data for create new {repo_type} {repo_id} on {action_url} response: {response.text}")
+            raise ValueError(
+                f"invalid json data for create new {repo_type} {repo_id} on {action_url} response: {response.text}")
 
     def get_space_resources(
-        self,
-        endpoint: str,
+            self,
+            endpoint: str,
     ):
         """
         Get space resources

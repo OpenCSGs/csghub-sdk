@@ -1,8 +1,11 @@
-import transformers
-from pycsghub.snapshot_download import snapshot_download
-from pycsghub.utils import get_token_to_send
 import os
 from pathlib import Path
+
+import transformers
+
+from pycsghub.snapshot_download import snapshot_download
+from pycsghub.utils import get_token_to_send
+
 
 @classmethod
 def from_pretrained(cls, pretrained_model_name_or_path,
@@ -15,11 +18,10 @@ def from_pretrained(cls, pretrained_model_name_or_path,
     if os.path.isdir(pretrained_model_name_or_path):
         path = Path(pretrained_model_name_or_path)
     else:
-        path = Path(snapshot_download(pretrained_model_name_or_path, token=token))
+        path = Path(snapshot_download(pretrained_model_name_or_path, token=token, allow_patterns=["*.json"]))
     # second step load model
     model = cls.from_pretrained_cached(path, *model_args, **model_kwargs)
     return model
-
 
 
 class_names = []
@@ -42,7 +44,3 @@ for i in class_names:
         })
     except AttributeError as e:
         print(e)
-
-
-
-

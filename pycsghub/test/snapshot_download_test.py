@@ -1,7 +1,8 @@
 import unittest
-from pycsghub.snapshot_download import snapshot_download
-from pycsghub.file_download import file_download
+
 from pycsghub.errors import InvalidParameter
+from pycsghub.file_download import file_download
+from pycsghub.snapshot_download import snapshot_download
 
 
 class MyTestCase(unittest.TestCase):

@@ -1,4 +1,5 @@
 import os
+
 API_FILE_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 API_FILE_DOWNLOAD_TIMEOUT = 5
 API_FILE_DOWNLOAD_RETRY_TIMES = 5
@@ -17,8 +18,22 @@ OPERATION_ACTION_API = "api"
 OPERATION_ACTION_GIT = "git"
 OPERATION_ACTION = [OPERATION_ACTION_API, OPERATION_ACTION_GIT]
 
+
+def _get_token_path():
+    """Get the token path based on the operating system."""
+    # 如果环境变量设置了，优先使用
+    if os.environ.get("CSGHUB_TOKEN_PATH"):
+        return os.environ.get("CSGHUB_TOKEN_PATH")
+
+    # 根据操作系统确定用户目录
+    # os.name: 'nt' for Windows, 'posix' for Unix/Linux/macOS
+    home_dir = os.path.expanduser("~")
+    token_dir = os.path.join(home_dir, ".csghub")
+    return os.path.join(token_dir, "token")
+
+
 CSGHUB_HOME = os.environ.get('CSGHUB_HOME', '/home')
-CSGHUB_TOKEN_PATH = os.environ.get("CSGHUB_TOKEN_PATH", os.path.join(CSGHUB_HOME, "token"))
+CSGHUB_TOKEN_PATH = _get_token_path()
 
 MODEL_ID_SEPARATOR = '/'
 DEFAULT_CSG_GROUP = 'OpenCSG'
@@ -88,7 +103,6 @@ saved_model/**/* filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.webp filter=lfs diff=lfs merge=lfs -text
 """
-
 
 S3_INTERNAL = os.environ.get("S3_INTERNAL", '')
 

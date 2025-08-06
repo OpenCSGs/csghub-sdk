@@ -1,20 +1,22 @@
 import logging
-import time
 import queue
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
-from .status import LargeUploadStatus, WorkerJob, JOB_ITEM_T
+import time
+from typing import List, Optional, Tuple
+
 from .consts import WAITING_TIME_IF_NO_TASKS, MAX_NB_LFS_FILES_PER_COMMIT, MAX_NB_REGULAR_FILES_PER_COMMIT
+from .status import LargeUploadStatus, WorkerJob, JOB_ITEM_T
 
 logger = logging.getLogger(__name__)
+
 
 def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, List[JOB_ITEM_T]]]:
     with status.lock:
         # Commit if more than 5 minutes since last commit attempt (and at least 1 file)
         if (
-            status.nb_workers_commit == 0
-            and status.queue_commit.qsize() > 0
-            and status.last_commit_attempt is not None
-            and time.time() - status.last_commit_attempt > 5 * 60
+                status.nb_workers_commit == 0
+                and status.queue_commit.qsize() > 0
+                and status.last_commit_attempt is not None
+                and time.time() - status.last_commit_attempt > 5 * 60
         ):
             status.nb_workers_commit += 1
             logger.debug("job: commit (more than 5 minutes since last commit attempt)")
@@ -43,7 +45,7 @@ def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, 
             status.nb_workers_preupload_lfs += 1
             logger.debug("job: preupload LFS (no other worker preuploading LFS)")
             return (WorkerJob.PREUPLOAD_LFS, _get_one(status.queue_preupload_lfs))
-            
+
         # Compute sha256 if at least 1 file and no worker is computing sha256
         elif status.queue_sha256.qsize() > 0 and status.nb_workers_sha256 == 0:
             status.nb_workers_sha256 += 1
@@ -58,7 +60,7 @@ def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, 
 
         # Preupload LFS file if at least 1 file
         elif status.queue_preupload_lfs.qsize() > 0 and (
-            status.nb_workers_preupload_lfs == 0
+                status.nb_workers_preupload_lfs == 0
         ):
             status.nb_workers_preupload_lfs += 1
             logger.debug("job: preupload LFS")
@@ -78,10 +80,10 @@ def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, 
 
         # Commit if at least 1 file and 1 min since last commit attempt
         elif (
-            status.nb_workers_commit == 0
-            and status.queue_commit.qsize() > 0
-            and status.last_commit_attempt is not None
-            and time.time() - status.last_commit_attempt > 1 * 60
+                status.nb_workers_commit == 0
+                and status.queue_commit.qsize() > 0
+                and status.last_commit_attempt is not None
+                and time.time() - status.last_commit_attempt > 1 * 60
         ):
             status.nb_workers_commit += 1
             logger.debug("job: commit (1 min since last commit attempt)")
@@ -90,14 +92,14 @@ def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, 
         # Commit if at least 1 file all other queues are empty and all workers are waiting
         # e.g. when it's the last commit
         elif (
-            status.nb_workers_commit == 0
-            and status.queue_commit.qsize() > 0
-            and status.queue_sha256.qsize() == 0
-            and status.queue_get_upload_mode.qsize() == 0
-            and status.queue_preupload_lfs.qsize() == 0
-            and status.nb_workers_sha256 == 0
-            and status.nb_workers_get_upload_mode == 0
-            and status.nb_workers_preupload_lfs == 0
+                status.nb_workers_commit == 0
+                and status.queue_commit.qsize() > 0
+                and status.queue_sha256.qsize() == 0
+                and status.queue_get_upload_mode.qsize() == 0
+                and status.queue_preupload_lfs.qsize() == 0
+                and status.nb_workers_sha256 == 0
+                and status.nb_workers_get_upload_mode == 0
+                and status.nb_workers_preupload_lfs == 0
         ):
             status.nb_workers_commit += 1
             logger.debug("job: commit")
@@ -113,6 +115,7 @@ def _determine_next_job(status: LargeUploadStatus) -> Optional[Tuple[WorkerJob, 
             status.nb_workers_waiting += 1
             logger.debug(f"no task available, waiting... ({WAITING_TIME_IF_NO_TASKS}s)")
             return (WorkerJob.WAIT, [])
+
 
 def _get_items_to_commit(queue: "queue.Queue[JOB_ITEM_T]") -> List[JOB_ITEM_T]:
     """Special case for commit job: the number of items to commit depends on the type of files."""
@@ -137,8 +140,10 @@ def _get_items_to_commit(queue: "queue.Queue[JOB_ITEM_T]") -> List[JOB_ITEM_T]:
         else:
             nb_regular += 1
 
+
 def _get_one(queue: "queue.Queue[JOB_ITEM_T]") -> List[JOB_ITEM_T]:
     return [queue.get()]
+
 
 def _get_n(queue: "queue.Queue[JOB_ITEM_T]", n: int) -> List[JOB_ITEM_T]:
     return [queue.get() for _ in range(min(queue.qsize(), n))]
