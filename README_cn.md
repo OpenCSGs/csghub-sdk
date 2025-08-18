@@ -3,12 +3,9 @@
 </p>
 
 # CSGHub SDK
-
 ## 介绍
 
-CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub 服务器无缝交互。这个工具包旨在为 Python
-开发者提供一个高效且直接的方法来操作和管理远程 CSGHub 实例。无论您是希望自动化任务、管理数据，还是将 CSGHub 功能集成到您的
-Python 应用中，CSGHUB SDK 都提供了一整套功能，让您轻松实现目标。
+CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub 服务器无缝交互。这个工具包旨在为 Python 开发者提供一个高效且直接的方法来操作和管理远程 CSGHub 实例。无论您是希望自动化任务、管理数据，还是将 CSGHub 功能集成到您的 Python 应用中，CSGHUB SDK 都提供了一整套功能，让您轻松实现目标。
 
 ## 主要特性
 
@@ -33,29 +30,23 @@ Python 应用中，CSGHUB SDK 都提供了一整套功能，让您轻松实现�
 
 ## 获取Token
 
-浏览器访问[OpenCSG](https://opencsg.com/)，点击右上角`注册`
-完成用户注册过程，使用已经注册成功的用户和密码登录[OpenCSG](https://opencsg.com/)，登录成功后在`账号设置`中找到[
-`Access Token`](https://opencsg.com/settings/access-token)来获取token。
+浏览器访问[OpenCSG](https://opencsg.com/)，点击右上角`注册`完成用户注册过程，使用已经注册成功的用户和密码登录[OpenCSG](https://opencsg.com/)，登录成功后在`账号设置`中找到[`Access Token`](https://opencsg.com/settings/access-token)来获取token。
 
 ## 入门
 
 要开始使用 CSGHub SDK，请确保您的系统上安装了 Python。然后，您可以使用 pip 安装 SDK：
 
 ```python
-pip
-install
-csghub - sdk
+pip install csghub-sdk
 
 # 使用pip安装训练相关的依赖
-pip
-install
-"csghub-sdk[train]"
+pip install "csghub-sdk[train]"
 ```
 
 安装后，您可以开始将 SDK 导入到您的 Python 脚本中，以连接到您的 CSGHub 服务器：
 
 ```python
-import os
+import os 
 from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
 os.environ['CSGHUB_TOKEN'] = 'your_access_token'
@@ -66,7 +57,7 @@ tokenizer = AutoTokenizer.from_pretrained(mid)
 
 inputs = tokenizer.encode("Write a short story", return_tensors="pt")
 outputs = model.generate(inputs)
-print('result: ', tokenizer.batch_decode(outputs))
+print('result: ',tokenizer.batch_decode(outputs))
 ```
 
 ### 快速切换下载地址
@@ -87,7 +78,6 @@ pip install .
 ```
 
 您可以使用`pip install '.[train]'`来安装与模型和数据集相关的依赖，例如：
-
 ```shell
 pip install '.[train]'
 ```
@@ -96,11 +86,6 @@ pip install '.[train]'
 
 ```shell
 export CSGHUB_TOKEN=your_access_token
-
-# 配置token
-
-csghub-cli login
-csghub-cli login --token your_token
 
 # 模型下载
 csghub-cli download OpenCSG/csg-wukong-1B
@@ -154,13 +139,11 @@ csghub-cli finetune stop OpenCSG/csg-wukong-1B 326
 csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 ```
 
-注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision
-选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
+注意：csghub-cli upload 将在仓库和分支不存在时创建它们。默认分支为main。如果您想上传到特定分支，可以使用 --revision 选项。如果该分支不存在，将会被创建。如果分支已存在，文件将上传到该分支。
 
-当使用`upload-large-folder`命令上传文件夹时，上传进度会在记录在上传目录`.cache`文件夹中用于支持断点续传，在上传完成前勿删除
-`.cache`文件夹。
+当使用`upload-large-folder`命令上传文件夹时，上传进度会在记录在上传目录`.cache`文件夹中用于支持断点续传，在上传完成前勿删除`.cache`文件夹。
 
-文件默认下载路径为当前目录
+文件默认下载路径为`~/.cache/csg/`
 
 ## SDK使用示例
 
@@ -168,23 +151,19 @@ csghub-cli upload-large-folder wanghh2000/model05 /Users/hhwang/temp/abc
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
-allow_patterns = ["*.json"]
-result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,
-                           allow_patterns=allow_patterns)
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,)
 ```
 
 ### 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
 
 ```python
 from pycsghub.snapshot_download import snapshot_download
-
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
@@ -192,58 +171,20 @@ repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/Users/hhwang/temp/'
 allow_patterns = ["*.json"]
 ignore_patterns = ["*_config.json"]
-result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns,
-                           ignore_patterns=ignore_patterns)
+result = snapshot_download(repo_id, cache_dir=cache_dir, endpoint=endpoint, token=token, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
 ```
 
 ### 数据集下载
-
 ```python
 from pycsghub.snapshot_download import snapshot_download
-
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_id = 'AIWizards/tmmluplus'
 repo_type = "dataset"
 cache_dir = '/Users/xiangzhen/Downloads/'
-allow_patterns = ["*.json"]
-result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token,
-                           allow_patterns=allow_patterns)
+result = snapshot_download(repo_id, repo_type=repo_type, cache_dir=cache_dir, endpoint=endpoint, token=token)
 ```
-
-### 带进度回调的下载
-
-您可以使用 `progress_callback` 参数来实时跟踪下载进度：
-
-```python
-from pycsghub.snapshot_download import snapshot_download
-
-def progress_callback(progress_info):
-    """进度回调函数"""
-    print(f"进度: {progress_info['current_downloaded']}/{progress_info['total_files']} 个文件")
-    print(f"成功: {progress_info['success_count']}, 失败: {progress_info['failed_count']}")
-    print(f"剩余: {progress_info['remaining_count']} 个文件")
-    if progress_info['successful_files']:
-        print(f"最近成功: {progress_info['successful_files'][-1]}")
-
-# 带进度跟踪的下载
-result = snapshot_download(
-    repo_id='OpenCSG/csg-wukong-1B',
-    progress_callback=progress_callback,
-    token="your_access_token",
-    endpoint="https://hub.opencsg.com"
-)
-```
-
-进度回调提供以下信息：
-- `total_files`: 需要下载的文件总数
-- `current_downloaded`: 当前已处理的文件数
-- `success_count`: 成功下载的文件数
-- `failed_count`: 下载失败的文件数
-- `successful_files`: 成功下载的文件名列表
-- `remaining_count`: 剩余待下载的文件数
-- `remaining_files`: 待下载的文件列表
 
 ### 单文件下载
 
@@ -251,22 +192,19 @@ result = snapshot_download(
 
 ```python
 from pycsghub.file_download import file_download
-
 token = "your_access_token"
 
 endpoint = "https://hub.opencsg.com"
 repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 cache_dir = '/home/test/'
-result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token,
-                       repo_type=repo_type)
+result = file_download(repo_id, file_name='README.md', cache_dir=cache_dir, endpoint=endpoint, token=token, repo_type=repo_type)
 ```
 
 使用`http_get`接口进行单文件下载
 
 ```python
 from pycsghub.file_download import http_get
-
 token = "your_access_token"
 
 url = "https://hub.opencsg.com/api/v1/models/OpenCSG/csg-wukong-1B/resolve/tokenizer.model"
@@ -366,7 +304,6 @@ CSGHub SDK v0.2版本为了兼容huggingface也提供用户最常用的功能，
 # import os 
 # os.environ['CSGHUB_TOKEN'] = 'your_access_token'
 from pycsghub.repo_reader import AutoModelForCausalLM
-
 model = AutoModelForCausalLM.from_pretrained('model/repoid')
 ```
 
@@ -377,6 +314,7 @@ model = AutoModelForCausalLM.from_pretrained('model/repoid')
 2. 通过动态批量类生成与类名反射机制，批量创建大量与transformers自动类加载的重名类。
 
 3. 为其赋予from_pretrained方法，这样读取出来的模型即为hf-transformers模型。
+
 
 ## 功能计划
 
