@@ -46,7 +46,7 @@ result = snapshot_download_parallel(
 print(f"Repository downloaded, save to: {result}")
 
 print("\n=== Example of single-threaded download comparison ===")
-# 使用单线程下载进行对比
+
 result_single = file_download(
     repo_id,
     file_name='README.md',
