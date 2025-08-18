@@ -18,7 +18,7 @@ def from_pretrained(cls, pretrained_model_name_or_path,
     if os.path.isdir(pretrained_model_name_or_path):
         path = Path(pretrained_model_name_or_path)
     else:
-        path = Path(snapshot_download(pretrained_model_name_or_path, token=token, allow_patterns=["*.json"]))
+        path = Path(snapshot_download(pretrained_model_name_or_path, token=token))
     # second step load model
     model = cls.from_pretrained_cached(path, *model_args, **model_kwargs)
     return model

@@ -45,8 +45,7 @@ def load_dataset(
             token = get_token_to_send(None)
         except Exception:
             pass
-    localPath = snapshot_download(path, repo_type=REPO_TYPE_DATASET, cache_dir=cache_dir, token=token,
-                                  allow_patterns=["*.json"])
+    localPath = snapshot_download(path, repo_type=REPO_TYPE_DATASET, cache_dir=cache_dir, token=token)
     return datasets.load.load_dataset(
         path=localPath,
         name=name,

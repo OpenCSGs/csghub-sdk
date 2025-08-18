@@ -16,7 +16,7 @@ def get_version():
             match = re.search(r'version = "([^"]+)"', content)
             if match:
                 return match.group(1)
-    return "0.7.4"  # default version
+    return "0.1.0"  # default version
 
 
 def update_version_in_init():
