@@ -36,16 +36,14 @@ def version_callback(value: bool):
 
 
 def auto_inject_token_and_verbose(func):
-    """装饰器：自动注入 token 和 verbose 参数"""
+    """Decorator: automatically inject token and verbose parameters"""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # 自动获取 token（如果用户没有提供）
         if 'token' in kwargs and kwargs['token'] is None:
             kwargs['token'] = get_token_to_send()
             if kwargs.get('verbose', False):
                 print(f"[DEBUG] Auto-detected token: {'*' * 10 if kwargs['token'] else 'None'}")
         
-        # 处理 verbose 参数
         verbose = kwargs.get('verbose', False)
         if verbose:
             print(f"[DEBUG] Arguments received:")
@@ -107,7 +105,6 @@ def login(
     """
 
     try:
-        # 如果token未提供，先检查环境变量
         if token is None:
             env_token = os.environ.get("CSGHUB_TOKEN")
             if env_token:
@@ -119,29 +116,23 @@ def login(
                 print("You can get your access token from https://opencsg.com/settings/access-token")
                 raise typer.Exit(1)
 
-        # 清理token
         cleaned_token = _clean_token(token)
         if not cleaned_token:
             print("❌ Error: Invalid token provided.")
             raise typer.Exit(1)
 
-        # 验证token格式（基本验证）
         if len(cleaned_token) < 10:
             print("❌ Error: Token seems too short. Please check your token.")
             raise typer.Exit(1)
 
-        # 保存token到文件
         try:
-            # 确保目录存在
             token_path = Path(CSGHUB_TOKEN_PATH)
             token_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # 写入token
             token_path.write_text(cleaned_token)
 
-            # 设置正确的权限（Unix系统）
-            if os.name != 'nt':  # Windows系统跳过权限设置
-                os.chmod(token_path, 0o600)  # 只有所有者可读写
+            if os.name != 'nt':
+                os.chmod(token_path, 0o600)
 
             print("✅ Token saved successfully!")
             print(f"Token location: {token_path}")
@@ -196,7 +187,6 @@ def whoami(
     """
 
     try:
-        # 获取token
         if token is None:
             token = _get_token_from_file()
 
@@ -205,8 +195,6 @@ def whoami(
             raise typer.Exit(1)
 
         try:
-            # 这里可以添加API调用来验证token并获取用户信息
-            # 暂时只显示token存在的信息
             print("✅ Logged in successfully!")
             print(f"Token location: {CSGHUB_TOKEN_PATH}")
             print()
@@ -272,10 +260,8 @@ def upload(
         verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
-        # 检查仓库ID是否包含中文字符
         validate_repo_id(repo_id)
 
-        # File upload
         if os.path.isfile(local_path):
             repo.upload_files(
                 repo_id=repo_id,
@@ -301,7 +287,6 @@ def upload(
                 verbose=verbose
             )
     except ValueError as e:
-        # 处理中文检查错误
         print(f"\n{e}")
         sys.exit(1)
     except Exception as e:
@@ -329,7 +314,6 @@ def upload_large_folder(
         verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
-        # 检查仓库ID是否包含中文字符
         validate_repo_id(repo_id)
 
         upload_large_folder_internal(
@@ -346,7 +330,6 @@ def upload_large_folder(
             print_report_every=print_report_every,
         )
     except ValueError as e:
-        # 处理中文检查错误
         print(f"\n{e}")
         sys.exit(1)
     except Exception as e:

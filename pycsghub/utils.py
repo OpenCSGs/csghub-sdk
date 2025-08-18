@@ -34,22 +34,22 @@ def get_session() -> requests.Session:
 
 
 def get_token_to_send(token: Optional[str] = None) -> Optional[str]:
-    """获取要发送的token
+    """Get token to send
     
-    优先级：
-    1. 显式提供的 token 参数
-    2. 环境变量 CSGHUB_TOKEN
-    3. 配置文件 ~/.csghub/token
+    Priority:
+    1. Explicitly provided token parameter
+    2. Environment variable CSGHUB_TOKEN
+    3. Configuration file ~/.csghub/token
     """
     if token:
         return token
     
-    # 检查环境变量
+    # Check environment variable
     env_token = os.environ.get("CSGHUB_TOKEN")
     if env_token:
         return env_token
     
-    # 检查配置文件
+    # Check configuration file
     try:
         from pycsghub._token import _get_token_from_file
         file_token = _get_token_from_file()
@@ -66,7 +66,7 @@ def _validate_token_to_send():
 
 
 def build_csg_headers(token: Optional[str] = None, headers: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """构建CSG请求头"""
+    """Build CSG request headers"""
     default_headers = {
         "User-Agent": "csghub-sdk",
         "Accept": "application/json",
@@ -82,7 +82,7 @@ def build_csg_headers(token: Optional[str] = None, headers: Optional[Dict[str, A
 
 
 def model_id_to_group_owner_name(model_id: str) -> tuple[str, str]:
-    """将模型ID转换为组和所有者名称"""
+    """Convert model ID to group and owner name"""
     if "/" not in model_id:
         raise ValueError(f"Invalid model_id format: {model_id}")
     
@@ -95,32 +95,32 @@ def model_id_to_group_owner_name(model_id: str) -> tuple[str, str]:
 
 
 def validate_cache_directory(cache_dir: str) -> bool:
-    """验证缓存目录是否可用
+    """Validate cache directory is available
     
     Args:
-        cache_dir (str): 缓存目录路径
+        cache_dir (str): cache directory path
         
     Returns:
-        bool: 缓存目录是否可用
+        bool: cache directory is available
     """
     try:
-        # Windows路径长度检查
+        # Windows path length check
         if os.name == 'nt':
-            # Windows有260字符路径限制，需要预留空间
+            # Windows has 260 character path limit, need to reserve space
             if len(os.path.abspath(cache_dir)) > 240:
                 print(f"Warning: Cache directory path too long for Windows: {cache_dir}")
                 return False
 
-        # 检查目录是否存在，不存在则创建
+        # Check if directory exists, if not, create it
         os.makedirs(cache_dir, exist_ok=True)
 
-        # 检查写入权限
+        # Check write permission
         test_file = os.path.join(cache_dir, '.test_write')
         with open(test_file, 'w') as f:
             f.write('test')
         os.remove(test_file)
 
-        # 检查磁盘空间（至少需要100MB）
+        # Check disk space (at least 100MB)
         free_space = shutil.disk_usage(cache_dir).free
         if free_space < 1024 * 1024 * 100:  # 100MB
             print(f"Warning: Low disk space in cache directory {cache_dir}")
@@ -133,16 +133,16 @@ def validate_cache_directory(cache_dir: str) -> bool:
 
 
 def cleanup_cache_directory(cache_dir: str) -> bool:
-    """清理损坏的缓存文件
+    """Clean corrupted cache files
     
     Args:
-        cache_dir (str): 缓存目录路径
+        cache_dir (str): cache directory path
         
     Returns:
-        bool: 清理是否成功
+        bool: clean cache directory successfully
     """
     try:
-        # 清理损坏的索引文件
+        # Clean corrupted index files
         index_file = os.path.join(cache_dir, '.msc')
         if os.path.exists(index_file):
             try:
@@ -152,7 +152,7 @@ def cleanup_cache_directory(cache_dir: str) -> bool:
                 print(f"Warning: Removing corrupted cache index file: {index_file}")
                 os.remove(index_file)
 
-        # 清理临时文件
+        # Clean temporary files
         for root, dirs, files in os.walk(cache_dir):
             for file in files:
                 if file.endswith('.tmp') or file.startswith('.test_'):
@@ -161,12 +161,12 @@ def cleanup_cache_directory(cache_dir: str) -> bool:
                     except OSError:
                         pass
 
-        # 清理空目录
+        # Clean empty directories
         for root, dirs, files in os.walk(cache_dir, topdown=False):
             for dir_name in dirs:
                 dir_path = os.path.join(root, dir_name)
                 try:
-                    if not os.listdir(dir_path):  # 目录为空
+                    if not os.listdir(dir_path):  # directory is empty
                         os.rmdir(dir_path)
                 except OSError:
                     pass
@@ -178,23 +178,23 @@ def cleanup_cache_directory(cache_dir: str) -> bool:
 
 
 def sanitize_path_for_windows(path: str) -> str:
-    """清理路径，使其在Windows下可用
+    """Clean path, make it available in Windows
     
     Args:
-        path (str): 原始路径
+        path (str): original path
         
     Returns:
-        str: 清理后的路径
+        str: cleaned path
     """
     if os.name == 'nt':
-        # Windows不允许的字符
+        # Windows forbidden characters
         invalid_chars = '<>:"|?*'
         for char in invalid_chars:
             path = path.replace(char, '_')
 
-        # 处理Windows路径长度限制
+        # Handle Windows path length limit
         if len(path) > 240:
-            # 使用短路径或截断
+            # Use short path or truncate
             try:
                 import win32api
                 short_path = win32api.GetShortPathName(path)
@@ -203,47 +203,47 @@ def sanitize_path_for_windows(path: str) -> str:
             except ImportError:
                 pass
 
-            # 截断路径
+            # Truncate path
             parts = path.split(os.sep)
             while len(path) > 240 and len(parts) > 1:
-                parts.pop(1)  # 保留根目录
+                parts.pop(1)  # Keep root directory
                 path = os.sep.join(parts)
 
     return path
 
 
 def get_cache_dir_with_fallback(model_id: Optional[str] = None, repo_type: Optional[str] = None) -> str:
-    """获取缓存目录，如果失败则使用备选方案
+    """Get cache directory, if failed, use fallback
     
     Args:
-        model_id (str, optional): 模型ID
-        repo_type (str, optional): 仓库类型
+        model_id (str, optional): model ID
+        repo_type (str, optional): repository type
         
     Returns:
-        str: 可用的缓存目录路径
+        str: available cache directory path
     """
-    # 获取主缓存目录
+    # Get primary cache directory
     primary_cache = get_cache_dir(model_id, repo_type)
 
-    # 在Windows下清理路径
+    # Clean path in Windows
     if os.name == 'nt':
         primary_cache = sanitize_path_for_windows(primary_cache)
 
-    # 验证主缓存目录
+    # Validate primary cache directory
     if validate_cache_directory(primary_cache):
         return primary_cache
 
-    # 清理缓存目录
+    # Clean cache directory
     cleanup_cache_directory(primary_cache)
 
-    # 再次验证
+    # Validate again
     if validate_cache_directory(primary_cache):
         return primary_cache
 
-    # 使用临时目录作为备选
+    # Use temporary directory as fallback
     fallback_cache = os.path.join(tempfile.gettempdir(), 'csg_cache')
     if model_id:
-        # 在Windows下处理模型ID中的特殊字符
+        # Handle special characters in model ID in Windows
         safe_model_id = model_id.replace('/', '_').replace('\\', '_')
         fallback_cache = os.path.join(fallback_cache, safe_model_id)
 
@@ -253,7 +253,7 @@ def get_cache_dir_with_fallback(model_id: Optional[str] = None, repo_type: Optio
         return fallback_cache
     except OSError as e:
         print(f"Error: Cannot create fallback cache directory: {e}")
-        # 最后的备选方案：使用当前目录
+        # Last fallback: use current directory
         current_cache = os.path.join(os.getcwd(), '.csg_cache')
         if model_id:
             safe_model_id = model_id.replace('/', '_').replace('\\', '_')
@@ -292,16 +292,16 @@ def get_default_cache_dir() -> Path:
 
 
 def get_model_temp_dir(cache_dir: str, model_id: str) -> str:
-    # 解析模型ID
+    # Parse model ID
     if '/' in model_id:
         owner, name = model_id.split('/', 1)
     else:
         owner = DEFAULT_CSG_GROUP
         name = model_id
 
-    # 在Windows下处理特殊字符
+    # Handle special characters in Windows
     if os.name == 'nt':
-        # 替换Windows不允许的字符
+        # Replace Windows forbidden characters
         invalid_chars = '<>:"|?*'
         for char in invalid_chars:
             owner = owner.replace(char, '_')
@@ -309,16 +309,16 @@ def get_model_temp_dir(cache_dir: str, model_id: str) -> str:
 
     model_cache_dir = os.path.join(cache_dir, owner, name)
 
-    # 在Windows下检查路径长度
+    # Check path length in Windows
     if os.name == 'nt' and len(os.path.abspath(model_cache_dir)) > 240:
-        # 使用系统临时目录作为备选
+        # Use system temporary directory as fallback
         fallback_temp = os.path.join(tempfile.gettempdir(), f'csg_temp_{owner}_{name}')
         try:
             os.makedirs(fallback_temp, exist_ok=True)
             return fallback_temp
         except OSError as e:
             print(f"Warning: Cannot create fallback temp directory {fallback_temp}: {e}")
-            # 最后的备选：使用当前目录
+            # Last fallback: use current directory
             current_temp = os.path.join(os.getcwd(), f'.csg_temp_{owner}_{name}')
             os.makedirs(current_temp, exist_ok=True)
             return current_temp
@@ -328,7 +328,7 @@ def get_model_temp_dir(cache_dir: str, model_id: str) -> str:
         return model_cache_dir
     except OSError as e:
         print(f"Warning: Cannot create model temp directory {model_cache_dir}: {e}")
-        # 使用系统临时目录作为备选
+        # Use system temporary directory as fallback
         fallback_temp = os.path.join(tempfile.gettempdir(), f'csg_temp_{owner}_{name}')
         os.makedirs(fallback_temp, exist_ok=True)
         return fallback_temp
@@ -719,28 +719,27 @@ def pack_repo_file_info(repo_file_path,
 
 def contains_chinese(text: str) -> bool:
     """
-    检查字符串是否包含中文字符
+    Check if the string contains Chinese characters
     
     Args:
-        text: 要检查的字符串
+        text: The string to check
         
     Returns:
-        bool: 如果包含中文字符返回True，否则返回False
+        bool: If the string contains Chinese characters, return True, otherwise return False
     """
-    # 中文字符的Unicode范围（简化版本，只包含基本的中文字符）
     chinese_pattern = re.compile(r'[\u4e00-\u9fff]')
     return bool(chinese_pattern.search(text))
 
 
 def validate_repo_id(repo_id: str) -> None:
     """
-    验证仓库ID是否包含中文字符
+    Validate if the repository ID contains Chinese characters
     
     Args:
-        repo_id: 仓库ID
+        repo_id: The repository ID
         
     Raises:
-        ValueError: 如果仓库ID包含中文字符
+        ValueError: If the repository ID contains Chinese characters
     """
     if contains_chinese(repo_id):
         raise ValueError(

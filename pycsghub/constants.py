@@ -21,12 +21,9 @@ OPERATION_ACTION = [OPERATION_ACTION_API, OPERATION_ACTION_GIT]
 
 def _get_token_path():
     """Get the token path based on the operating system."""
-    # 如果环境变量设置了，优先使用
     if os.environ.get("CSGHUB_TOKEN_PATH"):
         return os.environ.get("CSGHUB_TOKEN_PATH")
 
-    # 根据操作系统确定用户目录
-    # os.name: 'nt' for Windows, 'posix' for Unix/Linux/macOS
     home_dir = os.path.expanduser("~")
     token_dir = os.path.join(home_dir, ".csghub")
     return os.path.join(token_dir, "token")

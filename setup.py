@@ -3,8 +3,8 @@ CSGHub SDK setup configuration
 """
 from setuptools import setup
 
-# 这个文件现在主要用于向后兼容
-# 主要的配置已经移到 pyproject.toml 中
+# This file is now mainly used for backward compatibility
+# The main configuration has been moved to pyproject.toml
 
 if __name__ == "__main__":
     setup()

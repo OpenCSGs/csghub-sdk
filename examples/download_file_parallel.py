@@ -2,7 +2,7 @@ import logging
 
 from pycsghub.file_download import file_download, snapshot_download_parallel
 
-# 配置日志级别
+# Configure logging level
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # token = "your access token"
@@ -13,7 +13,7 @@ repo_type = "model"
 repo_id = 'OpenCSG/csg-wukong-1B'
 local_dir = "/Users/hhwang/temp/wukong"
 
-print("=== 单文件多线程下载示例 ===")
+print("=== Single-file multi-threaded download example ===")
 result = file_download(
     repo_id,
     file_name='README.md',
@@ -21,15 +21,15 @@ result = file_download(
     endpoint=endpoint,
     token=token,
     repo_type=repo_type,
-    max_workers=4,  # 设置线程数
-    use_parallel=True  # 启用多线程下载
+    max_workers=4,
+    use_parallel=True
 )
 
-print(f"单文件下载完成，保存到: {result}")
+print(f"Single-file multi-threaded downloaded ,save to: {result}")
 
-print("\n=== 整个仓库多线程下载示例 ===")
+print("\n=== Example of multi-threaded download for the entire repository ===")
 cache_dir = "/Users/hhwang/temp/"
-allow_patterns = ["*.json", "*.md", "*.txt"]  # 只下载特定类型的文件
+allow_patterns = ["*.json", "*.md", "*.txt"]
 
 result = snapshot_download_parallel(
     repo_id,
@@ -38,14 +38,14 @@ result = snapshot_download_parallel(
     endpoint=endpoint,
     token=token,
     allow_patterns=allow_patterns,
-    max_workers=6,  # 设置更多线程数用于批量下载
-    use_parallel=True,  # 启用多线程下载
-    verbose=True  # 启用详细日志
+    max_workers=6,
+    use_parallel=True,  
+    verbose=True 
 )
 
-print(f"仓库下载完成，保存到: {result}")
+print(f"Repository downloaded, save to: {result}")
 
-print("\n=== 单线程下载对比示例 ===")
+print("\n=== Example of single-threaded download comparison ===")
 # 使用单线程下载进行对比
 result_single = file_download(
     repo_id,
@@ -54,7 +54,7 @@ result_single = file_download(
     endpoint=endpoint,
     token=token,
     repo_type=repo_type,
-    use_parallel=False  # 禁用多线程，使用原有单线程下载
+    use_parallel=False
 )
 
-print(f"单线程下载完成，保存到: {result_single}")
+print(f"Single-threaded downloaded, save to: {result_single}")

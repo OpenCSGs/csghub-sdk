@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-构建脚本，用于处理版本信息
+Build script for handling version information
 """
 
 import re
@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def get_version():
-    """从pyproject.toml中获取版本号"""
+    """Get version from pyproject.toml"""
     pyproject_path = Path("pyproject.toml")
     if pyproject_path.exists():
         with open(pyproject_path, "r", encoding="utf-8") as f:
@@ -16,17 +16,17 @@ def get_version():
             match = re.search(r'version = "([^"]+)"', content)
             if match:
                 return match.group(1)
-    return "0.7.4"  # 默认版本
+    return "0.7.4"  # default version
 
 
 def update_version_in_init():
-    """更新__init__.py中的版本号"""
+    """Update version in __init__.py"""
     init_path = Path("pycsghub/__init__.py")
     if init_path.exists():
         with open(init_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # 更新版本号
+        # Update version
         new_content = re.sub(
             r'__version__ = "[^"]*"',
             f'__version__ = "{get_version()}"',

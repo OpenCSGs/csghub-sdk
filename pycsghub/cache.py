@@ -27,25 +27,22 @@ class FileSystemCache(object):
             kwargs(dict): The keyword arguments.
         """
         try:
-            # 在Windows下检查路径长度
             if os.name == 'nt' and len(os.path.abspath(cache_root_location)) > 240:
                 print(f"Warning: Cache path too long for Windows: {cache_root_location}")
-                # 使用短路径或截断
                 try:
                     import win32api
                     short_path = win32api.GetShortPathName(cache_root_location)
                     if len(short_path) <= 240:
                         cache_root_location = short_path
                 except ImportError:
-                    # 截断路径
                     parts = cache_root_location.split(os.sep)
                     while len(cache_root_location) > 240 and len(parts) > 1:
-                        parts.pop(1)  # 保留根目录
+                        parts.pop(1)
                         cache_root_location = os.sep.join(parts)
 
             os.makedirs(cache_root_location, exist_ok=True)
             self.cache_root_location = cache_root_location
-            self._lock = threading.RLock()  # 添加线程锁
+            self._lock = threading.RLock()
             self.load_cache()
         except (OSError, IOError) as e:
             raise RuntimeError(f"Failed to initialize cache at {cache_root_location}: {e}")
@@ -63,10 +60,8 @@ class FileSystemCache(object):
                 with open(cache_keys_file_path, 'rb') as f:
                     self.cached_files = pickle.load(f)
             except (pickle.PickleError, IOError, EOFError) as e:
-                # 如果缓存文件损坏，重新创建
                 print(f"Warning: Cache file corrupted, recreating: {e}")
                 self.cached_files = []
-                # 删除损坏的缓存文件
                 try:
                     os.remove(cache_keys_file_path)
                 except OSError:
@@ -74,12 +69,10 @@ class FileSystemCache(object):
 
     def save_cached_files(self):
         """Save cache metadata with atomic operation."""
-        with self._lock:  # 添加线程安全
+        with self._lock:
             cache_keys_file_path = os.path.join(self.cache_root_location,
                                                 FileSystemCache.KEY_FILE_NAME)
             try:
-                # 使用临时文件确保原子性
-                # 在Windows下使用系统临时目录
                 if os.name == 'nt':
                     temp_dir = tempfile.gettempdir()
                 else:
@@ -89,10 +82,8 @@ class FileSystemCache(object):
                 try:
                     with os.fdopen(fd, 'wb') as f:
                         pickle.dump(self.cached_files, f)
-                    # 原子性移动
                     move(fn, cache_keys_file_path)
                 except (IOError, OSError) as e:
-                    # 清理临时文件
                     try:
                         os.remove(fn)
                     except OSError:
@@ -130,7 +121,7 @@ class FileSystemCache(object):
         Args:
             key (dict): The cache key.
         """
-        with self._lock:  # 添加线程安全
+        with self._lock:
             if key in self.cached_files:
                 self.cached_files.remove(key)
                 self.save_cached_files()
@@ -147,7 +138,7 @@ class FileSystemCache(object):
         In the case of multiple cache locations, this clears only the last one,
         which is assumed to be the read/write one.
         """
-        with self._lock:  # 添加线程安全
+        with self._lock:
             try:
                 rmtree(self.cache_root_location)
                 os.makedirs(self.cache_root_location, exist_ok=True)
@@ -180,13 +171,10 @@ class ModelFileSystemCache(FileSystemCache):
         """
         try:
             if owner is None or name is None:
-                # get model meta from
                 super().__init__(os.path.join(cache_root))
                 self.load_model_meta()
             else:
-                # 在Windows下处理路径分隔符
                 if os.name == 'nt':
-                    # 替换Windows不允许的字符
                     invalid_chars = '<>:"|?*'
                     for char in invalid_chars:
                         owner = owner.replace(char, '_')
@@ -345,14 +333,11 @@ class ModelFileSystemCache(FileSystemCache):
         key = self.__get_cache_key(model_file_info)
         is_exists = False
 
-        # 改进版本匹配逻辑：使用精确匹配或前缀匹配
         for cached_key in self.cached_files:
             if cached_key['Path'] == key['Path']:
-                # 精确匹配
                 if cached_key['Revision'] == key['Revision']:
                     is_exists = True
                     break
-                # 前缀匹配（但要求至少6个字符，避免误匹配）
                 elif (len(cached_key['Revision']) >= 6 and
                       cached_key['Revision'].startswith(key['Revision'])) or \
                         (len(key['Revision']) >= 6 and
@@ -368,7 +353,6 @@ class ModelFileSystemCache(FileSystemCache):
             if os.path.exists(file_path):
                 return True
             else:
-                # 修复：传递正确的参数给remove_key
                 for cached_file in self.cached_files:
                     if (cached_file['Path'] == key['Path'] and
                             cached_file['Revision'] == key['Revision']):
@@ -413,7 +397,6 @@ class ModelFileSystemCache(FileSystemCache):
             if self.local_dir is not None:
                 cache_full_path = os.path.join(self.local_dir, cache_key['Path'])
 
-            # 在Windows下处理路径分隔符
             if os.name == 'nt':
                 cache_full_path = cache_full_path.replace('/', os.sep)
 
@@ -421,11 +404,9 @@ class ModelFileSystemCache(FileSystemCache):
             if not os.path.exists(cache_file_dir):
                 os.makedirs(cache_file_dir, exist_ok=True)
 
-            # 检查源文件是否存在
             if not os.path.exists(model_file_location):
                 raise RuntimeError(f"Source file does not exist: {model_file_location}")
 
-            # 移动文件到缓存
             move(model_file_location, cache_full_path)
             self.cached_files.append(cache_key)
             self.save_cached_files()

@@ -53,7 +53,6 @@ class Repository:
         self.upload_path = upload_path
         self.path_in_repo = path_in_repo
         self.branch_name = branch_name
-        # Windows下使用临时目录，其他系统使用默认目录
         if os.name == "nt":
             self.work_dir = os.path.join(tempfile.gettempdir(), "csg")
         else:
@@ -106,18 +105,15 @@ class Repository:
         if self.verbose:
             print(f"[DEBUG] Repo URL: {repo_url}")
 
-        # 优化仓库克隆逻辑
         if os.path.exists(self.repo_dir):
-            # 如果仓库目录已存在，尝试更新而不是删除重克隆
             try:
                 if self.verbose:
                     print(f"[DEBUG] Repository exists, pulling latest changes...")
                 self.git_pull(work_dir=self.repo_dir)
             except Exception as e:
-                # 如果更新失败，则删除重新克隆
                 if self.verbose:
                     print(f"[DEBUG] Pull failed, removing and re-cloning: {str(e)}")
-                print(f"更新仓库失败，重新克隆: {str(e)}")
+                print(f"Update repository failed, re-cloning: {str(e)}")
                 try:
                     shutil.rmtree(self.repo_dir)
                 except PermissionError as e:
@@ -125,7 +121,6 @@ class Repository:
                     raise Exception("permission denied,please run this program with administrator privileges")
                 self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
         else:
-            # 如果仓库目录不存在，直接克隆
             if self.verbose:
                 print(f"[DEBUG] Repository doesn't exist, cloning...")
             self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
@@ -156,69 +151,55 @@ class Repository:
             self.git_push(work_dir=git_cmd_workdir)
 
     def copy_repo_files(self):
-        """复制文件到仓库目录，优化版本"""
+        """Copy files to repository directory, optimized version"""
         from_path = self.upload_path
         git_cmd_workdir = self.repo_dir
 
-        # 构建目标路径，处理路径编码问题
         path_suffix = f"{self.path_in_repo.strip('/')}/" if self.path_in_repo else ""
         path_suffix = re.sub(r'^\./', '', path_suffix)
 
-        # 确保路径编码正确
         try:
             destination_path = os.path.join(git_cmd_workdir, path_suffix)
-            # 验证路径是否有效
             os.path.normpath(destination_path)
         except (OSError, ValueError) as e:
-            print(f"路径编码错误: {e}")
-            # 使用安全的路径构建方式
+            print(f"Path encoding error: {e}")
             destination_path = os.path.join(git_cmd_workdir, "upload")
 
-        # 确保目标目录存在
         if not os.path.exists(destination_path):
             os.makedirs(destination_path, exist_ok=True)
 
-        # 复制文件或目录
         if os.path.isfile(self.upload_path):
-            # 上传单个文件
             try:
                 filename = os.path.basename(self.upload_path)
-                # 确保文件名是安全的
                 safe_filename = self._get_safe_filename(filename)
                 destination_file_path = os.path.join(destination_path, safe_filename)
                 shutil.copyfile(self.upload_path, destination_file_path)
             except (OSError, UnicodeError) as e:
-                print(f"文件复制失败: {e}")
-                # 使用默认文件名
+                print(f"File copy failed: {e}")
                 destination_file_path = os.path.join(destination_path, "uploaded_file")
                 shutil.copyfile(self.upload_path, destination_file_path)
         else:
-            # 上传目录
             try:
                 shutil.copytree(from_path, destination_path, dirs_exist_ok=True, ignore=ignore_folders)
             except (OSError, UnicodeError) as e:
-                print(f"目录复制失败: {e}")
-                # 如果目录复制失败，尝试逐个复制文件
+                print(f"Directory copy failed: {e}")
                 self._copy_files_individually(from_path, destination_path)
 
         return git_cmd_workdir
 
     def _get_safe_filename(self, filename):
-        """获取安全的文件名，处理编码问题"""
+        """Get safe filename, handle encoding issues"""
         try:
-            # 尝试编码解码来验证文件名
             filename.encode('utf-8').decode('utf-8')
             return filename
         except UnicodeError:
-            # 如果文件名有编码问题，使用安全的替代名
             import hashlib
             safe_name = hashlib.md5(filename.encode('utf-8', errors='ignore')).hexdigest()
-            # 保留原始扩展名
             ext = os.path.splitext(filename)[1]
             return f"file_{safe_name}{ext}"
 
     def _copy_files_individually(self, from_path, destination_path):
-        """逐个复制文件，处理编码问题"""
+        """Copy files individually, handle encoding issues"""
         if not os.path.exists(from_path):
             return
 
@@ -230,11 +211,10 @@ class Repository:
                 if os.path.isfile(source_item):
                     shutil.copyfile(source_item, dest_item)
                 elif os.path.isdir(source_item):
-                    # 递归复制子目录
                     os.makedirs(dest_item, exist_ok=True)
                     self._copy_files_individually(source_item, dest_item)
             except (OSError, UnicodeError) as e:
-                print(f"跳过文件 {item}: {e}")
+                print(f"Skip file {item}: {e}")
                 continue
 
     def auto_create_repo_and_branch(self):
@@ -337,13 +317,12 @@ class Repository:
         try:
             env = os.environ.copy()
             env.update({"GIT_LFS_SKIP_SMUDGE": "1"})
-            # 在Windows下设置git配置
             if os.name == "nt":
                 try:
                     self.run_subprocess("git config --global core.quotepath false".split(), folder=self.work_dir,
                                         check=False)
                 except:
-                    pass  # 忽略配置错误，继续执行
+                    pass  # ignore configuration error, continue execution
 
             result = self.run_subprocess(
                 command=f"git clone -b {branch_name} {repo_url}",
@@ -402,7 +381,7 @@ class Repository:
             self,
             work_dir: str,
     ) -> subprocess.CompletedProcess:
-        """更新仓库到最新版本"""
+        """Update repository to the latest version"""
         try:
             result = self.run_subprocess("git pull".split(), work_dir)
         except subprocess.CalledProcessError as exc:
@@ -442,18 +421,14 @@ class Repository:
 
     def list_files_to_be_staged(self, work_dir: str, pattern: str = ".") -> List[str]:
         try:
-            # 先设置git配置，然后执行ls-files命令
             try:
                 self.run_subprocess("git config --global core.quotepath false".split(), work_dir)
             except subprocess.CalledProcessError:
-                # 如果全局配置失败，尝试本地配置
                 try:
                     self.run_subprocess("git config core.quotepath false".split(), work_dir)
                 except subprocess.CalledProcessError:
-                    # 如果配置失败，继续执行，不中断流程
                     pass
 
-            # 执行ls-files命令
             p = self.run_subprocess("git ls-files --exclude-standard -mo".split() + [pattern], work_dir)
             if len(p.stdout.strip()):
                 files = p.stdout.strip().split("\n")

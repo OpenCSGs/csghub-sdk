@@ -31,7 +31,7 @@ from pycsghub.utils import (get_file_download_url,
 API_FILE_DOWNLOAD_RETRY_TIMES = 3
 API_FILE_DOWNLOAD_TIMEOUT = 30
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def get_csg_hub_url():
 
 
 class MultiThreadDownloader:
-    """多线程下载器"""
+    """Multi-threaded downloader"""
 
     def __init__(self, max_workers=4, chunk_size=8192, retry_times=3, timeout=30):
         self.max_workers = max_workers
@@ -65,16 +65,15 @@ class MultiThreadDownloader:
     def download_file_with_retry(self, url: str, file_path: str, headers: dict = None,
                                  cookies: CookieJar = None, token: str = None,
                                  file_name: str = None, progress_bar: tqdm = None) -> bool:
-        """下载单个文件，带重试机制"""
+        """Download a single file with retry mechanism"""
         headers = headers or {}
         get_headers = build_csg_headers(token=token, headers=headers)
 
         for attempt in range(self.retry_times + 1):
             try:
                 logger.info(
-                    f"开始下载文件: {file_name or os.path.basename(file_path)} (尝试 {attempt + 1}/{self.retry_times + 1})")
+                    f"Start downloading file: {file_name or os.path.basename(file_path)} (attempt {attempt + 1}/{self.retry_times + 1})")
 
-                # 创建临时文件
                 temp_file_path = file_path + '.tmp'
 
                 with open(temp_file_path, 'wb') as f:
@@ -87,12 +86,11 @@ class MultiThreadDownloader:
                     )
                     response.raise_for_status()
 
-                    # 获取文件大小
                     total_size = int(response.headers.get('content-length', 0))
 
                     if progress_bar:
                         progress_bar.total = total_size
-                        progress_bar.set_description(f"下载 {file_name or os.path.basename(file_path)}")
+                        progress_bar.set_description(f"Downloading {file_name or os.path.basename(file_path)}")
 
                     downloaded_size = 0
                     for chunk in response.iter_content(chunk_size=self.chunk_size):
@@ -102,51 +100,48 @@ class MultiThreadDownloader:
                             if progress_bar:
                                 progress_bar.update(len(chunk))
 
-                # 验证文件大小
                 if total_size > 0:
                     actual_size = os.path.getsize(temp_file_path)
                     if actual_size != total_size:
-                        logger.warning(f"文件大小不匹配: 期望 {total_size}, 实际 {actual_size}")
+                        logger.warning(f"File size mismatch: expected {total_size}, actual {actual_size}")
                         if attempt < self.retry_times:
-                            logger.info(f"重试下载...")
+                            logger.info(f"Retry downloading...")
                             continue
                         else:
-                            logger.error(f"文件大小验证失败，已达到最大重试次数")
+                            logger.error(f"File size verification failed, reached maximum retry count")
                             return False
 
-                # 移动临时文件到最终位置
                 os.rename(temp_file_path, file_path)
-                logger.info(f"文件下载成功: {file_path}")
+                logger.info(f"File download successful: {file_path}")
                 return True
 
             except requests.exceptions.RequestException as e:
-                logger.error(f"下载失败 (尝试 {attempt + 1}/{self.retry_times + 1}): {e}")
-                if attempt < self.retry_times:
-                    wait_time = 2 ** attempt  # 指数退避
-                    logger.info(f"等待 {wait_time} 秒后重试...")
-                    time.sleep(wait_time)
-                else:
-                    logger.error(f"文件下载失败，已达到最大重试次数: {file_name or os.path.basename(file_path)}")
-                    return False
-            except Exception as e:
-                logger.error(f"未知错误 (尝试 {attempt + 1}/{self.retry_times + 1}): {e}")
+                logger.error(f"Download failed (attempt {attempt + 1}/{self.retry_times + 1}): {e}")
                 if attempt < self.retry_times:
                     wait_time = 2 ** attempt
-                    logger.info(f"等待 {wait_time} 秒后重试...")
+                    logger.info(f"Waiting {wait_time} seconds before retrying...")
                     time.sleep(wait_time)
                 else:
-                    logger.error(f"文件下载失败，已达到最大重试次数: {file_name or os.path.basename(file_path)}")
+                    logger.error(f"File download failed, reached maximum retry count: {file_name or os.path.basename(file_path)}")
+                    return False
+            except Exception as e:
+                logger.error(f"Unknown error (attempt {attempt + 1}/{self.retry_times + 1}): {e}")
+                if attempt < self.retry_times:
+                    wait_time = 2 ** attempt
+                    logger.info(f"Waiting {wait_time} seconds before retrying...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"File download failed, reached maximum retry count: {file_name or os.path.basename(file_path)}")
                     return False
 
         return False
 
     def download_files_parallel(self, download_tasks: List[Dict],
                                 progress_bar: tqdm = None) -> Dict[str, bool]:
-        """并行下载多个文件"""
+        """Download multiple files in parallel"""
         results = {}
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # 提交所有下载任务
             future_to_file = {}
             for task in download_tasks:
                 future = executor.submit(
@@ -161,14 +156,14 @@ class MultiThreadDownloader:
                 )
                 future_to_file[future] = task.get('file_name', os.path.basename(task['file_path']))
 
-            # 收集结果
+            # Collect results
             for future in as_completed(future_to_file):
                 file_name = future_to_file[future]
                 try:
                     success = future.result()
                     results[file_name] = success
                 except Exception as e:
-                    logger.error(f"下载任务异常: {file_name} - {e}")
+                    logger.error(f"Download task exception: {file_name} - {e}")
                     results[file_name] = False
 
         return results
@@ -177,11 +172,10 @@ class MultiThreadDownloader:
                                             progress_bar: tqdm = None,
                                             progress_tracker=None,
                                             progress_callback=None) -> Dict[str, bool]:
-        """并行下载多个文件，支持进度回调"""
+        """Download multiple files in parallel, support progress callback"""
         results = {}
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # 提交所有下载任务
             future_to_file = {}
             for task in download_tasks:
                 future = executor.submit(
@@ -196,31 +190,26 @@ class MultiThreadDownloader:
                 )
                 future_to_file[future] = task.get('file_name', os.path.basename(task['file_path']))
 
-            # 收集结果
             for future in as_completed(future_to_file):
                 file_name = future_to_file[future]
                 try:
                     success = future.result()
                     results[file_name] = success
                     
-                    # 更新进度跟踪器
                     if progress_tracker:
                         progress_tracker.update_progress(file_name, success)
                         
-                        # 调用进度回调函数
                         if progress_callback:
                             progress_info = progress_tracker.get_progress_info()
                             progress_callback(progress_info)
                             
                 except Exception as e:
-                    logger.error(f"下载任务异常: {file_name} - {e}")
+                    logger.error(f"Download task exception: {file_name} - {e}")
                     results[file_name] = False
                     
-                    # 更新进度跟踪器（失败情况）
                     if progress_tracker:
                         progress_tracker.update_progress(file_name, False)
                         
-                        # 调用进度回调函数
                         if progress_callback:
                             progress_info = progress_tracker.get_progress_info()
                             progress_callback(progress_info)
@@ -247,7 +236,6 @@ def file_download(
         max_workers: int = 4,
         use_parallel: bool = True,
 ) -> str:
-    # 恢复原有的缓存目录逻辑
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
@@ -260,15 +248,12 @@ def file_download(
         raise InvalidParameter('file_name cannot be None, if you want to load single file from repo {}'.format(repo_id))
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
-    # 在Windows下处理特殊字符
     if os.name == 'nt':
         name = name.replace('.', '___')
-        # 进一步清理Windows不允许的字符
         invalid_chars = '<>:"|?*'
         for char in invalid_chars:
             name = name.replace(char, '_')
 
-    # 为每个模型创建独立的缓存实例
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
     if local_files_only:
@@ -281,7 +266,7 @@ def file_download(
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
         # make headers
-        # todo need to add cookies？
+        # todo need to add cookies?
         repo_info = utils.get_repo_info(repo_id=repo_id,
                                         revision=revision,
                                         token=token,
@@ -301,10 +286,8 @@ def file_download(
         if file_name not in model_files:
             raise InvalidParameter('file {} not in repo {}'.format(file_name, repo_id))
 
-        # 使用模型专用的临时目录，但保持原有的缓存目录结构
         model_temp_dir = get_model_temp_dir(cache_dir, f"{group_or_owner}/{name}")
 
-        # 直接使用模型临时目录，避免创建随机子目录
         repo_file_info = pack_repo_file_info(file_name, revision)
         if not cache.exists(repo_file_info):
             file_name = os.path.basename(repo_file_info['Path'])
@@ -318,7 +301,6 @@ def file_download(
                 source=source)
 
             if use_parallel:
-                # 使用多线程下载
                 downloader = MultiThreadDownloader(max_workers=max_workers)
                 download_tasks = [{
                     'url': url,
@@ -329,13 +311,12 @@ def file_download(
                     'file_name': file_name
                 }]
 
-                with tqdm(total=1, desc=f"下载文件", unit="文件") as pbar:
+                with tqdm(total=1, desc=f"Downloading file", unit="file") as pbar:
                     results = downloader.download_files_parallel(download_tasks, pbar)
 
                 if not results.get(file_name, False):
-                    raise Exception(f"文件下载失败: {file_name}")
+                    raise Exception(f"File download failed: {file_name}")
             else:
-                # 使用原有的单线程下载
                 http_get(
                     url=url,
                     local_dir=model_temp_dir,
@@ -373,7 +354,7 @@ def snapshot_download_parallel(
         max_workers: int = 4,
         use_parallel: bool = True,
 ) -> str:
-    """并行下载整个仓库的快照"""
+    """Download snapshot of the entire repository in parallel"""
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
     if repo_type not in REPO_TYPES:
@@ -392,7 +373,6 @@ def snapshot_download_parallel(
         print(f"[VERBOSE] allow_patterns: {allow_patterns}")
         print(f"[VERBOSE] ignore_patterns: {ignore_patterns}")
 
-    # 恢复原有的缓存目录逻辑
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
@@ -405,7 +385,6 @@ def snapshot_download_parallel(
     else:
         local_dir = str(Path.cwd() / repo_id)
 
-    # 确保local_dir目录存在
     os.makedirs(local_dir, exist_ok=True)
     if verbose:
         print(f"[VERBOSE] Created/verified local_dir: {local_dir}")
@@ -419,7 +398,6 @@ def snapshot_download_parallel(
     if verbose:
         print(f"[VERBOSE] Parsed repo_id - owner: {group_or_owner}, name: {name}")
 
-    # 为每个模型创建独立的缓存实例
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
     if local_files_only:
@@ -474,7 +452,6 @@ def snapshot_download_parallel(
             print(f"[VERBOSE] model_temp_dir: {model_temp_dir}")
             print(f"[VERBOSE] Starting parallel download for {len(repo_files)} files...")
 
-        # 准备下载任务
         download_tasks = []
         files_to_download = []
 
@@ -505,7 +482,7 @@ def snapshot_download_parallel(
             if verbose:
                 print(f"[VERBOSE] Download URL: {url}")
 
-            # 准备下载任务
+            # Prepare download tasks
             download_tasks.append({
                 'url': url,
                 'file_path': os.path.join(model_temp_dir, repo_file),
@@ -518,13 +495,11 @@ def snapshot_download_parallel(
 
         if download_tasks:
             if use_parallel:
-                # 使用多线程并行下载
                 downloader = MultiThreadDownloader(max_workers=max_workers)
 
-                with tqdm(total=len(download_tasks), desc="并行下载文件", unit="文件") as pbar:
+                with tqdm(total=len(download_tasks), desc="Parallel downloading files", unit="file") as pbar:
                     results = downloader.download_files_parallel(download_tasks, pbar)
 
-                # 处理下载结果
                 failed_files = []
                 for file_name, success in results.items():
                     if success:
@@ -536,13 +511,12 @@ def snapshot_download_parallel(
                             print(f"[VERBOSE] File successfully saved to: {savedFile}")
                     else:
                         failed_files.append(file_name)
-                        logger.error(f"文件下载失败: {file_name}")
+                        logger.error(f"File download failed: {file_name}")
 
                 if failed_files:
-                    logger.error(f"以下文件下载失败: {failed_files}")
-                    raise Exception(f"部分文件下载失败，请检查网络连接或重试")
+                    logger.error(f"Some files download failed: {failed_files}")
+                    raise Exception(f"Some files download failed, please check network connection or retry")
             else:
-                # 使用原有的单线程下载
                 for repo_file in files_to_download:
                     if verbose:
                         print(f"[VERBOSE] Starting HTTP download for {repo_file}...")
