@@ -3,6 +3,9 @@ import requests
 from typing import Optional
 from pycsghub.constants import (DEFAULT_REVISION)
 from pycsghub.utils import (build_csg_headers, get_endpoint)
+import logging
+
+logger = logging.getLogger(__name__)
 
 def http_upload_file(
         repo_id: str,
@@ -25,7 +28,7 @@ def http_upload_file(
     form_data = {'file_path': destination_path, 'branch': revision, 'message': 'upload' + file_path}
     response = requests.post(http_url, headers=post_headers, data=form_data, files=file_data)
     if response.status_code == 200:
-        print(f"file '{file_path}' upload successfully.")
+        logger.info(f"file '{file_path}' upload successfully.")
     else:
-        print(f"fail to upload {file_path} with response code: {response.status_code}, error: {response.content.decode()}")
+        logger.error(f"fail to upload {file_path} with response code: {response.status_code}, error: {response.content.decode()}")
     

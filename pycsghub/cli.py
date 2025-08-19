@@ -49,7 +49,7 @@ OPTIONS = {
     "source": typer.Option("--source", help="Specify the source of the repository (e.g. 'csg', 'hf', 'ms')."),
 }
 
-@app.command(name="download", help="Download model/dataset from OpenCSG Hub", no_args_is_help=True)
+@app.command(name="download", help="Download model/dataset/space from OpenCSG Hub", no_args_is_help=True)
 def download(
         repo_id: Annotated[str, OPTIONS["repoID"]],
         repo_type: Annotated[RepoType, OPTIONS["repoType"]] = RepoType.MODEL, 
@@ -245,7 +245,6 @@ def stop_finetune(
     }
 )
 def main(
-    version: bool = OPTIONS["version"],
     log_level: str = OPTIONS["log_level"]
 ):
     # for example: format='%(asctime)s - %(name)s:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s',

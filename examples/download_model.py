@@ -1,3 +1,4 @@
+import logging
 from pycsghub.snapshot_download import snapshot_download
 # token = "your access token"
 token = None
@@ -8,6 +9,14 @@ repo_id = "OpenCSG/csg-wukong-1B"
 local_dir = "/Users/hhwang/temp/wukong"
 allow_patterns = ["*.json"]
 ignore_patterns = ["tokenizer.json"]
+
+# set log level
+logging.basicConfig(
+    level=getattr(logging, "INFO"),
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[logging.StreamHandler()]
+)
 
 result = snapshot_download(
     repo_id, 
