@@ -81,7 +81,7 @@ def build_csg_headers(token: Optional[str] = None, headers: Optional[Dict[str, A
     return default_headers
 
 
-def model_id_to_group_owner_name(model_id: str) -> tuple[str, str]:
+def model_id_to_group_owner_name(model_id: str):
     """Convert model ID to group and owner name"""
     if "/" not in model_id:
         raise ValueError(f"Invalid model_id format: {model_id}")

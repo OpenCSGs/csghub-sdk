@@ -83,8 +83,8 @@ def snapshot_download(
         token: Optional[str] = None,
         source: Optional[str] = None,
         verbose: bool = False,
-        max_workers: int = 4,
         use_parallel: bool = True,
+        max_workers: int = 4,
         progress_callback: Optional[Callable[[Dict], None]] = None,
 ) -> str:
     if repo_type is None:
@@ -188,144 +188,25 @@ def snapshot_download(
             print(f"[VERBOSE] Starting download loop for {len(repo_files)} files...")
 
         if use_parallel:
-            download_tasks = []
-            files_to_download = []
-
-            for repo_file in repo_files:
-                if verbose:
-                    print(f"[VERBOSE] Processing file: {repo_file}")
-
-                repo_file_info = pack_repo_file_info(repo_file, revision)
-                if cache.exists(repo_file_info):
-                    file_name = os.path.basename(repo_file_info['Path'])
-                    print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
-                    if verbose:
-                        print(f"[VERBOSE] File already exists, skipping download")
-                    continue
-
-                if verbose:
-                    print(f"[VERBOSE] File does not exist, preparing download...")
-
-                # get download url
-                url = get_file_download_url(
-                    model_id=repo_id,
-                    file_path=repo_file,
-                    repo_type=repo_type,
-                    revision=revision,
-                    endpoint=download_endpoint,
-                    source=source)
-
-                if verbose:
-                    print(f"[VERBOSE] Download URL: {url}")
-
-                download_tasks.append({
-                    'url': url,
-                    'file_path': os.path.join(model_temp_dir, repo_file),
-                    'headers': headers,
-                    'cookies': cookies,
-                    'token': token,
-                    'file_name': repo_file
-                })
-                files_to_download.append(repo_file)
-
-            if download_tasks:
-                logger.info(f"Start parallel downloading {len(download_tasks)} files, using {max_workers} threads")
-
-                progress_tracker = DownloadProgressTracker(len(download_tasks))
-                progress_tracker.set_remaining_files(files_to_download)
-
-                downloader = MultiThreadDownloader(max_workers=max_workers)
-
-                with tqdm(total=len(download_tasks), desc="Parallel downloading files", unit="file") as pbar:
-                    results = downloader.download_files_parallel_with_progress(
-                        download_tasks, pbar, progress_tracker, progress_callback)
-
-                failed_files = []
-                for file_name, success in results.items():
-                    if success:
-                        temp_file = os.path.join(model_temp_dir, file_name)
-                        repo_file_info = pack_repo_file_info(file_name, revision)
-                        savedFile = cache.put_file(repo_file_info, temp_file)
-                        print(f"Saved file to '{savedFile}'")
-                        if verbose:
-                            print(f"[VERBOSE] File successfully saved to: {savedFile}")
-                    else:
-                        failed_files.append(file_name)
-                        logger.error(f"File download failed: {file_name}")
-
-                if failed_files:
-                    logger.error(f"Some files download failed: {failed_files}")
-                    raise Exception(f"Some files download failed, please check network connection or retry")
+            snapshot_download_with_multi_thread(
+                max_workers=max_workers
+            )
         else:
-            files_to_download = []
-            for repo_file in repo_files:
-                repo_file_info = pack_repo_file_info(repo_file, revision)
-                if not cache.exists(repo_file_info):
-                    files_to_download.append(repo_file)
-            
-            progress_tracker = DownloadProgressTracker(len(files_to_download))
-            progress_tracker.set_remaining_files(files_to_download)
-            
-            for repo_file in repo_files:
-                if verbose:
-                    print(f"[VERBOSE] Processing file: {repo_file}")
-
-                repo_file_info = pack_repo_file_info(repo_file, revision)
-                if cache.exists(repo_file_info):
-                    file_name = os.path.basename(repo_file_info['Path'])
-                    print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
-                    if verbose:
-                        print(f"[VERBOSE] File already exists, skipping download")
-                    continue
-
-                if verbose:
-                    print(f"[VERBOSE] File does not exist, downloading...")
-
-                # get download url
-                url = get_file_download_url(
-                    model_id=repo_id,
-                    file_path=repo_file,
-                    repo_type=repo_type,
-                    revision=revision,
-                    endpoint=download_endpoint,
-                    source=source)
-
-                if verbose:
-                    print(f"[VERBOSE] Download URL: {url}")
-
-                # todo support parallel download api
-                if verbose:
-                    print(f"[VERBOSE] Starting HTTP download...")
-
-                try:
-                    http_get(
-                        url=url,
-                        local_dir=model_temp_dir,
-                        file_name=repo_file,
-                        headers=headers,
-                        cookies=cookies,
-                        token=token)
-
-                    # todo using hash to check file integrity
-                    temp_file = os.path.join(model_temp_dir, repo_file)
-                    if verbose:
-                        print(f"[VERBOSE] Temp file path: {temp_file}")
-
-                    savedFile = cache.put_file(repo_file_info, temp_file)
-                    print(f"Saved file to '{savedFile}'")
-
-                    if verbose:
-                        print(f"[VERBOSE] File successfully saved to: {savedFile}")
-                    
-                    progress_tracker.update_progress(repo_file, True)
-                    
-                except Exception as e:
-                    logger.error(f"File download failed: {repo_file} - {e}")
-                    progress_tracker.update_progress(repo_file, False)
-                
-                if progress_callback:
-                    progress_info = progress_tracker.get_progress_info()
-                    progress_callback(progress_info)
+            snapshot_download_with_single_thread(
+                repo_id=repo_id,
+                repo_type=repo_type,
+                repo_files=repo_files,
+                revision=revision,
+                cache=cache,
+                download_endpoint=download_endpoint,
+                source=source,
+                headers=headers,
+                cookies=cookies,
+                token=token,
+                model_temp_dir=model_temp_dir,
+                verbose=verbose,
+                progress_callback=progress_callback,
+            )
 
         cache.save_model_version(revision_info={'Revision': revision})
 
@@ -334,3 +215,174 @@ def snapshot_download(
             print(f"[VERBOSE] Download completed. Final location: {final_location}")
 
         return final_location
+
+def snapshot_download_with_single_thread(
+        repo_id: str,
+        repo_type: str,
+        repo_files: list,
+        revision: str,
+        cache: ModelFileSystemCache,
+        download_endpoint: str,
+        source: str,
+        headers: Dict[str, str],
+        cookies: CookieJar,
+        token: str,
+        model_temp_dir: str,
+        verbose: bool,
+        progress_callback: Optional[Callable[[Dict], None]]
+):
+    files_to_download = []
+    for repo_file in repo_files:
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if not cache.exists(repo_file_info):
+            files_to_download.append(repo_file)
+    
+    progress_tracker = DownloadProgressTracker(len(files_to_download))
+    progress_tracker.set_remaining_files(files_to_download)
+    
+    for repo_file in repo_files:
+        if verbose:
+            print(f"[VERBOSE] Processing file: {repo_file}")
+
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if cache.exists(repo_file_info):
+            file_name = os.path.basename(repo_file_info['Path'])
+            print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
+            if verbose:
+                print(f"[VERBOSE] File already exists, skipping download")
+            continue
+
+        if verbose:
+            print(f"[VERBOSE] File does not exist, downloading...")
+
+        # get download url
+        url = get_file_download_url(
+            model_id=repo_id,
+            file_path=repo_file,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=download_endpoint,
+            source=source)
+
+        if verbose:
+            print(f"[VERBOSE] Download URL: {url}")
+
+        # todo support parallel download api
+        if verbose:
+            print(f"[VERBOSE] Starting HTTP download...")
+
+        try:
+            http_get(
+                url=url,
+                local_dir=model_temp_dir,
+                file_name=repo_file,
+                headers=headers,
+                cookies=cookies,
+                token=token)
+
+            # todo using hash to check file integrity
+            temp_file = os.path.join(model_temp_dir, repo_file)
+            if verbose:
+                print(f"[VERBOSE] Temp file path: {temp_file}")
+
+            savedFile = cache.put_file(repo_file_info, temp_file)
+            print(f"Saved file to '{savedFile}'")
+
+            if verbose:
+                print(f"[VERBOSE] File successfully saved to: {savedFile}")
+            
+            progress_tracker.update_progress(repo_file, True)
+            
+        except Exception as e:
+            logger.error(f"File download failed: {repo_file} - {e}")
+            progress_tracker.update_progress(repo_file, False)
+        
+        if progress_callback:
+            progress_info = progress_tracker.get_progress_info()
+            progress_callback(progress_info)
+
+
+def snapshot_download_with_multi_thread(
+        repo_id: str,
+        repo_type: str,
+        repo_files: list,
+        revision: str,
+        cache: ModelFileSystemCache,
+        download_endpoint: str,
+        source: str,
+        headers: Dict[str, str],
+        cookies: CookieJar,
+        token: str,
+        model_temp_dir: str,
+        verbose: bool,
+        max_workers: int,
+        progress_callback: Optional[Callable[[Dict], None]],
+):
+    download_tasks = []
+    files_to_download = []
+
+    for repo_file in repo_files:
+        if verbose:
+            print(f"[VERBOSE] Processing file: {repo_file}")
+
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if cache.exists(repo_file_info):
+            file_name = os.path.basename(repo_file_info['Path'])
+            print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
+            if verbose:
+                print(f"[VERBOSE] File already exists, skipping download")
+            continue
+
+        if verbose:
+            print(f"[VERBOSE] File does not exist, preparing download...")
+
+        # get download url
+        url = get_file_download_url(
+            model_id=repo_id,
+            file_path=repo_file,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=download_endpoint,
+            source=source)
+
+        if verbose:
+            print(f"[VERBOSE] Download URL: {url}")
+
+        download_tasks.append({
+            'url': url,
+            'file_path': os.path.join(model_temp_dir, repo_file),
+            'headers': headers,
+            'cookies': cookies,
+            'token': token,
+            'file_name': repo_file
+        })
+        files_to_download.append(repo_file)
+
+    if download_tasks:
+        logger.info(f"Start parallel downloading {len(download_tasks)} files, using {max_workers} threads")
+
+        progress_tracker = DownloadProgressTracker(len(download_tasks))
+        progress_tracker.set_remaining_files(files_to_download)
+
+        downloader = MultiThreadDownloader(max_workers=max_workers)
+
+        with tqdm(total=len(download_tasks), desc="Parallel downloading files", unit="file") as pbar:
+            results = downloader.download_files_parallel_with_progress(
+                download_tasks, pbar, progress_tracker, progress_callback)
+
+        failed_files = []
+        for file_name, success in results.items():
+            if success:
+                temp_file = os.path.join(model_temp_dir, file_name)
+                repo_file_info = pack_repo_file_info(file_name, revision)
+                savedFile = cache.put_file(repo_file_info, temp_file)
+                print(f"Saved file to '{savedFile}'")
+                if verbose:
+                    print(f"[VERBOSE] File successfully saved to: {savedFile}")
+            else:
+                failed_files.append(file_name)
+                logger.error(f"File download failed: {file_name}")
+
+        if failed_files:
+            logger.error(f"Some files download failed: {failed_files}")
+            raise Exception(f"Some files download failed, please check network connection or retry")

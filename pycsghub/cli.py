@@ -238,6 +238,8 @@ def download(
             ignore_patterns=ignore_patterns,
             source=source,
             verbose=verbose,
+            use_parallel=False,
+            max_workers=4,
         )
     except Exception as e:
         print(f"\n❌ Error in download command: {e}")
