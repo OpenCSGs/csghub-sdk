@@ -189,10 +189,6 @@ def snapshot_download(
 
         if use_parallel:
             snapshot_download_with_multi_thread(
-                max_workers=max_workers
-            )
-        else:
-            snapshot_download_with_single_thread(
                 repo_id=repo_id,
                 repo_type=repo_type,
                 repo_files=repo_files,
@@ -205,7 +201,12 @@ def snapshot_download(
                 token=token,
                 model_temp_dir=model_temp_dir,
                 verbose=verbose,
+                max_workers=max_workers,
                 progress_callback=progress_callback,
+            )
+        else:
+            snapshot_download_with_single_thread(
+
             )
 
         cache.save_model_version(revision_info={'Revision': revision})
