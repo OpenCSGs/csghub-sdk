@@ -17,6 +17,9 @@ from pycsghub.constants import (GIT_HIDDEN_DIR, GIT_ATTRIBUTES_FILE)
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
                             get_endpoint)
+import logging
+
+logger = logging.getLogger(__name__)
 
 def ignore_folders(folder, contents):
     ignored = []
@@ -185,7 +188,7 @@ class Repository:
         })
         response = requests.post(url, json=data, headers=headers)
         if response.status_code != 200:
-            print(f"create branch on {url} response: {response.text}")
+            logger.info(f"create branch on {url} response: {response.text}")
         response.raise_for_status()
         return response
 
@@ -208,7 +211,7 @@ class Repository:
         })
         response = requests.post(url, json=data, headers=headers)
         if response.status_code != 200:
-            print(f"create repo on {url} response: {response.text}")
+            logger.info(f"create repo on {url} response: {response.text}")
         response.raise_for_status()
         return response
 
@@ -291,6 +294,7 @@ class Repository:
             if filename in deleted_files:
                 continue
             
+            logger.debug(f"Checking file {filename} for LFS tracking.")
             path_to_file = os.path.join(os.getcwd(), work_dir, filename)
             size_in_mb = os.path.getsize(path_to_file) / (1024 * 1024)
 
@@ -302,11 +306,23 @@ class Repository:
 
         return files_to_be_tracked_with_lfs
 
+    def set_git_config_quotepath(self, work_dir: str) -> None:
+        try:
+            self.run_subprocess("git config --global core.quotepath false".split(), work_dir)
+        except subprocess.CalledProcessError:
+            try:
+                self.run_subprocess("git config core.quotepath false".split(), work_dir)
+            except subprocess.CalledProcessError:
+                pass
+
     def list_files_to_be_staged(self, work_dir: str, pattern: str = ".") -> List[str]:
         try:
+            self.set_git_config_quotepath(work_dir)
             p = self.run_subprocess("git ls-files --exclude-standard -mo".split() + [pattern], work_dir)
-            if len(p.stdout.strip()):
-                files = p.stdout.strip().split("\n")
+            output = p.stdout.strip()
+            if len(output):
+                logger.debug(f"Files to be staged: {output}")
+                files = output.split("\n")
             else:
                 files = []
         except subprocess.CalledProcessError as exc:

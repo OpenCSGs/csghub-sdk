@@ -14,6 +14,9 @@ from pycsghub.file_download import http_get
 from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
 from pycsghub import utils
 from pycsghub.constants import REPO_TYPE_MODEL
+import logging
+
+logger = logging.getLogger(__name__)
 
 def snapshot_download(
         repo_id: str,
@@ -35,14 +38,18 @@ def snapshot_download(
         repo_type = REPO_TYPE_MODEL
     if repo_type not in REPO_TYPES:
         raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
+    
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
+
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
     os.makedirs(temporary_cache_dir, exist_ok=True)
     
-    if local_dir is not None and isinstance(local_dir, Path):
+    if local_dir is None:
+        local_dir = os.getcwd()
+    if isinstance(local_dir, Path):
         local_dir = str(local_dir)
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
@@ -83,7 +90,7 @@ def snapshot_download(
                 repo_file_info = pack_repo_file_info(repo_file, revision)
                 if cache.exists(repo_file_info):
                     file_name = os.path.basename(repo_file_info['Path'])
-                    print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
+                    logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
                     continue
 
                 # get download url
@@ -95,6 +102,7 @@ def snapshot_download(
                     endpoint=download_endpoint,
                     source=source)
                 # todo support parallel download api
+                logger.debug(f"Downloading {repo_file} from {url}")
                 http_get(
                     url=url,
                     local_dir=temp_cache_dir,
@@ -106,7 +114,7 @@ def snapshot_download(
                 # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, repo_file)
                 savedFile = cache.put_file(repo_file_info, temp_file)
-                print(f"Saved file to '{savedFile}'")
+                logger.info(f"Saved file to '{savedFile}'")
             
         cache.save_model_version(revision_info={'Revision': revision})
         return os.path.join(cache.get_root_location())

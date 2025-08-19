@@ -17,6 +17,8 @@ from pycsghub.csghub_api import CsgHubApi
 from pycsghub.constants import DEFAULT_REVISION
 import os
 import signal
+import shutil
+from .local_folder import cache_path, cache_csghub
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +69,7 @@ def upload_large_folder_internal(
         
         items = [
             (paths, read_upload_metadata(folder_path, paths.path_in_repo))
-            for paths in tqdm(paths_list, desc=f"recovering from cache metadata from {folder_path}/.cache")
+            for paths in tqdm(paths_list, desc=f"recovering from cache metadata from {folder_path}/f{cache_path}")
         ]
         
         logger.info(f"starting {num_workers} worker threads for upload tasks")
@@ -109,6 +111,13 @@ def upload_large_folder_internal(
 
         print(status.current_report())
         logging.info("large folder upload process is complete!")
+
+        clean_path = os.path.join(folder_path, cache_path, cache_csghub)
+        if os.path.exists(clean_path):
+            try:
+                shutil.rmtree(clean_path)
+            except Exception as e:
+                logging.error(f"failed to remove cache path: {e}")
     except KeyboardInterrupt:
         print("Terminated by Ctrl+C")
         os.kill(os.getpid(), signal.SIGTERM)

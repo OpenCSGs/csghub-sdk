@@ -14,7 +14,9 @@ from pycsghub.errors import FileIntegrityError
 from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote, urlparse
 from pycsghub.constants import S3_INTERNAL
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_session() -> requests.Session:
     session = requests.Session()
@@ -221,6 +223,8 @@ def dataset_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get dataset meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return DatasetInfo(**data)
@@ -282,6 +286,8 @@ def space_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get space meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return SpaceInfo(**data)
@@ -349,6 +355,8 @@ def model_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get model meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return ModelInfo(**data)

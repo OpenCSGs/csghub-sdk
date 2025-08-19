@@ -22,6 +22,9 @@ key_lfs_part_count = "lfs_part_count"
 key_lfs_uploaded_ids = "lfs_uploaded_ids"
 key_remote_oid = "remote_oid"
 
+cache_path = ".cache"
+cache_csghub = "csghub"
+
 @dataclass(frozen=True)
 class LocalUploadFilePaths:
     path_in_repo: str
@@ -184,7 +187,7 @@ def get_local_upload_paths(local_dir: Path, filename: str) -> LocalUploadFilePat
 
 
 def csghub_dir(local_dir: Path) -> Path:
-    path = local_dir / ".cache" / "csghub"
+    path = local_dir / cache_path / cache_csghub
     path.mkdir(exist_ok=True, parents=True)
 
     gitignore = path / ".gitignore"
