@@ -19,9 +19,8 @@ def download(
         allow_patterns: Optional[str] = None,
         ignore_patterns: Optional[str] = None,
         source: str = None,
-        verbose: bool = False,
-        use_parallel: bool = False,
-        max_workers: int = 4,
+        enable_parallel: bool = False,
+        max_parallel_workers: int = 4,
 ):
     snapshot_download(
         repo_id=repo_id,
@@ -34,9 +33,8 @@ def download(
         allow_patterns=allow_patterns,
         ignore_patterns=ignore_patterns,
         source=source,
-        verbose=verbose,
-        use_parallel=use_parallel,
-        max_workers=max_workers,
+        enable_parallel=enable_parallel,
+        max_parallel_workers=max_parallel_workers,
     )
 
 

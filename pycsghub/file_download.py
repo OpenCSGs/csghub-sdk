@@ -611,7 +611,7 @@ def http_get(*,
                         temp_file.write(chunk)
                 break
             except requests.exceptions.RequestException as e:
-                print(f"Download failed: {e}")
+                logger.error(f"Download failed: {e}")
                 if temp_file.tell() == 0:
                     raise e
                 else:
@@ -622,12 +622,11 @@ def http_get(*,
         # move temp file to final location
         final_file = os.path.join(local_dir, file_name)
         os.rename(temp_file.name, final_file)
-        print(f"Downloaded {file_name} to {final_file}")
+        logger.debug(f"Downloaded {file_name} to {final_file}")
         if total_content_length > 0:
             actual_size = os.path.getsize(final_file)
             if actual_size != total_content_length:
-                print(
-                    f"Warning: Downloaded file size ({actual_size}) doesn't match expected size ({total_content_length})")
+                logger.error(f"Warning: Downloaded file size ({actual_size}) doesn't match expected size ({total_content_length})")
 
 
 if __name__ == '__main__':

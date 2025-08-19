@@ -88,7 +88,6 @@ OPTIONS = {
                               case_sensitive=False,
                               ),
     "source": typer.Option("--source", help="Specify the source of the repository (e.g. 'csg', 'hf', 'ms')."),
-    "verbose": typer.Option("--verbose", "-v", help="Enable verbose logging for debugging."),
 }
 
 
@@ -108,21 +107,21 @@ def login(
         if token is None:
             env_token = os.environ.get("CSGHUB_TOKEN")
             if env_token:
-                print("✅ Found token in environment variable CSGHUB_TOKEN")
+                logger.info("✅ Found token in environment variable CSGHUB_TOKEN")
                 token = env_token
             else:
-                print("❌ No token found in environment variable CSGHUB_TOKEN")
-                print("Please use 'csghub-cli login --token your_token_here' to provide your token")
-                print("You can get your access token from https://opencsg.com/settings/access-token")
+                logger.error("❌ No token found in environment variable CSGHUB_TOKEN")
+                logger.info("Please use 'csghub-cli login --token your_token_here' to provide your token")
+                logger.info("You can get your access token from https://opencsg.com/settings/access-token")
                 raise typer.Exit(1)
 
         cleaned_token = _clean_token(token)
         if not cleaned_token:
-            print("❌ Error: Invalid token provided.")
+            logger.error("❌ Error: Invalid token provided.")
             raise typer.Exit(1)
 
         if len(cleaned_token) < 10:
-            print("❌ Error: Token seems too short. Please check your token.")
+            logger.error("❌ Error: Token seems too short. Please check your token.")
             raise typer.Exit(1)
 
         try:
@@ -134,21 +133,20 @@ def login(
             if os.name != 'nt':
                 os.chmod(token_path, 0o600)
 
-            print("✅ Token saved successfully!")
-            print(f"Token location: {token_path}")
-            print()
-            print("You can now use csghub-cli commands without specifying --token each time.")
+            logger.info("✅ Token saved successfully!")
+            logger.info(f"Token location: {token_path}")
+            logger.info("You can now use csghub-cli commands without specifying --token each time.")
 
         except PermissionError as e:
-            print(f"❌ Permission error saving token: {e}")
-            print("Please check if you have write permissions to the token directory.")
+            logger.error(f"❌ Permission error saving token: {e}")
+            logger.error("Please check if you have write permissions to the token directory.")
             raise typer.Exit(1)
         except Exception as e:
-            print(f"❌ Error saving token: {e}")
+            logger.error(f"❌ Error saving token: {e}")
             raise typer.Exit(1)
     except Exception as e:
-        print(f"\n❌ Error in login command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in login command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -164,14 +162,14 @@ def logout():
         token_path = Path(CSGHUB_TOKEN_PATH)
         if token_path.exists():
             token_path.unlink()
-            print("✅ Successfully logged out!")
-            print("Your access token has been removed from this machine.")
+            logger.info("✅ Successfully logged out!")
+            logger.info("Your access token has been removed from this machine.")
         else:
-            print("ℹ️  No stored token found. You are already logged out.")
+            logger.info("ℹ️  No stored token found. You are already logged out.")
 
     except Exception as e:
-        print(f"\n❌ Error in logout command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in logout command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -191,21 +189,20 @@ def whoami(
             token = _get_token_from_file()
 
         if not token:
-            print("❌ Not logged in. Please run 'csghub-cli login' first.")
+            logger.error("❌ Not logged in. Please run 'csghub-cli login' first.")
             raise typer.Exit(1)
 
         try:
-            print("✅ Logged in successfully!")
-            print(f"Token location: {CSGHUB_TOKEN_PATH}")
-            print()
-            print("Note: Token validation requires API access. Please test with a download/upload command.")
+            logger.info("✅ Logged in successfully!")
+            logger.info(f"Token location: {CSGHUB_TOKEN_PATH}")
+            logger.info("Note: Token validation requires API access. Please test with a download/upload command.")
 
         except Exception as e:
-            print(f"❌ Error verifying token: {e}")
+            logger.error(f"❌ Error verifying token: {e}")
             raise typer.Exit(1)
     except Exception as e:
-        print(f"\n❌ Error in whoami command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in whoami command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -223,7 +220,6 @@ def download(
         allow_patterns: Annotated[Optional[str], OPTIONS["allow_patterns"]] = None,
         ignore_patterns: Annotated[Optional[str], OPTIONS["ignore_patterns"]] = None,
         source: Annotated[str, OPTIONS["source"]] = REPO_SOURCE_CSG,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         repo.download(
@@ -237,13 +233,12 @@ def download(
             allow_patterns=allow_patterns,
             ignore_patterns=ignore_patterns,
             source=source,
-            verbose=verbose,
-            use_parallel=False,
-            max_workers=4,
+            enable_parallel=False,
+            max_parallel_workers=4,
         )
     except Exception as e:
-        print(f"\n❌ Error in download command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in download command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -259,7 +254,6 @@ def upload(
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         user_name: Annotated[Optional[str], OPTIONS["username"]] = "",
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         validate_repo_id(repo_id)
@@ -273,7 +267,6 @@ def upload(
                 revision=revision,
                 endpoint=endpoint,
                 token=token,
-                verbose=verbose
             )
         # Folder upload
         else:
@@ -286,14 +279,13 @@ def upload(
                 endpoint=endpoint,
                 token=token,
                 user_name=user_name,
-                verbose=verbose
             )
     except ValueError as e:
-        print(f"\n{e}")
+        logger.error(f"{e}")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Error in upload command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in upload command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -313,7 +305,6 @@ def upload_large_folder(
         num_workers: Annotated[int, OPTIONS["num_workers"]] = None,
         print_report: Annotated[bool, OPTIONS["print_report"]] = False,
         print_report_every: Annotated[int, OPTIONS["print_report_every"]] = 60,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         validate_repo_id(repo_id)
@@ -332,11 +323,11 @@ def upload_large_folder(
             print_report_every=print_report_every,
         )
     except ValueError as e:
-        print(f"\n{e}")
+        logger.error(f"{e}")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Error in upload-large-folder command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in upload-large-folder command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -355,7 +346,6 @@ def list_inferences(
         token: Annotated[str, OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
         limit: Annotated[Optional[int], OPTIONS["limit"]] = 50,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         inference.list(
@@ -365,8 +355,8 @@ def list_inferences(
             limit=limit,
         )
     except Exception as e:
-        print(f"\n❌ Error in inference list command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in inference list command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -378,7 +368,6 @@ def start_inference(
         id: int = typer.Argument(..., help="ID of the inference instance to start"),
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         inference.start(
@@ -388,8 +377,8 @@ def start_inference(
             endpoint=endpoint,
         )
     except Exception as e:
-        print(f"\n❌ Error in inference start command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in inference start command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -401,7 +390,6 @@ def stop_inference(
         id: int = typer.Argument(..., help="ID of the inference instance to start"),
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         inference.stop(
@@ -411,8 +399,8 @@ def stop_inference(
             endpoint=endpoint,
         )
     except Exception as e:
-        print(f"\n❌ Error in inference stop command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in inference stop command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -431,7 +419,6 @@ def list_finetune(
         token: Annotated[str, OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
         limit: Annotated[Optional[int], OPTIONS["limit"]] = 50,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         finetune.list(
@@ -441,8 +428,8 @@ def list_finetune(
             limit=limit,
         )
     except Exception as e:
-        print(f"\n❌ Error in finetune list command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in finetune list command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -454,7 +441,6 @@ def start_finetune(
         id: int = typer.Argument(..., help="ID of the fine-tuning instance to start"),
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         finetune.start(
@@ -464,8 +450,8 @@ def start_finetune(
             endpoint=endpoint,
         )
     except Exception as e:
-        print(f"\n❌ Error in finetune start command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in finetune start command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -477,7 +463,6 @@ def stop_finetune(
         id: int = typer.Argument(..., help="ID of the fine-tuning instance to stop"),
         token: Annotated[Optional[str], OPTIONS["token"]] = None,
         endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
-        verbose: Annotated[bool, OPTIONS["verbose"]] = False,
 ):
     try:
         finetune.stop(
@@ -487,8 +472,8 @@ def stop_finetune(
             endpoint=endpoint,
         )
     except Exception as e:
-        print(f"\n❌ Error in finetune stop command: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error in finetune stop command: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)
 
@@ -502,7 +487,6 @@ def stop_finetune(
     }
 )
 def main(
-        version: bool = OPTIONS["version"],
         log_level: str = OPTIONS["log_level"]
 ):
     # for example: format='%(asctime)s - %(name)s:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s',
@@ -520,7 +504,7 @@ if __name__ == "__main__":
     try:
         app()
     except Exception as e:
-        print(f"\n❌ Error: {e}")
-        print("\n📋 Full stack trace:")
+        logger.error(f"❌ Error: {e}")
+        logger.error("📋 Full stack trace:")
         traceback.print_exc()
         sys.exit(1)

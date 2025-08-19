@@ -7,6 +7,7 @@ import urllib
 from pathlib import Path
 from typing import Optional, Union, Dict, Any
 from urllib.parse import quote, urlparse
+import logging
 
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
@@ -21,6 +22,7 @@ from pycsghub.errors import FileIntegrityError
 
 import re
 
+logger = logging.getLogger(__name__)
 
 def get_session() -> requests.Session:
     session = requests.Session()
@@ -82,13 +84,13 @@ def build_csg_headers(token: Optional[str] = None, headers: Optional[Dict[str, A
 
 
 def model_id_to_group_owner_name(model_id: str):
-    """Convert model ID to group and owner name"""
+    """Convert repo ID to group and owner name"""
     if "/" not in model_id:
-        raise ValueError(f"Invalid model_id format: {model_id}")
+        raise ValueError(f"Invalid repo_id format: {model_id}")
     
     parts = model_id.split("/", 1)
     if len(parts) != 2:
-        raise ValueError(f"Invalid model_id format: {model_id}")
+        raise ValueError(f"Invalid repo_id format: {model_id}")
     
     namespace, name = parts
     return namespace, name
@@ -460,6 +462,8 @@ def dataset_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get {REPO_TYPE_DATASET} meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return DatasetInfo(**data)
@@ -522,6 +526,8 @@ def space_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get {REPO_TYPE_SPACE} meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return SpaceInfo(**data)
@@ -590,6 +596,8 @@ def model_info(
     if files_metadata:
         params["blobs"] = True
     r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get {REPO_TYPE_MODEL} meta info from {path} response: {r.text}")
     r.raise_for_status()
     data = r.json()
     return ModelInfo(**data)

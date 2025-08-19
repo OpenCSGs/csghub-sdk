@@ -82,9 +82,8 @@ def snapshot_download(
         endpoint: Optional[str] = None,
         token: Optional[str] = None,
         source: Optional[str] = None,
-        verbose: bool = False,
-        use_parallel: bool = True,
-        max_workers: int = 4,
+        enable_parallel: bool = False,
+        max_parallel_workers: int = 4,
         progress_callback: Optional[Callable[[Dict], None]] = None,
 ) -> str:
     if repo_type is None:
@@ -98,14 +97,13 @@ def snapshot_download(
     if ignore_patterns and isinstance(ignore_patterns, str):
         ignore_patterns = [ignore_patterns]
 
-    if verbose:
-        print(f"[VERBOSE] Starting download for repo_id: {repo_id}")
-        print(f"[VERBOSE] repo_type: {repo_type}")
-        print(f"[VERBOSE] revision: {revision}")
-        print(f"[VERBOSE] allow_patterns: {allow_patterns}")
-        print(f"[VERBOSE] ignore_patterns: {ignore_patterns}")
-        print(f"[VERBOSE] use_parallel: {use_parallel}")
-        print(f"[VERBOSE] max_workers: {max_workers}")
+    logger.debug(f"Starting download forepo_id: {repo_id}")
+    logger.debug(f"repo_type: {repo_type}")
+    logger.debug(f"revision: {revision}")
+    logger.debug(f"allow_patterns: {allow_patterns}")
+    logger.debug(f"ignore_patterns: {ignore_patterns}")
+    logger.debug(f"enable_parallel: {enable_parallel}")
+    logger.debug(f"max_parallel_workers: {max_parallel_workers}")
 
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
@@ -117,21 +115,18 @@ def snapshot_download(
     elif isinstance(local_dir, str):
         pass
     else:
-        local_dir = str(Path.cwd() / repo_id)
+        local_dir = str(Path.cwd())
 
     os.makedirs(local_dir, exist_ok=True)
-    if verbose:
-        print(f"[VERBOSE] Created/verified local_dir: {local_dir}")
 
-    if verbose:
-        print(f"[VERBOSE] cache_dir: {cache_dir}")
-        print(f"[VERBOSE] local_dir: {local_dir}")
+    logger.debug(f"created/verified local_dir: {local_dir}")
+    logger.debug(f"cache_dir: {cache_dir}")
+    logger.debug(f"local_dir: {local_dir}")
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
     # name = name.replace('.', '___')
 
-    if verbose:
-        print(f"[VERBOSE] Parsed repo_id - owner: {group_or_owner}, name: {name}")
+    logger.debug(f"parsed repo_id - owner: {group_or_owner}, name: {name}")
 
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
@@ -144,13 +139,7 @@ def snapshot_download(
         return cache.get_root_location()
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
-        if verbose:
-            print(f"[VERBOSE] download_endpoint: {download_endpoint}")
-
-        # make headers
-        # todo need to add cookies?
-        if verbose:
-            print(f"[VERBOSE] Getting repository info...")
+        logger.debug(f"download_endpoint: {download_endpoint}")
 
         repo_info = utils.get_repo_info(repo_id,
                                         repo_type=repo_type,
@@ -162,12 +151,8 @@ def snapshot_download(
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
 
-        if verbose:
-            print(f"[VERBOSE] Repository SHA: {repo_info.sha}")
-            print(f"[VERBOSE] Total files in repository: {len(repo_info.siblings)}")
-            print(f"[VERBOSE] All files in repository:")
-            for sibling in repo_info.siblings:
-                print(f"[VERBOSE]   - {sibling.rfilename}")
+        logger.debug(f"repository SHA: {repo_info.sha}")
+        logger.debug(f"total files in repository: {len(repo_info.siblings)}")
 
         repo_files = list(
             filter_repo_objects(
@@ -177,17 +162,9 @@ def snapshot_download(
             )
         )
 
-        if verbose:
-            print(f"[VERBOSE] Files after filtering: {len(repo_files)}")
-            for file in repo_files:
-                print(f"[VERBOSE]   - {file}")
         model_temp_dir = get_model_temp_dir(cache_dir, f"{group_or_owner}/{name}")
 
-        if verbose:
-            print(f"[VERBOSE] model_temp_dir: {model_temp_dir}")
-            print(f"[VERBOSE] Starting download loop for {len(repo_files)} files...")
-
-        if use_parallel:
+        if enable_parallel:
             snapshot_download_with_multi_thread(
                 repo_id=repo_id,
                 repo_type=repo_type,
@@ -200,21 +177,29 @@ def snapshot_download(
                 cookies=cookies,
                 token=token,
                 model_temp_dir=model_temp_dir,
-                verbose=verbose,
-                max_workers=max_workers,
+                max_parallel_workers=max_parallel_workers,
                 progress_callback=progress_callback,
             )
         else:
             snapshot_download_with_single_thread(
-
+                repo_id=repo_id,
+                repo_type=repo_type,
+                repo_files=repo_files,
+                revision=revision,
+                cache=cache,
+                download_endpoint=download_endpoint,
+                source=source,
+                headers=headers,
+                cookies=cookies,
+                token=token,
+                model_temp_dir=model_temp_dir,
+                progress_callback=progress_callback,
             )
 
         cache.save_model_version(revision_info={'Revision': revision})
 
         final_location = os.path.join(cache.get_root_location())
-        if verbose:
-            print(f"[VERBOSE] Download completed. Final location: {final_location}")
-
+        logger.debug(f"download completed. Final location: {final_location}")
         return final_location
 
 def snapshot_download_with_single_thread(
@@ -229,7 +214,6 @@ def snapshot_download_with_single_thread(
         cookies: CookieJar,
         token: str,
         model_temp_dir: str,
-        verbose: bool,
         progress_callback: Optional[Callable[[Dict], None]]
 ):
     files_to_download = []
@@ -242,19 +226,11 @@ def snapshot_download_with_single_thread(
     progress_tracker.set_remaining_files(files_to_download)
     
     for repo_file in repo_files:
-        if verbose:
-            print(f"[VERBOSE] Processing file: {repo_file}")
-
         repo_file_info = pack_repo_file_info(repo_file, revision)
         if cache.exists(repo_file_info):
             file_name = os.path.basename(repo_file_info['Path'])
-            print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
-            if verbose:
-                print(f"[VERBOSE] File already exists, skipping download")
+            logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
             continue
-
-        if verbose:
-            print(f"[VERBOSE] File does not exist, downloading...")
 
         # get download url
         url = get_file_download_url(
@@ -264,13 +240,6 @@ def snapshot_download_with_single_thread(
             revision=revision,
             endpoint=download_endpoint,
             source=source)
-
-        if verbose:
-            print(f"[VERBOSE] Download URL: {url}")
-
-        # todo support parallel download api
-        if verbose:
-            print(f"[VERBOSE] Starting HTTP download...")
 
         try:
             http_get(
@@ -283,17 +252,10 @@ def snapshot_download_with_single_thread(
 
             # todo using hash to check file integrity
             temp_file = os.path.join(model_temp_dir, repo_file)
-            if verbose:
-                print(f"[VERBOSE] Temp file path: {temp_file}")
-
             savedFile = cache.put_file(repo_file_info, temp_file)
-            print(f"Saved file to '{savedFile}'")
-
-            if verbose:
-                print(f"[VERBOSE] File successfully saved to: {savedFile}")
+            logger.info(f"Saved file to '{savedFile}'")
             
-            progress_tracker.update_progress(repo_file, True)
-            
+            progress_tracker.update_progress(repo_file, True)     
         except Exception as e:
             logger.error(f"File download failed: {repo_file} - {e}")
             progress_tracker.update_progress(repo_file, False)
@@ -315,27 +277,18 @@ def snapshot_download_with_multi_thread(
         cookies: CookieJar,
         token: str,
         model_temp_dir: str,
-        verbose: bool,
-        max_workers: int,
+        max_parallel_workers: int,
         progress_callback: Optional[Callable[[Dict], None]],
 ):
     download_tasks = []
     files_to_download = []
 
     for repo_file in repo_files:
-        if verbose:
-            print(f"[VERBOSE] Processing file: {repo_file}")
-
         repo_file_info = pack_repo_file_info(repo_file, revision)
         if cache.exists(repo_file_info):
             file_name = os.path.basename(repo_file_info['Path'])
-            print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
-            if verbose:
-                print(f"[VERBOSE] File already exists, skipping download")
+            logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
             continue
-
-        if verbose:
-            print(f"[VERBOSE] File does not exist, preparing download...")
 
         # get download url
         url = get_file_download_url(
@@ -345,9 +298,6 @@ def snapshot_download_with_multi_thread(
             revision=revision,
             endpoint=download_endpoint,
             source=source)
-
-        if verbose:
-            print(f"[VERBOSE] Download URL: {url}")
 
         download_tasks.append({
             'url': url,
@@ -360,12 +310,12 @@ def snapshot_download_with_multi_thread(
         files_to_download.append(repo_file)
 
     if download_tasks:
-        logger.info(f"Start parallel downloading {len(download_tasks)} files, using {max_workers} threads")
+        logger.info(f"Start parallel downloading {len(download_tasks)} files, using {max_parallel_workers} threads")
 
         progress_tracker = DownloadProgressTracker(len(download_tasks))
         progress_tracker.set_remaining_files(files_to_download)
 
-        downloader = MultiThreadDownloader(max_workers=max_workers)
+        downloader = MultiThreadDownloader(max_workers=max_parallel_workers)
 
         with tqdm(total=len(download_tasks), desc="Parallel downloading files", unit="file") as pbar:
             results = downloader.download_files_parallel_with_progress(
@@ -377,9 +327,7 @@ def snapshot_download_with_multi_thread(
                 temp_file = os.path.join(model_temp_dir, file_name)
                 repo_file_info = pack_repo_file_info(file_name, revision)
                 savedFile = cache.put_file(repo_file_info, temp_file)
-                print(f"Saved file to '{savedFile}'")
-                if verbose:
-                    print(f"[VERBOSE] File successfully saved to: {savedFile}")
+                logger.info(f"Saved file to '{savedFile}'")
             else:
                 failed_files.append(file_name)
                 logger.error(f"File download failed: {file_name}")
