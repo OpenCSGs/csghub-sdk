@@ -12,3 +12,4 @@ dist/
 .pypirc
 .vscode/
 .DS_Store
+.codesouler/

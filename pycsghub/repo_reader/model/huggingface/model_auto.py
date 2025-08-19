@@ -1,8 +1,11 @@
-import transformers
-from pycsghub.snapshot_download import snapshot_download
-from pycsghub.utils import get_token_to_send
 import os
 from pathlib import Path
+
+import transformers
+
+from pycsghub.snapshot_download import snapshot_download
+from pycsghub.utils import get_token_to_send
+
 
 @classmethod
 def from_pretrained(cls, pretrained_model_name_or_path,
@@ -19,7 +22,6 @@ def from_pretrained(cls, pretrained_model_name_or_path,
     # second step load model
     model = cls.from_pretrained_cached(path, *model_args, **model_kwargs)
     return model
-
 
 
 class_names = []
@@ -42,7 +44,3 @@ for i in class_names:
         })
     except AttributeError as e:
         print(e)
-
-
-
-

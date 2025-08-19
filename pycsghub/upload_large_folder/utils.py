@@ -4,6 +4,7 @@ _asciire = re.compile('([\x00-\x7f]+)')
 _hexdig = '0123456789ABCDEFabcdef'
 _hextobyte = None
 
+
 def unquote_to_bytes(string):
     """unquote_to_bytes('abc%20def') -> b'abc def'."""
     # Note: strings are encoded as UTF-8. This is only an issue if it contains
@@ -33,6 +34,7 @@ def unquote_to_bytes(string):
             append(b'%')
             append(item)
     return b''.join(res)
+
 
 def unquote(string, encoding='utf-8', errors='replace'):
     """Replace %xx escapes by their single-character equivalent. The optional

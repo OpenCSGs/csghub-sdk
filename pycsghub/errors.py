@@ -1,4 +1,3 @@
-
 class NotSupportError(Exception):
     pass
 

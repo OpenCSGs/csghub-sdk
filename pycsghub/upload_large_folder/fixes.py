@@ -6,6 +6,7 @@ except ImportError:
     except ImportError:
         from json import JSONDecodeError  # type: ignore  # noqa: F401
 import contextlib
+import logging
 import os
 import shutil
 import stat
@@ -18,18 +19,18 @@ import yaml
 from filelock import BaseFileLock, FileLock, SoftFileLock, Timeout
 
 from . import consts
-import logging
 
 logger = logging.getLogger(__name__)
 
 yaml_dump: Callable[..., str] = partial(yaml.dump, stream=None, allow_unicode=True)  # type: ignore
 
+
 @contextlib.contextmanager
 def SoftTemporaryDirectory(
-    suffix: Optional[str] = None,
-    prefix: Optional[str] = None,
-    dir: Optional[Union[Path, str]] = None,
-    **kwargs,
+        suffix: Optional[str] = None,
+        prefix: Optional[str] = None,
+        dir: Optional[Union[Path, str]] = None,
+        **kwargs,
 ) -> Generator[Path, None, None]:
     tmpdir = tempfile.TemporaryDirectory(prefix=prefix, suffix=suffix, dir=dir, **kwargs)
     yield Path(tmpdir.name).resolve()

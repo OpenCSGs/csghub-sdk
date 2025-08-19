@@ -1,19 +1,71 @@
+import logging
 import os
-import tempfile
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Dict, List, Optional, Union
-from pycsghub.utils import (get_file_download_url,
-                            model_id_to_group_owner_name)
+from typing import Dict, Optional, Union, Callable, List
+import threading
+
+from huggingface_hub.utils import filter_repo_objects
+from tqdm import tqdm
+
+from pycsghub import utils
 from pycsghub.cache import ModelFileSystemCache
+from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
+from pycsghub.constants import REPO_TYPE_MODEL
+from pycsghub.file_download import http_get, MultiThreadDownloader
 from pycsghub.utils import (get_cache_dir,
                             pack_repo_file_info,
                             get_endpoint)
-from huggingface_hub.utils import filter_repo_objects
-from pycsghub.file_download import http_get
-from pycsghub.constants import DEFAULT_REVISION, REPO_TYPES
-from pycsghub import utils
-from pycsghub.constants import REPO_TYPE_MODEL
+from pycsghub.utils import (get_file_download_url,
+                            model_id_to_group_owner_name,
+                            get_model_temp_dir)
+
+logger = logging.getLogger(__name__)
+
+
+class DownloadProgressTracker:
+    """Download progress tracker"""
+    
+    def __init__(self, total_files: int):
+        self.total_files = total_files
+        self.current_downloaded = 0
+        self.success_count = 0
+        self.failed_count = 0
+        self.successful_files = []
+        self.remaining_files = []
+        self.lock = threading.Lock()
+    
+    def update_progress(self, file_name: str, success: bool):
+        """Update download progress"""
+        with self.lock:
+            self.current_downloaded += 1
+            if success:
+                self.success_count += 1
+                self.successful_files.append(file_name)
+            else:
+                self.failed_count += 1
+            
+            if file_name in self.remaining_files:
+                self.remaining_files.remove(file_name)
+    
+    def get_progress_info(self) -> Dict:
+        """Get current progress information"""
+        with self.lock:
+            return {
+                'total_files': self.total_files,
+                'current_downloaded': self.current_downloaded,
+                'success_count': self.success_count,
+                'failed_count': self.failed_count,
+                'successful_files': self.successful_files.copy(),
+                'remaining_count': len(self.remaining_files),
+                'remaining_files': self.remaining_files.copy()
+            }
+    
+    def set_remaining_files(self, files: List[str]):
+        """Set remaining file list"""
+        with self.lock:
+            self.remaining_files = files.copy()
+
 
 def snapshot_download(
         repo_id: str,
@@ -24,29 +76,57 @@ def snapshot_download(
         local_dir: Union[str, Path, None] = None,
         local_files_only: Optional[bool] = False,
         cookies: Optional[CookieJar] = None,
-        allow_patterns: Optional[Union[List[str], str]] = None,
-        ignore_patterns: Optional[Union[List[str], str]] = None,
+        allow_patterns: Optional[str] = None,
+        ignore_patterns: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
         token: Optional[str] = None,
         source: Optional[str] = None,
+        enable_parallel: bool = False,
+        max_parallel_workers: int = 4,
+        progress_callback: Optional[Callable[[Dict], None]] = None,
 ) -> str:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
     if repo_type not in REPO_TYPES:
         raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
+
+    # Convert string patterns to lists
+    if allow_patterns and isinstance(allow_patterns, str):
+        allow_patterns = [allow_patterns]
+    if ignore_patterns and isinstance(ignore_patterns, str):
+        ignore_patterns = [ignore_patterns]
+
+    logger.debug(f"Starting download forepo_id: {repo_id}")
+    logger.debug(f"repo_type: {repo_type}")
+    logger.debug(f"revision: {revision}")
+    logger.debug(f"allow_patterns: {allow_patterns}")
+    logger.debug(f"ignore_patterns: {ignore_patterns}")
+    logger.debug(f"enable_parallel: {enable_parallel}")
+    logger.debug(f"max_parallel_workers: {max_parallel_workers}")
+
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
-    temporary_cache_dir = os.path.join(cache_dir, 'temp')
-    os.makedirs(temporary_cache_dir, exist_ok=True)
-    
-    if local_dir is not None and isinstance(local_dir, Path):
+
+    if isinstance(local_dir, Path):
         local_dir = str(local_dir)
+    elif isinstance(local_dir, str):
+        pass
+    else:
+        local_dir = str(Path.cwd())
+
+    os.makedirs(local_dir, exist_ok=True)
+
+    logger.debug(f"created/verified local_dir: {local_dir}")
+    logger.debug(f"cache_dir: {cache_dir}")
+    logger.debug(f"local_dir: {local_dir}")
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
     # name = name.replace('.', '___')
+
+    logger.debug(f"parsed repo_id - owner: {group_or_owner}, name: {name}")
 
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
@@ -59,8 +139,8 @@ def snapshot_download(
         return cache.get_root_location()
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
-        # make headers
-        # todo need to add cookies？
+        logger.debug(f"download_endpoint: {download_endpoint}")
+
         repo_info = utils.get_repo_info(repo_id,
                                         repo_type=repo_type,
                                         revision=revision,
@@ -70,6 +150,10 @@ def snapshot_download(
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
+
+        logger.debug(f"repository SHA: {repo_info.sha}")
+        logger.debug(f"total files in repository: {len(repo_info.siblings)}")
+
         repo_files = list(
             filter_repo_objects(
                 items=[f.rfilename for f in repo_info.siblings],
@@ -78,35 +162,176 @@ def snapshot_download(
             )
         )
 
-        with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
-            for repo_file in repo_files:
-                repo_file_info = pack_repo_file_info(repo_file, revision)
-                if cache.exists(repo_file_info):
-                    file_name = os.path.basename(repo_file_info['Path'])
-                    print(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
-                    continue
+        model_temp_dir = get_model_temp_dir(cache_dir, f"{group_or_owner}/{name}")
 
-                # get download url
-                url = get_file_download_url(
-                    model_id=repo_id,
-                    file_path=repo_file,
-                    repo_type=repo_type,
-                    revision=revision,
-                    endpoint=download_endpoint,
-                    source=source)
-                # todo support parallel download api
-                http_get(
-                    url=url,
-                    local_dir=temp_cache_dir,
-                    file_name=repo_file,
-                    headers=headers,
-                    cookies=cookies,
-                    token=token)
+        if enable_parallel:
+            snapshot_download_with_multi_thread(
+                repo_id=repo_id,
+                repo_type=repo_type,
+                repo_files=repo_files,
+                revision=revision,
+                cache=cache,
+                download_endpoint=download_endpoint,
+                source=source,
+                headers=headers,
+                cookies=cookies,
+                token=token,
+                model_temp_dir=model_temp_dir,
+                max_parallel_workers=max_parallel_workers,
+                progress_callback=progress_callback,
+            )
+        else:
+            snapshot_download_with_single_thread(
+                repo_id=repo_id,
+                repo_type=repo_type,
+                repo_files=repo_files,
+                revision=revision,
+                cache=cache,
+                download_endpoint=download_endpoint,
+                source=source,
+                headers=headers,
+                cookies=cookies,
+                token=token,
+                model_temp_dir=model_temp_dir,
+                progress_callback=progress_callback,
+            )
 
-                # todo using hash to check file integrity
-                temp_file = os.path.join(temp_cache_dir, repo_file)
-                savedFile = cache.put_file(repo_file_info, temp_file)
-                print(f"Saved file to '{savedFile}'")
-            
         cache.save_model_version(revision_info={'Revision': revision})
-        return os.path.join(cache.get_root_location())
+
+        final_location = os.path.join(cache.get_root_location())
+        logger.debug(f"download completed. Final location: {final_location}")
+        return final_location
+
+def snapshot_download_with_single_thread(
+        repo_id: str,
+        repo_type: str,
+        repo_files: list,
+        revision: str,
+        cache: ModelFileSystemCache,
+        download_endpoint: str,
+        source: str,
+        headers: Dict[str, str],
+        cookies: CookieJar,
+        token: str,
+        model_temp_dir: str,
+        progress_callback: Optional[Callable[[Dict], None]]
+):
+    files_to_download = []
+    for repo_file in repo_files:
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if not cache.exists(repo_file_info):
+            files_to_download.append(repo_file)
+    
+    progress_tracker = DownloadProgressTracker(len(files_to_download))
+    progress_tracker.set_remaining_files(files_to_download)
+    
+    for repo_file in repo_files:
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if cache.exists(repo_file_info):
+            file_name = os.path.basename(repo_file_info['Path'])
+            logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
+            continue
+
+        # get download url
+        url = get_file_download_url(
+            model_id=repo_id,
+            file_path=repo_file,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=download_endpoint,
+            source=source)
+
+        try:
+            http_get(
+                url=url,
+                local_dir=model_temp_dir,
+                file_name=repo_file,
+                headers=headers,
+                cookies=cookies,
+                token=token)
+
+            # todo using hash to check file integrity
+            temp_file = os.path.join(model_temp_dir, repo_file)
+            savedFile = cache.put_file(repo_file_info, temp_file)
+            logger.info(f"Saved file to '{savedFile}'")
+            
+            progress_tracker.update_progress(repo_file, True)     
+        except Exception as e:
+            logger.error(f"File download failed: {repo_file} - {e}")
+            progress_tracker.update_progress(repo_file, False)
+        
+        if progress_callback:
+            progress_info = progress_tracker.get_progress_info()
+            progress_callback(progress_info)
+
+
+def snapshot_download_with_multi_thread(
+        repo_id: str,
+        repo_type: str,
+        repo_files: list,
+        revision: str,
+        cache: ModelFileSystemCache,
+        download_endpoint: str,
+        source: str,
+        headers: Dict[str, str],
+        cookies: CookieJar,
+        token: str,
+        model_temp_dir: str,
+        max_parallel_workers: int,
+        progress_callback: Optional[Callable[[Dict], None]],
+):
+    download_tasks = []
+    files_to_download = []
+
+    for repo_file in repo_files:
+        repo_file_info = pack_repo_file_info(repo_file, revision)
+        if cache.exists(repo_file_info):
+            file_name = os.path.basename(repo_file_info['Path'])
+            logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
+            continue
+
+        # get download url
+        url = get_file_download_url(
+            model_id=repo_id,
+            file_path=repo_file,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=download_endpoint,
+            source=source)
+
+        download_tasks.append({
+            'url': url,
+            'file_path': os.path.join(model_temp_dir, repo_file),
+            'headers': headers,
+            'cookies': cookies,
+            'token': token,
+            'file_name': repo_file
+        })
+        files_to_download.append(repo_file)
+
+    if download_tasks:
+        logger.info(f"Start parallel downloading {len(download_tasks)} files, using {max_parallel_workers} threads")
+
+        progress_tracker = DownloadProgressTracker(len(download_tasks))
+        progress_tracker.set_remaining_files(files_to_download)
+
+        downloader = MultiThreadDownloader(max_workers=max_parallel_workers)
+
+        with tqdm(total=len(download_tasks), desc="Parallel downloading files", unit="file") as pbar:
+            results = downloader.download_files_parallel_with_progress(
+                download_tasks, pbar, progress_tracker, progress_callback)
+
+        failed_files = []
+        for file_name, success in results.items():
+            if success:
+                temp_file = os.path.join(model_temp_dir, file_name)
+                repo_file_info = pack_repo_file_info(file_name, revision)
+                savedFile = cache.put_file(repo_file_info, temp_file)
+                logger.info(f"Saved file to '{savedFile}'")
+            else:
+                failed_files.append(file_name)
+                logger.error(f"File download failed: {file_name}")
+
+        if failed_files:
+            logger.error(f"Some files download failed: {failed_files}")
+            raise Exception(f"Some files download failed, please check network connection or retry")

@@ -4,12 +4,13 @@ from typing import Callable, Generator, Iterable, List, Optional, TypeVar, Union
 
 T = TypeVar("T")
 
+
 def filter_repo_objects(
-    items: Iterable[T],
-    *,
-    allow_patterns: Optional[Union[List[str], str]] = None,
-    ignore_patterns: Optional[Union[List[str], str]] = None,
-    key: Optional[Callable[[T], str]] = None,
+        items: Iterable[T],
+        *,
+        allow_patterns: Optional[Union[List[str], str]] = None,
+        ignore_patterns: Optional[Union[List[str], str]] = None,
+        key: Optional[Callable[[T], str]] = None,
 ) -> Generator[T, None, None]:
     if isinstance(allow_patterns, str):
         allow_patterns = [allow_patterns]

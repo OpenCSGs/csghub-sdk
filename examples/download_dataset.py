@@ -1,4 +1,5 @@
 from pycsghub.snapshot_download import snapshot_download
+
 # token = "your access token"
 token = None
 

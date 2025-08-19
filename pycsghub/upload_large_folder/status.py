@@ -1,19 +1,22 @@
-import enum
-import queue
-import logging
-from threading import Lock
-from datetime import datetime
-from typing import List, Optional, Tuple
-from .local_folder import LocalUploadFileMetadata, LocalUploadFilePaths
-from .consts import REPO_LFS_TYPE, REPO_REGULAR_TYPE
 import base64
+import enum
+import logging
+import queue
+from datetime import datetime
 from io import BytesIO
+from threading import Lock
+from typing import List, Optional, Tuple
+
 from tqdm import tqdm
+
 from .consts import META_FILE_IDENTIFIER, META_FILE_OID_PREFIX
+from .consts import REPO_LFS_TYPE, REPO_REGULAR_TYPE
+from .local_folder import LocalUploadFileMetadata, LocalUploadFilePaths
 
 logger = logging.getLogger(__name__)
 
 JOB_ITEM_T = Tuple[LocalUploadFilePaths, LocalUploadFileMetadata]
+
 
 class WorkerJob(enum.Enum):
     SHA256 = enum.auto()
@@ -23,16 +26,18 @@ class WorkerJob(enum.Enum):
     COMMIT = enum.auto()
     WAIT = enum.auto()  # if no tasks are available but we don't want to exit
 
+
 class ProgressReader:
     def __init__(self, fileobj, progress_bar):
         self.fileobj = fileobj
         self.progress_bar = progress_bar
-    
+
     def read(self, size=-1):
         data = self.fileobj.read(size)
         if data:
             self.progress_bar.update(len(data))
         return data
+
 
 class LargeUploadStatus:
     """Contains information, queues and tasks for a large upload process."""
@@ -62,16 +67,16 @@ class LargeUploadStatus:
         for item in self.items:
             paths, metadata = item
             self._lfs_uploaded_ids[paths.file_path] = metadata.lfs_uploaded_ids
-            
+
             if (metadata.upload_mode is not None and metadata.upload_mode == REPO_LFS_TYPE
-                and metadata.is_uploaded and metadata.is_committed):
+                    and metadata.is_uploaded and metadata.is_committed):
                 num_uploaded_and_commited += 1
             elif (metadata.upload_mode is not None and metadata.upload_mode == REPO_REGULAR_TYPE
                   and metadata.is_committed):
                 num_uploaded_and_commited += 1
             elif (metadata.sha256 is None or metadata.sha256 == ""):
                 self.queue_sha256.put(item)
-            elif (metadata.upload_mode is None or metadata.upload_mode == "" 
+            elif (metadata.upload_mode is None or metadata.upload_mode == ""
                   or metadata.remote_oid is None or metadata.remote_oid == ""):
                 self.queue_get_upload_mode.put(item)
             elif (metadata.upload_mode == REPO_LFS_TYPE and not metadata.is_uploaded):
@@ -81,7 +86,7 @@ class LargeUploadStatus:
             else:
                 num_uploaded_and_commited += 1
                 logger.debug(f"skipping file {paths.path_in_repo} because they are already uploaded and committed")
-                
+
         log_msg = "init upload status"
         if num_uploaded_and_commited > 0:
             log_msg = f"{log_msg}, found {len(items)} files, {num_uploaded_and_commited} of which are already uploaded and committed"
@@ -148,7 +153,7 @@ class LargeUploadStatus:
             message += f" | queued-slices: {nb_queued_slices}"
             message += f" | committed: {nb_committed}/{total_files} ({_format_size(size_committed)}/{total_size_str})"
             message += f" | ignored: {ignored_files}\n"
-            
+
             message += "Workers: "
             message += f"hashing: {self.nb_workers_sha256} | "
             message += f"get upload mode: {self.nb_workers_get_upload_mode} | "
@@ -181,7 +186,7 @@ class LargeUploadStatus:
                 else:
                     new_ids = old_ids
             self._lfs_uploaded_ids[file_path] = new_ids
-    
+
     def convert_uploaded_ids_to_map(self, ids: str):
         id_map = {}
         if ids is None or ids == "":
@@ -190,18 +195,17 @@ class LargeUploadStatus:
             idx, etag = item.split(':', 2)
             id_map[idx] = etag
         return id_map
-            
-    
+
     def is_lfs_upload_completed(self, item: JOB_ITEM_T) -> bool:
         paths, metadata = item
         with self.lock:
             uploaded_ids = self._lfs_uploaded_ids.get(paths.file_path)
             if (uploaded_ids is not None and
-                metadata.lfs_upload_id is not None and
-                metadata.lfs_upload_part_count is not None and 
-                len(uploaded_ids.split(",")) == metadata.lfs_upload_part_count):
-                    metadata.lfs_uploaded_ids = uploaded_ids
-                    return True
+                    metadata.lfs_upload_id is not None and
+                    metadata.lfs_upload_part_count is not None and
+                    len(uploaded_ids.split(",")) == metadata.lfs_upload_part_count):
+                metadata.lfs_uploaded_ids = uploaded_ids
+                return True
         return False
 
     def compute_file_base64(self, item: JOB_ITEM_T):
@@ -210,19 +214,19 @@ class LargeUploadStatus:
             self._compute_lfs_file_base64(item=item)
         elif meta.upload_mode == REPO_REGULAR_TYPE:
             self._compute_regular_file_base64(item=item)
-    
+
     def _compute_lfs_file_base64(self, item: JOB_ITEM_T):
         _, meta = item
         content = f"{META_FILE_IDENTIFIER}\n{META_FILE_OID_PREFIX}{meta.sha256}\nsize {meta.size}\n"
         content_bytes = content.encode('utf-8')
         meta.content_base64 = base64.b64encode(content_bytes).decode('utf-8')
-    
+
     def _compute_regular_file_base64(self, item: JOB_ITEM_T):
         paths, meta = item
         # with open(paths.file_path, 'rb') as f, BytesIO() as b64_buffer:
         #     base64.encode(f, b64_buffer)
         #     meta.content_base64 = b64_buffer.getvalue().decode("utf-8")
-        
+
         desc = f"converting {paths.file_path} to base64"
         with tqdm(total=meta.size, desc=desc, unit="B", unit_scale=True, dynamic_ncols=True) as pbar:
             with open(paths.file_path, 'rb') as f, BytesIO() as b64_buffer:
@@ -230,6 +234,7 @@ class LargeUploadStatus:
                 base64.encode(progress_reader, b64_buffer)
                 b64_buffer.seek(0)
                 meta.content_base64 = b64_buffer.getvalue().decode("utf-8")
+
 
 def _format_size(num: int) -> str:
     """Format size in bytes into a human-readable string.

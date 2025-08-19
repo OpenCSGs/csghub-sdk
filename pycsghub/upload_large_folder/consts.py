@@ -1,5 +1,3 @@
-from typing import Literal
-
 REPO_REGULAR_TYPE = "regular"
 REPO_LFS_TYPE = "lfs"
 
@@ -16,7 +14,7 @@ DEFAULT_IGNORE_PATTERNS = [
     ".git/*",
     "*/.git",
     "**/.git/**",
-     ".cache/csghub",
+    ".cache/csghub",
     ".cache/csghub/*",
     "*/.cache/csghub",
     "**/.cache/csghub/**",

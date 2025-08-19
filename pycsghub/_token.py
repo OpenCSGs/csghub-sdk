@@ -1,11 +1,12 @@
-from typing import Optional
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Optional
+
 from pycsghub.constants import CSGHUB_TOKEN_PATH
 
 
 def _get_token_from_environment() -> Optional[str]:
-    return _clean_token(os.environ.get("CSGHUB_TOKEN")) # apk key
+    return _clean_token(os.environ.get("CSGHUB_TOKEN"))  # apk key
 
 
 def _get_token_from_file() -> Optional[str]:

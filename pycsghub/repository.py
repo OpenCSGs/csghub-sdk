@@ -1,22 +1,26 @@
-import os
-from typing import Optional
-import subprocess
-from typing import List, Optional, Union
-from pathlib import Path
-import requests
 import base64
-import shutil
+import os
 import re
+import shutil
+import subprocess
+import tempfile
+import traceback
+from pathlib import Path
+from typing import List, Optional, Union
 from urllib.parse import urlparse
-from pycsghub.constants import (GIT_ATTRIBUTES_CONTENT, 
-                                OPERATION_ACTION_GIT, 
-                                REPO_TYPE_DATASET, 
-                                REPO_TYPE_SPACE, 
+
+import requests
+
+from pycsghub.constants import (GIT_ATTRIBUTES_CONTENT,
+                                OPERATION_ACTION_GIT,
+                                REPO_TYPE_DATASET,
+                                REPO_TYPE_SPACE,
                                 REPO_TYPE_CODE)
-from pycsghub.constants import (GIT_HIDDEN_DIR, GIT_ATTRIBUTES_FILE)
+from pycsghub.constants import (GIT_HIDDEN_DIR)
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
                             get_endpoint)
+
 
 def ignore_folders(folder, contents):
     ignored = []
@@ -26,28 +30,33 @@ def ignore_folders(folder, contents):
             ignored.append(item)
     return ignored
 
+
 class Repository:
     def __init__(
-        self,
-        repo_id: str,
-        upload_path: str,
-        path_in_repo: Optional[str] = "",
-        branch_name: Optional[str] = "main",
-        work_dir: Optional[str] = "/tmp/csg",
-        user_name: Optional[str] = "",
-        token: Optional[str] = "",
-        license: Optional[str] = "apache-2.0",
-        nickname: Optional[str] = "",
-        description: Optional[str] = "",
-        repo_type: Optional[str] = None,
-        endpoint: Optional[str] = None,
-        auto_create: Optional[bool] = True,
-    ):    
+            self,
+            repo_id: str,
+            upload_path: str,
+            path_in_repo: Optional[str] = "",
+            branch_name: Optional[str] = "main",
+            work_dir: Optional[str] = "/tmp/csg",
+            user_name: Optional[str] = "",
+            token: Optional[str] = "",
+            license: Optional[str] = "apache-2.0",
+            nickname: Optional[str] = "",
+            description: Optional[str] = "",
+            repo_type: Optional[str] = None,
+            endpoint: Optional[str] = None,
+            auto_create: Optional[bool] = True,
+            verbose: bool = False,
+    ):
         self.repo_id = repo_id
         self.upload_path = upload_path
         self.path_in_repo = path_in_repo
         self.branch_name = branch_name
-        self.work_dir = work_dir
+        if os.name == "nt":
+            self.work_dir = os.path.join(tempfile.gettempdir(), "csg")
+        else:
+            self.work_dir = work_dir
         self.user_name = user_name
         self.token = token
         self.license = license
@@ -56,11 +65,12 @@ class Repository:
         self.repo_type = repo_type
         self.endpoint = endpoint
         self.auto_create = auto_create
+        self.verbose = verbose
         self.repo_url_prefix = self.get_url_prefix()
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
         self.user_name = self.user_name if self.user_name else self.namespace
-        
+
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
             return "datasets"
@@ -70,62 +80,142 @@ class Repository:
             return "codes"
         else:
             return "models"
-    
+
     def upload(self) -> None:
+        if self.verbose:
+            print(f"[DEBUG] Starting upload process...")
+            print(f"[DEBUG] Upload path: {self.upload_path}")
+            print(f"[DEBUG] Work dir: {self.work_dir}")
+            print(f"[DEBUG] Repo ID: {self.repo_id}")
+            print(f"[DEBUG] Repo type: {self.repo_type}")
+        
         if not os.path.exists(self.upload_path):
-           raise ValueError("upload path does not exist")
-       
+            raise ValueError("upload path does not exist")
+
         if not os.path.exists(self.work_dir):
             os.makedirs(self.work_dir, exist_ok=True)
-        
+
         if self.auto_create:
+            if self.verbose:
+                print(f"[DEBUG] Auto-creating repo and branch...")
             self.auto_create_repo_and_branch()
-        
-        if os.path.exists(self.repo_dir):
-            shutil.rmtree(self.repo_dir)
-            
+
         repo_url = self.generate_repo_clone_url()
-        self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
         
+        if self.verbose:
+            print(f"[DEBUG] Repo URL: {repo_url}")
+
+        if os.path.exists(self.repo_dir):
+            try:
+                if self.verbose:
+                    print(f"[DEBUG] Repository exists, pulling latest changes...")
+                self.git_pull(work_dir=self.repo_dir)
+            except Exception as e:
+                if self.verbose:
+                    print(f"[DEBUG] Pull failed, removing and re-cloning: {str(e)}")
+                print(f"Update repository failed, re-cloning: {str(e)}")
+                try:
+                    shutil.rmtree(self.repo_dir)
+                except PermissionError as e:
+                    print(traceback.format_exc())
+                    raise Exception("permission denied,please run this program with administrator privileges")
+                self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
+        else:
+            if self.verbose:
+                print(f"[DEBUG] Repository doesn't exist, cloning...")
+            self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
+
+        if self.verbose:
+            print(f"[DEBUG] Copying files to repository...")
         git_cmd_workdir = self.copy_repo_files()
-        
+
+        if self.verbose:
+            print(f"[DEBUG] Tracking large files...")
         self.track_large_files(work_dir=git_cmd_workdir)
+        
+        if self.verbose:
+            print(f"[DEBUG] Adding files to git...")
         self.git_add(work_dir=git_cmd_workdir)
+        
+        if self.verbose:
+            print(f"[DEBUG] Committing changes...")
         self.git_commit(work_dir=git_cmd_workdir)
+        
         number_of_commits = self.commits_to_push(work_dir=git_cmd_workdir)
+        if self.verbose:
+            print(f"[DEBUG] Commits to push: {number_of_commits}")
+        
         if number_of_commits > 1:
+            if self.verbose:
+                print(f"[DEBUG] Pushing changes to remote...")
             self.git_push(work_dir=git_cmd_workdir)
 
     def copy_repo_files(self):
-        from_path = ""
-        git_cmd_workdir = ""
-        
+        """Copy files to repository directory, optimized version"""
         from_path = self.upload_path
         git_cmd_workdir = self.repo_dir
-        destination_path = git_cmd_workdir
-        
+
         path_suffix = f"{self.path_in_repo.strip('/')}/" if self.path_in_repo else ""
         path_suffix = re.sub(r'^\./', '', path_suffix)
-        
-        destination_path = os.path.join(destination_path, path_suffix)
-        
+
+        try:
+            destination_path = os.path.join(git_cmd_workdir, path_suffix)
+            os.path.normpath(destination_path)
+        except (OSError, ValueError) as e:
+            print(f"Path encoding error: {e}")
+            destination_path = os.path.join(git_cmd_workdir, "upload")
+
         if not os.path.exists(destination_path):
             os.makedirs(destination_path, exist_ok=True)
-        
-        for item in os.listdir(destination_path):
-            item_path = os.path.join(destination_path, item)
-            if item != GIT_HIDDEN_DIR and item != GIT_ATTRIBUTES_FILE:
-                if os.path.isfile(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
-                    
+
         if os.path.isfile(self.upload_path):
-            shutil.copyfile(self.upload_path, destination_path)
+            try:
+                filename = os.path.basename(self.upload_path)
+                safe_filename = self._get_safe_filename(filename)
+                destination_file_path = os.path.join(destination_path, safe_filename)
+                shutil.copyfile(self.upload_path, destination_file_path)
+            except (OSError, UnicodeError) as e:
+                print(f"File copy failed: {e}")
+                destination_file_path = os.path.join(destination_path, "uploaded_file")
+                shutil.copyfile(self.upload_path, destination_file_path)
         else:
-            shutil.copytree(from_path, destination_path, dirs_exist_ok=True, ignore=ignore_folders)
+            try:
+                shutil.copytree(from_path, destination_path, dirs_exist_ok=True, ignore=ignore_folders)
+            except (OSError, UnicodeError) as e:
+                print(f"Directory copy failed: {e}")
+                self._copy_files_individually(from_path, destination_path)
 
         return git_cmd_workdir
+
+    def _get_safe_filename(self, filename):
+        """Get safe filename, handle encoding issues"""
+        try:
+            filename.encode('utf-8').decode('utf-8')
+            return filename
+        except UnicodeError:
+            import hashlib
+            safe_name = hashlib.md5(filename.encode('utf-8', errors='ignore')).hexdigest()
+            ext = os.path.splitext(filename)[1]
+            return f"file_{safe_name}{ext}"
+
+    def _copy_files_individually(self, from_path, destination_path):
+        """Copy files individually, handle encoding issues"""
+        if not os.path.exists(from_path):
+            return
+
+        for item in os.listdir(from_path):
+            try:
+                source_item = os.path.join(from_path, item)
+                dest_item = os.path.join(destination_path, self._get_safe_filename(item))
+
+                if os.path.isfile(source_item):
+                    shutil.copyfile(source_item, dest_item)
+                elif os.path.isdir(source_item):
+                    os.makedirs(dest_item, exist_ok=True)
+                    self._copy_files_individually(source_item, dest_item)
+            except (OSError, UnicodeError) as e:
+                print(f"Skip file {item}: {e}")
+                continue
 
     def auto_create_repo_and_branch(self):
         repoExist, branchExist = self.repo_exists()
@@ -135,7 +225,7 @@ class Repository:
                 err_msg = f"fail to create new repo for {self.repo_id} with http status code '{response.status_code}' and message '{response.text}'"
                 raise ValueError(err_msg)
             repoExist, branchExist = self.repo_exists()
-        
+
         if not branchExist:
             response = self.create_new_branch()
             if response.status_code != 200:
@@ -154,9 +244,9 @@ class Repository:
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             return False, False
-        
+
         response.raise_for_status()
-        
+
         jsonRes = response.json()
         if jsonRes["msg"] != "OK":
             return True, False
@@ -165,13 +255,13 @@ class Repository:
         for b in branches:
             if b["name"] == self.branch_name:
                 return True, True
-        
+
         return True, False
-        
+
     def create_new_branch(self):
         action_endpoint = get_endpoint(endpoint=self.endpoint)
         url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}/{self.repo_id}/raw/.gitattributes"
-        
+
         GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
@@ -179,7 +269,7 @@ class Repository:
             "new_branch": self.branch_name,
             "content": GIT_ATTRIBUTES_CONTENT_BASE64
         }
-        
+
         headers = build_csg_headers(token=self.token, headers={
             "Content-Type": "application/json"
         })
@@ -202,7 +292,7 @@ class Repository:
             "license": self.license,
             "description": self.description,
         }
-        
+
         headers = build_csg_headers(token=self.token, headers={
             "Content-Type": "application/json"
         })
@@ -220,15 +310,22 @@ class Repository:
         return clone_url
 
     def git_clone(
-        self, 
-        branch_name: str, 
-        repo_url: str
+            self,
+            branch_name: str,
+            repo_url: str
     ) -> subprocess.CompletedProcess:
         try:
             env = os.environ.copy()
             env.update({"GIT_LFS_SKIP_SMUDGE": "1"})
+            if os.name == "nt":
+                try:
+                    self.run_subprocess("git config --global core.quotepath false".split(), folder=self.work_dir,
+                                        check=False)
+                except:
+                    pass  # ignore configuration error, continue execution
+
             result = self.run_subprocess(
-                command=f"git clone -b {branch_name} {repo_url}", 
+                command=f"git clone -b {branch_name} {repo_url}",
                 folder=self.work_dir,
                 check=True,
                 env=env
@@ -236,11 +333,11 @@ class Repository:
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
         return result
-    
+
     def git_add(
-        self, 
-        work_dir: str, 
-        pattern: str = "."
+            self,
+            work_dir: str,
+            pattern: str = "."
     ) -> subprocess.CompletedProcess:
         try:
             result = self.run_subprocess("git add -v".split() + [pattern], work_dir)
@@ -249,9 +346,9 @@ class Repository:
         return result
 
     def git_commit(
-        self, 
-        work_dir: str, 
-        commit_message: str = "commit files to CSGHub"
+            self,
+            work_dir: str,
+            commit_message: str = "commit files to CSGHub"
     ) -> subprocess.CompletedProcess:
         try:
             result = self.run_subprocess("git commit -v -m".split() + [commit_message], work_dir)
@@ -259,12 +356,17 @@ class Repository:
             if len(exc.stderr) > 0:
                 raise EnvironmentError(exc.stderr)
             else:
-                raise EnvironmentError(exc.stdout)
+                err_str = exc.stdout
+                if "nothing to commit, working tree clean" in err_str:
+                    print(err_str)
+                    exit()
+                else:
+                    raise EnvironmentError(exc.stdout)
         return result
 
     def git_push(
-        self,
-        work_dir: str,
+            self,
+            work_dir: str,
     ) -> subprocess.CompletedProcess:
         try:
             result = self.run_subprocess("git push".split(), work_dir)
@@ -274,7 +376,21 @@ class Repository:
             else:
                 raise EnvironmentError(exc.stdout)
         return result
-    
+
+    def git_pull(
+            self,
+            work_dir: str,
+    ) -> subprocess.CompletedProcess:
+        """Update repository to the latest version"""
+        try:
+            result = self.run_subprocess("git pull".split(), work_dir)
+        except subprocess.CalledProcessError as exc:
+            if len(exc.stderr) > 0:
+                raise EnvironmentError(exc.stderr)
+            else:
+                raise EnvironmentError(exc.stdout)
+        return result
+
     def commits_to_push(self, work_dir: Union[str, Path]) -> int:
         try:
             result = self.run_subprocess(f"git cherry -v", work_dir)
@@ -290,12 +406,13 @@ class Repository:
         for filename in self.list_files_to_be_staged(work_dir=work_dir, pattern=pattern):
             if filename in deleted_files:
                 continue
-            
+
             path_to_file = os.path.join(os.getcwd(), work_dir, filename)
             size_in_mb = os.path.getsize(path_to_file) / (1024 * 1024)
 
-            if size_in_mb >= 1 and not self.is_tracked_with_lfs(filename=path_to_file) and not self.is_git_ignored(filename=path_to_file):
-                self.lfs_track(work_dir=work_dir,patterns=filename)
+            if size_in_mb >= 1 and not self.is_tracked_with_lfs(filename=path_to_file) and not self.is_git_ignored(
+                    filename=path_to_file):
+                self.lfs_track(work_dir=work_dir, patterns=filename)
                 files_to_be_tracked_with_lfs.append(filename)
 
         self.lfs_untrack(work_dir=work_dir, patterns=deleted_files)
@@ -304,6 +421,14 @@ class Repository:
 
     def list_files_to_be_staged(self, work_dir: str, pattern: str = ".") -> List[str]:
         try:
+            try:
+                self.run_subprocess("git config --global core.quotepath false".split(), work_dir)
+            except subprocess.CalledProcessError:
+                try:
+                    self.run_subprocess("git config core.quotepath false".split(), work_dir)
+                except subprocess.CalledProcessError:
+                    pass
+
             p = self.run_subprocess("git ls-files --exclude-standard -mo".split() + [pattern], work_dir)
             if len(p.stdout.strip()):
                 files = p.stdout.strip().split("\n")
@@ -313,7 +438,7 @@ class Repository:
             raise EnvironmentError(exc.stderr)
 
         return files
-    
+
     def list_deleted_files(self, work_dir: str) -> List[str]:
         try:
             git_status = self.run_subprocess("git status -s", work_dir).stdout.strip()
@@ -339,7 +464,6 @@ class Repository:
                 )
         except subprocess.CalledProcessError as exc:
             raise EnvironmentError(exc.stderr)
-
 
     def lfs_untrack(self, work_dir: str, patterns: Union[str, List[str]]):
         if isinstance(patterns, str):
@@ -385,12 +509,12 @@ class Repository:
         return is_ignored
 
     def run_subprocess(
-        self,
-        command: Union[str, List[str]],
-        folder: Optional[Union[str, Path]] = None,
-        check: bool = True,
-        **kwargs,
-        ) -> subprocess.CompletedProcess:
+            self,
+            command: Union[str, List[str]],
+            folder: Optional[Union[str, Path]] = None,
+            check: bool = True,
+            **kwargs,
+    ) -> subprocess.CompletedProcess:
         if isinstance(command, str):
             command = command.split()
 
@@ -406,4 +530,4 @@ class Repository:
             errors="replace",
             cwd=folder or os.getcwd(),
             **kwargs,
-        )   
+        )

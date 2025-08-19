@@ -1,12 +1,14 @@
 import requests
+
 from pycsghub.utils import (build_csg_headers,
                             get_endpoint)
 
+
 def list(
-    user_name: str,
-    token: str,
-    endpoint: str,
-    limit: int,
+        user_name: str,
+        token: str,
+        endpoint: str,
+        limit: int,
 ):
     action_endpoint = get_endpoint(endpoint=endpoint)
     url = f"{action_endpoint}/api/v1/user/{user_name}/finetune/instances"
@@ -24,15 +26,16 @@ def list(
     if instances:
         for instance in instances:
             print(f"{instance['deploy_id']:<10}"
-                f"{instance['deploy_name']:<40}"
-                f"{instance['model_id']:<50}"
-                f"{instance['status']:<10}")
+                  f"{instance['deploy_name']:<40}"
+                  f"{instance['model_id']:<50}"
+                  f"{instance['status']:<10}")
+
 
 def start(
-    id: int,
-    model: str,
-    token: str,
-    endpoint: str,
+        id: int,
+        model: str,
+        token: str,
+        endpoint: str,
 ):
     action_endpoint = get_endpoint(endpoint=endpoint)
     url = f"{action_endpoint}/api/v1/models/{model}/finetune/{id}/start"
@@ -43,11 +46,12 @@ def start(
     result = response.json()
     print(result)
 
+
 def stop(
-    id: int,
-    model: str,
-    token: str,
-    endpoint: str,
+        id: int,
+        model: str,
+        token: str,
+        endpoint: str,
 ):
     action_endpoint = get_endpoint(endpoint=endpoint)
     url = f"{action_endpoint}/api/v1/models/{model}/finetune/{id}/stop"
