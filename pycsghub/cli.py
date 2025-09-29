@@ -9,6 +9,7 @@ from importlib.metadata import version
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION
 from .upload_large_folder.main import upload_large_folder_internal
 from pycsghub.constants import REPO_SOURCE_CSG
+from .lfs import LfsEnableCommand, LfsUploadCommand
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ OPTIONS = {
         case_sensitive=False,
     ),
     "source": typer.Option("--source", help="Specify the source of the repository (e.g. 'csg', 'hf', 'ms')."),
+    "path": typer.Argument(help="Local path to repository you want to configure."),
 }
 
 @app.command(name="download", help="Download model/dataset/space from OpenCSG Hub", no_args_is_help=True)
@@ -138,7 +140,16 @@ def upload_large_folder(
         print_report_every=print_report_every,
     )
 
+@app.command(name="lfs-enable-largefiles", help="Configure your repository to enable upload of files > 5GB.", no_args_is_help=True)
+def lfs_enable_largefiles(path: Annotated[str, OPTIONS["path"]]):
+    lfsCmd = LfsEnableCommand(path)
+    lfsCmd.run()
 
+@app.command(name="lfs-multipart-upload", hidden=True)
+def lfs_multipart_upload():
+    lfsCmd = LfsUploadCommand()
+    lfsCmd.run()
+    
 inference_app = typer.Typer(
     no_args_is_help=True,
     help="Manage inference instances on OpenCSG Hub"
@@ -244,6 +255,7 @@ def stop_finetune(
         "help_option_names": ["-h", "--help"],
     }
 )
+
 def main(
     log_level: str = OPTIONS["log_level"]
 ):
@@ -255,7 +267,6 @@ def main(
         handlers=[logging.StreamHandler()]
     )
     pass
-
 
 if __name__ == "__main__":
     app()
