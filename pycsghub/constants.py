@@ -94,3 +94,5 @@ S3_INTERNAL = os.environ.get("S3_INTERNAL", '')
 
 GIT_HIDDEN_DIR = ".git"
 GIT_ATTRIBUTES_FILE = ".gitattributes"
+
+LFS_MULTIPART_UPLOAD_COMMAND = "lfs-multipart-upload"
