@@ -1,8 +1,19 @@
 ## 命令行使用示例
 
 ```shell
+# set env token on linux 
 export CSGHUB_TOKEN=your_access_token
 
+# set env token on window command
+set CSGHUB_TOKEN=your_access_token
+
+# set env token on window powershell
+$env:CSGHUB_TOKEN="your_access_token"
+```
+
+### 示例命令使用在Linux或Window CMD环境
+
+```shell
 # 模型下载
 csghub-cli download OpenCSG/csg-wukong-1B
 
@@ -56,6 +67,21 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 
 # 在当前工作目录启用大文件分片上传功能
 csghub-cli lfs-enable-largefiles ./
+```
+
+### 示例命令使用在Window Powershell环境
+
+由于参数解析上的差异，在Windows PowerShell下请参考如下命令。
+
+```
+# 下载模型
+csghub-cli download wanghh2000/MyMind-0.05B
+
+# 过滤下载的文件
+csghub-cli download wanghh2000/MyMind-0.05B --allow-patterns="*.json" --ignore-patterns="*_config.json"
+
+# 下载数据集
+csghub-cli download wanghh2000/data-refine2 -t dataset
 
 ```
 

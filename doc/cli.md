@@ -1,8 +1,19 @@
 ## Use cases of command line
 
 ```shell
+# set env token on linux 
 export CSGHUB_TOKEN=your_access_token
 
+# set env token on window command
+set CSGHUB_TOKEN=your_access_token
+
+# set env token on window powershell
+$env:CSGHUB_TOKEN="your_access_token"
+```
+
+### Example works for Linux and Window CMD
+
+```shell
 # download model
 csghub-cli download OpenCSG/csg-wukong-1B
 
@@ -56,6 +67,21 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 
 # auto upload large file in multi-part mode by 'git push' under working directory
 csghub-cli lfs-enable-largefiles ./
+```
+
+### Example for Window Powershell
+
+Due to differences in parameter parsing, please refer to the following commands when using Windows PowerShell.
+
+```
+# download model
+csghub-cli download wanghh2000/MyMind-0.05B
+
+# download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
+csghub-cli download wanghh2000/MyMind-0.05B --allow-patterns="*.json" --ignore-patterns="*_config.json"
+
+# download dataset
+csghub-cli download wanghh2000/data-refine2 -t dataset
 ```
 
 Notes: 
