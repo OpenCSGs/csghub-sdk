@@ -184,7 +184,6 @@ def start_inference(
         endpoint=endpoint,
     )
 
-
 @inference_app.command(name="stop", help="Stop inference instance", no_args_is_help=True)
 def stop_inference(
     model: str = typer.Argument(..., help="model to use for inference"),
@@ -257,6 +256,7 @@ def stop_finetune(
 )
 
 def main(
+    version: Optional[bool] = OPTIONS["version"],
     log_level: str = OPTIONS["log_level"]
 ):
     # for example: format='%(asctime)s - %(name)s:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s',

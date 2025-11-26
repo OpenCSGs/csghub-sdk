@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "csghub-sdk"
-version = "0.7.6"
+version = "0.7.7"
 description = "CSGHub SDK for downloading and uploading models, datasets, and spaces"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -28,6 +28,7 @@ classifiers = [
 ]
 requires-python = ">=3.8,<3.14"
 dependencies = [
+    "requests",
     "typer",
     "typing_extensions",
     "huggingface_hub>=0.22.2",
