@@ -31,6 +31,7 @@ r = Repository(
     resource_id=4,
     cluster_id="xxxx-xxxx-xxxx-xxxx",
     min_replica=1,
+    env={"key1": "value1"},
 )
 
 r.upload()

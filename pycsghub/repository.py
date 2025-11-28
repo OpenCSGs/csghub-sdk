@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Optional
 import subprocess
 from typing import List, Optional, Union
@@ -49,7 +50,12 @@ class Repository:
         cluster_id: Optional[str] = "",
         resource_id: Optional[int] = 0,
         min_replica: Optional[int] = 0,
-    ):    
+        env: Optional[dict] = {},
+        template: Optional[str] = "",
+        secrets: Optional[dict] = {},
+        variables: Optional[str] = "",
+        cover_image_url: Optional[str] = "",
+    ):
         self.repo_id = repo_id
         self.upload_path = upload_path
         self.path_in_repo = path_in_repo
@@ -71,8 +77,12 @@ class Repository:
         self.cluster_id = cluster_id
         self.resource_id = resource_id
         self.min_replica = min_replica
+        self.env = env
+        self.template = template
+        self.secrets = secrets
+        self.variables = variables
+        self.cover_image_url = cover_image_url
 
-        
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
             return "datasets"
@@ -219,6 +229,11 @@ class Repository:
             data["cluster_id"] = self.cluster_id
             data["resource_id"] = self.resource_id
             data["min_replica"] = self.min_replica
+            data["env"] = json.dumps(self.env) if self.env else ""
+            data["template"] = self.template
+            data["secrets"] = json.dumps(self.secrets) if self.secrets else ""
+            data["variables"] = self.variables
+            data["cover_image_url"] = self.cover_image_url
 
         headers = build_csg_headers(token=self.token, headers={
             "Content-Type": "application/json"
