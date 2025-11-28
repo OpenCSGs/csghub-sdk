@@ -45,6 +45,10 @@ class Repository:
         repo_type: Optional[str] = None,
         endpoint: Optional[str] = None,
         auto_create: Optional[bool] = True,
+        sdk: Optional[str] = "",
+        cluster_id: Optional[str] = "",
+        resource_id: Optional[int] = 0,
+        min_replica: Optional[int] = 0,
     ):    
         self.repo_id = repo_id
         self.upload_path = upload_path
@@ -63,6 +67,11 @@ class Repository:
         self.namespace, self.name = model_id_to_group_owner_name(model_id=self.repo_id)
         self.repo_dir = os.path.join(self.work_dir, self.name)
         self.user_name = self.user_name if self.user_name else self.namespace
+        self.sdk = sdk
+        self.cluster_id = cluster_id
+        self.resource_id = resource_id
+        self.min_replica = min_replica
+
         
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
@@ -205,7 +214,12 @@ class Repository:
             "license": self.license,
             "description": self.description,
         }
-        
+        if self.repo_type == REPO_TYPE_SPACE:
+            data["sdk"] = self.sdk
+            data["cluster_id"] = self.cluster_id
+            data["resource_id"] = self.resource_id
+            data["min_replica"] = self.min_replica
+
         headers = build_csg_headers(token=self.token, headers={
             "Content-Type": "application/json"
         })
