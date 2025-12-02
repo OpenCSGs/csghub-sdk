@@ -46,7 +46,6 @@ csghub-cli = "pycsghub.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/OpenCSGs/csghub-sdk"
-Documentation = "https://github.com/OpenCSGs/csghub-sdk"
 Repository = "https://github.com/OpenCSGs/csghub-sdk"
 Issues = "https://github.com/OpenCSGs/csghub-sdk"
 
