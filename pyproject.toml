@@ -31,7 +31,7 @@ dependencies = [
     "requests",
     "typer",
     "typing_extensions",
-    "huggingface_hub>=0.22.2",
+    "huggingface_hub>=0.35.3",
 ]
 
 [project.optional-dependencies]

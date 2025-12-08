@@ -15,6 +15,7 @@ def http_upload_file(
         revision: Optional[str] = DEFAULT_REVISION,
         endpoint: Optional[str] = None,
         token: Optional[str] = None,
+        commit_message: Optional[str] = None,
     ):
     if not os.path.exists(file_path):
         raise ValueError(f"file '{file_path}' does not exist")
@@ -25,7 +26,7 @@ def http_upload_file(
     http_url = http_endpoint + "api/v1/" + repo_type + "s/" + repo_id + "/upload_file"
     post_headers = build_csg_headers(token=token)
     file_data = {'file': open(file_path, 'rb')}
-    form_data = {'file_path': destination_path, 'branch': revision, 'message': 'upload' + file_path}
+    form_data = {'file_path': destination_path, 'branch': revision, 'message': (commit_message or ('upload ' + os.path.basename(file_path)))}
     response = requests.post(http_url, headers=post_headers, data=form_data, files=file_data)
     if response.status_code == 200:
         logger.info(f"file '{file_path}' upload successfully.")
