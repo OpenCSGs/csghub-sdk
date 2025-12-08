@@ -214,7 +214,7 @@ def http_get(*,
                 retry.sleep()
 
     downloaded_length = os.path.getsize(temp_file.name)
-    if total_content_length != downloaded_length:
+    if total_content_length is not None and total_content_length != downloaded_length:
         os.remove(temp_file.name)
         msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (
             file_name, total_content_length, downloaded_length)

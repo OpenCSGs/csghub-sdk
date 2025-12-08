@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from pycsghub.cli import download
 from pycsghub.cmd.repo_types import RepoType
-from pycsghub.api_client import CsghubApi
+from pycsghub.api_client.api_client import CsghubApi
 from huggingface_hub import HfApi
 
 class TestCliDownload(unittest.TestCase):

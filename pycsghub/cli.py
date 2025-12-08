@@ -7,16 +7,20 @@ from typing import List, Optional
 import dotenv
 
 import typer
-from huggingface_hub.file_download import DryRunFileInfo
+try:
+    from huggingface_hub.file_download import DryRunFileInfo
+except ImportError:
+    from collections import namedtuple
+    DryRunFileInfo = namedtuple('DryRunFileInfo', ['path', 'size', 'hash'])
 
 dotenv.load_dotenv()
-from huggingface_hub.utils import _format_size, disable_progress_bars, enable_progress_bars, tabulate
+from huggingface_hub.utils import disable_progress_bars, enable_progress_bars
 from typing_extensions import Annotated
 
-from pycsghub.cmd import finetune, inference, repo
+from pycsghub.cmd import finetune, inference
 from pycsghub.cmd.repo_types import RepoType
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, REPO_SOURCE_CSG
-from .cli_utils import get_csghub_api
+from pycsghub.api_client import get_csghub_api
 from .utils import print_download_result
 from .lfs import LfsEnableCommand, LfsUploadCommand
 from .upload_large_folder.main import upload_large_folder_internal

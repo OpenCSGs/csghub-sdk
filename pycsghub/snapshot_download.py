@@ -5,7 +5,14 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from huggingface_hub.file_download import DryRunFileInfo
+try:
+    from huggingface_hub.file_download import DryRunFileInfo
+except ImportError:
+    # Fallback for newer huggingface_hub versions where DryRunFileInfo might be moved or removed
+    # Or define a dummy if it's just for type hinting or simple usage
+    from collections import namedtuple
+    DryRunFileInfo = namedtuple('DryRunFileInfo', ['path', 'size', 'hash'])
+
 from huggingface_hub.utils import filter_repo_objects
 
 from pycsghub import utils
@@ -137,11 +144,15 @@ def snapshot_download(
                 logger.info(f"Saved file to '{savedFile}'")
             
             if max_workers and max_workers > 1:
-                from concurrent.futures import ThreadPoolExecutor
+                from concurrent.futures import ThreadPoolExecutor, as_completed
                 with ThreadPoolExecutor(max_workers=max_workers) as ex:
-                    for f in repo_files:
-                        ex.submit(_download_one, f)
-                ex.shutdown(wait=True)
+                    futures = {ex.submit(_download_one, f): f for f in repo_files}
+                    for future in as_completed(futures):
+                        try:
+                            future.result()
+                        except Exception as exc:
+                            # Re-raise exception from thread
+                            raise exc
             else:
                 for f in repo_files:
                     _download_one(f)

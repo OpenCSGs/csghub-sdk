@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Optional, Union
 
-from pycsghub.cli_utils import get_csghub_api
+from pycsghub.api_client import get_csghub_api
 from pycsghub.constants import DEFAULT_REVISION
 from pycsghub.snapshot_download import snapshot_download
 

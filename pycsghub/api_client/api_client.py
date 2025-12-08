@@ -1,20 +1,23 @@
 from __future__ import annotations
-from typing import Optional, Union, List
-from pathlib import Path
-from huggingface_hub.utils import filter_repo_objects
+
 from fnmatch import fnmatch
-from .utils import get_repo_info, get_endpoint
-from .commit_ops import CommitOperationAdd, CommitOperationDelete, build_payload
-from .utils import get_repo_info, get_endpoint
-from .snapshot_download import snapshot_download as csghub_snapshot_download
-from .file_download import file_download as csghub_file_download
+from pathlib import Path
+from typing import Dict, List, Optional, Union, Any
+
+from huggingface_hub.utils import filter_repo_objects
+
+from pycsghub.commit_ops import build_payload, CommitOperationAdd, CommitOperationDelete
+from pycsghub.file_download import file_download as csghub_file_download
+from pycsghub.snapshot_download import snapshot_download as csghub_snapshot_download
+from pycsghub.utils import get_endpoint, get_repo_info
+from pycsghub.csghub_api import CsgHubApi
 
 class CsghubApi:
     def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None):
-        self._api = CsgHubApi()
+        self._api = CsgHubApi(token=token, endpoint=endpoint)
         self._token = token
         self._endpoint = endpoint
-
+    
     def hf_hub_download(
         self,
         repo_id: str,
@@ -46,7 +49,7 @@ class CsghubApi:
         dry_run = kwargs.get('dry_run', False)
         quiet = kwargs.get('quiet', False)
         source = kwargs.get('source', None)
-
+        
         return csghub_file_download(
             repo_id=repo_id,
             file_name=final_filename,
@@ -63,7 +66,7 @@ class CsghubApi:
             quiet=quiet,
             source=source
         )
-
+    
     def snapshot_download(
         self,
         repo_id: str,
@@ -108,7 +111,7 @@ class CsghubApi:
             max_workers=max_workers,
             quiet=quiet
         )
-
+    
     def create_repo(
         self,
         repo_id: str,
@@ -118,10 +121,10 @@ class CsghubApi:
         **kwargs
     ):
         # Reusing Repository logic for creation
-        from .repository import Repository
+        from pycsghub.repository import Repository
         repo = Repository(
             repo_id=repo_id,
-            upload_path=".",
+            upload_path="..",
             repo_type=repo_type,
             token=self._token,
             endpoint=self._endpoint,
@@ -133,7 +136,7 @@ class CsghubApi:
             if not exist_ok:
                 raise
         return repo
-
+    
     def repo_info(
         self,
         repo_id: str,
@@ -148,7 +151,7 @@ class CsghubApi:
             token=token or self._token,
             endpoint=self._endpoint
         )
-
+    
     def create_branch(
         self,
         repo_id: str,
@@ -157,17 +160,21 @@ class CsghubApi:
         exist_ok: bool = False
     ):
         try:
-            return self._api.create_new_branch(
+            # Reusing Repository logic until CsgHubApi supports create_branch directly or via new endpoint
+            from pycsghub.repository import Repository
+            repo = Repository(
                 repo_id=repo_id,
-                repo_type=repo_type or 'model',
-                revision=branch,
-                endpoint=self._endpoint,
-                token=self._token
+                upload_path="..",
+                repo_type=repo_type,
+                branch_name=branch,
+                token=self._token,
+                endpoint=self._endpoint
             )
+            return repo.create_new_branch()
         except Exception:
             if not exist_ok:
                 raise
-
+    
     def upload_file(
         self,
         *,
@@ -191,8 +198,11 @@ class CsghubApi:
             revision=revision or 'main',
             endpoint=self._endpoint,
             token=self._token,
+            commit_description=commit_description,
+            create_pr=create_pr,
+            parent_commit=parent_commit,
         )
-
+    
     def upload_folder(
         self,
         *,
@@ -227,7 +237,8 @@ class CsghubApi:
             if isinstance(delete_patterns, str):
                 delete_patterns = [delete_patterns]
             endpoint = get_endpoint(endpoint=self._endpoint)
-            repo_info = get_repo_info(repo_id=repo_id, repo_type=repo_type or 'model', revision=revision or 'main', token=self._token, endpoint=endpoint)
+            repo_info = get_repo_info(repo_id=repo_id, repo_type=repo_type or 'model', revision=revision or 'main',
+                                      token=self._token, endpoint=endpoint)
             remote_files = [f.rfilename for f in getattr(repo_info, 'siblings', []) or []]
             for d in delete_patterns:
                 pattern = f"{pi}/{d}" if pi else d
@@ -235,7 +246,7 @@ class CsghubApi:
                     rp = f"{pi}/{rf}" if pi else rf
                     if fnmatch(rp, pattern):
                         operations.append(CommitOperationDelete(path_in_repo=rp))
-
+        
         message = commit_message or "Upload folder using csghub"
         payload = build_payload(operations, message)
         return self._api.create_commit(
