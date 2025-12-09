@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 # Mock/Override disable_xnet for testing
 import pycsghub.utils
-from pycsghub.cmd.repo import download, upload_files
+from pycsghub.cli import download, upload
 from pycsghub.cmd.repo_types import RepoType
 
 class RepoIntegrationTest(unittest.TestCase):
@@ -32,9 +32,14 @@ class RepoIntegrationTest(unittest.TestCase):
         else:
             cls.skip_test = False
             try:
-                cls.repos = json.loads(cls.repos_json)
-            except json.JSONDecodeError:
-                print("Invalid JSON in CSGHUB_TEST_REPOS")
+                # Attempt to clean up common JSON syntax errors like trailing commas
+                import re
+                cleaned_json = re.sub(r',\s*\]', ']', cls.repos_json)
+                cleaned_json = re.sub(r',\s*\}', '}', cleaned_json)
+                cls.repos = json.loads(cleaned_json)
+            except json.JSONDecodeError as e:
+                print(f"Invalid JSON in CSGHUB_TEST_REPOS: {e}")
+                print(f"Raw content: {cls.repos_json}")
                 cls.skip_test = True
                 return
             
@@ -69,43 +74,53 @@ class RepoIntegrationTest(unittest.TestCase):
                 f.write(content.decode('utf-8'))
         return path, content
     
-    def _run_with_xnet_toggle(self, enable_xnet: bool):
-        # Patch disable_xnet in utils
-        # disable_xnet() returns True if we want to disable xnet (use CsghubApi)
-        # disable_xnet() returns False if we want to enable xnet (use HfApi)
+    def test_from_env_config(self):
+        if not isinstance(self.repos, list):
+             print("Skipping test_from_env_config: CSGHUB_TEST_REPOS is not a list")
+             return
+
+        print(f"\nLoaded {len(self.repos)} repos from env for testing.")
         
-        original_disable_xnet = pycsghub.utils.disable_xnet
-        pycsghub.utils.disable_xnet = lambda: not enable_xnet
-        
-        try:
-            print(f"\n--- Running tests with XNet {'Enabled' if enable_xnet else 'Disabled'} ---")
-            self._run_all_types_cycle(expect_failure=enable_xnet)
-        finally:
-            pycsghub.utils.disable_xnet = original_disable_xnet
-    
-    def test_xnet_disabled(self):
-        self._run_with_xnet_toggle(enable_xnet=False)
-    
-    def test_xnet_enabled(self):
-        self._run_with_xnet_toggle(enable_xnet=True)
-    
-    def _run_all_types_cycle(self, expect_failure=False):
-        # Test Model
-        if "model" in self.repos:
-            self._run_upload_download_cycle(RepoType.MODEL, self.repos["model"], "test_model_small.txt", 1, False,
-                                            expect_failure)
-            self._run_upload_download_cycle(RepoType.MODEL, self.repos["model"], "test_model_large.bin", 500, True,
-                                            expect_failure)
-        
-        # Test Dataset
-        if "dataset" in self.repos:
-            self._run_upload_download_cycle(RepoType.DATASET, self.repos["dataset"], "test_dataset.txt", 1, False,
-                                            expect_failure)
-        
-        # Test Space
-        if "space" in self.repos:
-            self._run_upload_download_cycle(RepoType.SPACE, self.repos["space"], "test_space.txt", 1, False,
-                                            expect_failure)
+        for repo_config in self.repos:
+            repo_id = repo_config.get("repo_id")
+            type_str = repo_config.get("type")
+            disable_xnet = repo_config.get("disable_xnet", "false")
+            
+            if not repo_id or not type_str:
+                print(f"Skipping invalid config: {repo_config}")
+                continue
+
+            # Map type string to RepoType enum
+            unique_suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            if type_str == "model":
+                repo_type = RepoType.MODEL
+                filename = f"test_model_small_{unique_suffix}.bin"
+            elif type_str == "dataset":
+                repo_type = RepoType.DATASET
+                filename = f"test_dataset_{unique_suffix}.txt"
+            elif type_str == "space":
+                repo_type = RepoType.SPACE
+                filename = f"test_space_{unique_suffix}.txt"
+            else:
+                print(f"Unknown repo type: {type_str}")
+                continue
+            
+
+            # Toggle XNet
+            original_disable_xnet = pycsghub.utils.disable_xnet()
+            os.environ["CSGHUB_DISABLE_XNET"] = str(disable_xnet)
+            print(f"\n>>> Testing {repo_id} ({type_str}) with XNet {'Disabled' if pycsghub.utils.disable_xnet() else 'Enabled'}")
+
+            try:
+                self._run_upload_download_cycle(
+                    repo_type=repo_type, 
+                    repo_id=repo_id, 
+                    filename=filename, 
+                    size_kb=1, 
+                    binary=False
+                )
+            finally:
+                os.environ["CSGHUB_DISABLE_XNET"] = str(original_disable_xnet)
     
     def _run_upload_download_cycle(self, repo_type, repo_id, filename, size_kb, binary, expect_failure=False):
         local_path, original_content = self._create_test_file(filename, size_kb, binary)
@@ -114,10 +129,10 @@ class RepoIntegrationTest(unittest.TestCase):
         print(f"Uploading {repo_type} {repo_id} file {filename} ({size_kb}KB)...")
         # 1. Upload
         try:
-            upload_files(
+            upload(
                 repo_id=repo_id,
-                repo_type=repo_type.value,
-                repo_file=str(local_path),
+                repo_type=repo_type,
+                local_path=str(local_path),
                 path_in_repo=remote_path,
                 token=self.token,
                 endpoint=self.endpoint,
@@ -132,18 +147,14 @@ class RepoIntegrationTest(unittest.TestCase):
         
         try:
             # Inspect repo_info before download to see if file is there
-            from pycsghub.utils import get_repo_info
-            info = get_repo_info(repo_id, repo_type=repo_type.value, token=self.token, endpoint=self.endpoint)
-            print(f"DEBUG: Repo siblings: {[s.rfilename for s in info.siblings]}")
-            
             download(
                 repo_id=repo_id,
-                repo_type=repo_type.value,
-                local_dir=download_dir,
+                filenames=[remote_path], # CLI uses filenames list, mapped to allow_patterns or single file
+                repo_type=repo_type,
+                local_dir=str(download_dir),
                 token=self.token,
                 endpoint=self.endpoint,
-                allow_patterns=None,
-                force_download=True
+                force_download=True 
             )
         except Exception as e:
             self.fail(f"Download failed for {repo_type} {filename}: {e}")

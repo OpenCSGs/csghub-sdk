@@ -120,7 +120,6 @@ def file_download(
         with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
             repo_file_info = pack_repo_file_info(file_name, revision)
             if force_download or not cache.exists(repo_file_info):
-                file_name = os.path.basename(repo_file_info['Path'])
                 # get download url
                 url = get_file_download_url(
                     model_id=repo_id,

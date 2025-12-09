@@ -495,12 +495,13 @@ def pack_repo_file_info(repo_file_path,
     return repo_file_info
 
 def print_download_result(res):
-    from huggingface_hub.utils import _format_size, tabulate
-    from huggingface_hub.file_download import DryRunFileInfo
-    
     if isinstance(res, str):
         print(res)
         return
+
+    from huggingface_hub.utils import _format_size, tabulate
+    from huggingface_hub.file_download import DryRunFileInfo
+    
     if isinstance(res, DryRunFileInfo):
         res = [res]
     if isinstance(res, list) and len(res) > 0 and isinstance(res[0], DryRunFileInfo):

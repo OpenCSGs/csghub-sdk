@@ -108,7 +108,6 @@ def download(
     ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
     source: Annotated[str, OPTIONS["source"]] = REPO_SOURCE_CSG,
     quiet: Annotated[Optional[bool], OPTIONS["quiet"]] = False,
-    dry_run: Annotated[Optional[bool], OPTIONS["dry_run"]] = False,
     force_download: Annotated[Optional[bool], OPTIONS["force_download"]] = False,
     max_workers: Annotated[Optional[int], OPTIONS["max_workers"]] = 8,
 ):
@@ -135,7 +134,6 @@ def download(
                 "force_download": force_download,
                 "token": token,
                 "local_dir": local_dir,
-                "dry_run": dry_run,
             }
             
             # Only pass extra args if API supports them (CsghubApi)
@@ -165,11 +163,9 @@ def download(
         "local_dir": local_dir,
         "allow_patterns": allow_patterns,
         "ignore_patterns": ignore_patterns,
-        "dry_run": dry_run,
         "force_download": force_download,
         "max_workers": max_workers,
     }
-
     if api.__class__.__name__ == "CsghubApi":
         snapshot_kwargs["source"] = source
         snapshot_kwargs["quiet"] = quiet
