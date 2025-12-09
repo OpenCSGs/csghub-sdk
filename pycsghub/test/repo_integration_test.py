@@ -84,14 +84,16 @@ class RepoIntegrationTest(unittest.TestCase):
         for repo_config in self.repos:
             repo_id = repo_config.get("repo_id")
             type_str = repo_config.get("type")
+            size_kb = repo_config.get("size_kb")
             disable_xnet = repo_config.get("disable_xnet", "false")
             
             if not repo_id or not type_str:
                 print(f"Skipping invalid config: {repo_config}")
                 continue
-
+            
+            size_kb = size_kb or 100
             # Map type string to RepoType enum
-            unique_suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            unique_suffix = f"{size_kb}kb" 
             if type_str == "model":
                 repo_type = RepoType.MODEL
                 filename = f"test_model_small_{unique_suffix}.bin"
@@ -116,7 +118,7 @@ class RepoIntegrationTest(unittest.TestCase):
                     repo_type=repo_type, 
                     repo_id=repo_id, 
                     filename=filename, 
-                    size_kb=1, 
+                    size_kb=size_kb, 
                     binary=False
                 )
             finally:
@@ -146,7 +148,6 @@ class RepoIntegrationTest(unittest.TestCase):
         download_dir = self.test_dir / f"download_{filename}_{random.randint(0, 10000)}"
         
         try:
-            # Inspect repo_info before download to see if file is there
             download(
                 repo_id=repo_id,
                 filenames=[remote_path], # CLI uses filenames list, mapped to allow_patterns or single file
@@ -188,6 +189,16 @@ class RepoIntegrationTest(unittest.TestCase):
             self.assertEqual(original_content, downloaded_content, "Binary content mismatch")
         else:
             self.assertEqual(original_content, downloaded_content, "Text content mismatch")
+
+        print(f"Downloading entire repo: {repo_type} {repo_id} ...")
+        download(
+            repo_id=repo_id,
+            repo_type=repo_type,
+            local_dir=str(download_dir),
+            token=self.token,
+            endpoint=self.endpoint,
+            force_download=True 
+        )     
 
 if __name__ == '__main__':
     unittest.main()

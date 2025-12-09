@@ -108,6 +108,7 @@ def download(
     ignore_patterns: Annotated[Optional[List[str]], OPTIONS["ignore_patterns"]] = None,
     source: Annotated[str, OPTIONS["source"]] = REPO_SOURCE_CSG,
     quiet: Annotated[Optional[bool], OPTIONS["quiet"]] = False,
+    dry_run: Annotated[Optional[bool], OPTIONS["dry_run"]] = False,
     force_download: Annotated[Optional[bool], OPTIONS["force_download"]] = False,
     max_workers: Annotated[Optional[int], OPTIONS["max_workers"]] = 8,
 ):
@@ -136,10 +137,20 @@ def download(
                 "local_dir": local_dir,
             }
             
+            # Explicitly pass endpoint for CsgXnetApi if available
+            # Note: HfApi.hf_hub_download might not accept 'endpoint' as a keyword argument in some versions.
+            # But we can try to pass it if it's CsghubApi (our wrapper) OR relying on instance state.
+            # However, if we are calling api.hf_hub_download (HfApi method), it usually uses self.endpoint.
+            # If we pass 'endpoint', it might fail if the method signature doesn't accept it.
+            # Let's rely on api instance having the correct endpoint set (which we fixed in CsgXnetApi.__init__).
+            # if hasattr(api, 'endpoint') and api.endpoint:
+            #     download_kwargs["endpoint"] = api.endpoint
+            
             # Only pass extra args if API supports them (CsghubApi)
             if api.__class__.__name__ == "CsghubApi":
                 download_kwargs["quiet"] = quiet
                 download_kwargs["source"] = source
+                download_kwargs["dry_run"] = dry_run
 
             try:
                 result = api.hf_hub_download(**download_kwargs)
