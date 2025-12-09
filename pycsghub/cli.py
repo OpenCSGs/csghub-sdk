@@ -4,8 +4,8 @@ import time
 import warnings
 from importlib.metadata import version
 from typing import List, Optional
-import dotenv
 
+import dotenv
 import typer
 try:
     from huggingface_hub.file_download import DryRunFileInfo
@@ -17,7 +17,7 @@ dotenv.load_dotenv()
 from huggingface_hub.utils import disable_progress_bars, enable_progress_bars
 from typing_extensions import Annotated
 
-from pycsghub.cmd import finetune, inference
+from pycsghub.cmd import finetune, inference, system
 from pycsghub.cmd.repo_types import RepoType
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, REPO_SOURCE_CSG
 from pycsghub.api_client import get_csghub_api
@@ -120,21 +120,21 @@ def download(
     # If filenames are provided, use them as allow_patterns or download single file
     if len(filenames_list) > 0:
         if allow_patterns is not None and len(allow_patterns) > 0:
-             warnings.warn("Ignoring --allow-patterns since filenames have been explicitly set.")
+            warnings.warn("Ignoring --allow-patterns since filenames have been explicitly set.")
         if ignore_patterns is not None and len(ignore_patterns) > 0:
-             warnings.warn("Ignoring --ignore-patterns since filenames have been explicitly set.")
+            warnings.warn("Ignoring --ignore-patterns since filenames have been explicitly set.")
         
         # Single file case: use hf_hub_download (or equivalent)
         if len(filenames_list) == 1:
             download_kwargs = {
-                "repo_id": repo_id,
-                "repo_type": repo_type.value,
-                "revision": revision,
-                "filename": filenames_list[0],
-                "cache_dir": cache_dir,
+                "repo_id"       : repo_id,
+                "repo_type"     : repo_type.value,
+                "revision"      : revision,
+                "filename"      : filenames_list[0],
+                "cache_dir"     : cache_dir,
                 "force_download": force_download,
-                "token": token,
-                "local_dir": local_dir,
+                "token"         : token,
+                "local_dir"     : local_dir,
             }
             
             # Explicitly pass endpoint for CsgXnetApi if available
@@ -151,36 +151,36 @@ def download(
                 download_kwargs["quiet"] = quiet
                 download_kwargs["source"] = source
                 download_kwargs["dry_run"] = dry_run
-
+            
             try:
                 result = api.hf_hub_download(**download_kwargs)
                 print_download_result(result)
             except Exception as e:
                 if quiet:
-                     raise e
+                    raise e
                 print(f"Download failed: {e}")
                 raise typer.Exit(code=1)
             return
-
+        
         # Multiple files case: use snapshot_download with allow_patterns
         allow_patterns = filenames_list
         ignore_patterns = None
-
+    
     snapshot_kwargs = {
-        "repo_id": repo_id,
-        "repo_type": repo_type.value,
-        "revision": revision,
-        "cache_dir": cache_dir,
-        "local_dir": local_dir,
-        "allow_patterns": allow_patterns,
+        "repo_id"        : repo_id,
+        "repo_type"      : repo_type.value,
+        "revision"       : revision,
+        "cache_dir"      : cache_dir,
+        "local_dir"      : local_dir,
+        "allow_patterns" : allow_patterns,
         "ignore_patterns": ignore_patterns,
-        "force_download": force_download,
-        "max_workers": max_workers,
+        "force_download" : force_download,
+        "max_workers"    : max_workers,
     }
     if api.__class__.__name__ == "CsghubApi":
         snapshot_kwargs["source"] = source
         snapshot_kwargs["quiet"] = quiet
-
+    
     try:
         result = api.snapshot_download(**snapshot_kwargs)
     except Exception as e:
@@ -188,7 +188,7 @@ def download(
             raise e
         print(f"Download failed: {e}")
         raise typer.Exit(code=1)
-
+    
     if quiet:
         disable_progress_bars()
         print_download_result(result)
@@ -336,6 +336,14 @@ def lfs_enable_largefiles(path: Annotated[str, OPTIONS["path"]]):
 def lfs_multipart_upload():
     lfsCmd = LfsUploadCommand()
     lfsCmd.run()
+
+@app.command(name="env", help="Print information about the environment.")
+def env():
+    system.env()
+
+@app.command(name="version", help="Print information about the hf version.")
+def version():
+    system.version()
 
 inference_app = typer.Typer(
     no_args_is_help=True,

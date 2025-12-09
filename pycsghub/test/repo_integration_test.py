@@ -65,13 +65,8 @@ class RepoIntegrationTest(unittest.TestCase):
     def _create_test_file(self, filename, size_kb=1, binary=False):
         path = self.test_dir / filename
         content = self._generate_random_content(size_kb, binary)
-        mode = 'wb' if binary else 'w'
-        if binary:
-            with open(path, 'wb') as f:
-                f.write(content)
-        else:
-            with open(path, 'w') as f:
-                f.write(content.decode('utf-8'))
+        with open(path, 'wb') as f:
+            f.write(content)
         return path, content
     
     def test_from_env_config(self):
@@ -93,7 +88,7 @@ class RepoIntegrationTest(unittest.TestCase):
             
             size_kb = size_kb or 100
             # Map type string to RepoType enum
-            unique_suffix = f"{size_kb}kb" 
+            unique_suffix = f"{size_kb}kb_{random.randint(1000, 9999)}" 
             if type_str == "model":
                 repo_type = RepoType.MODEL
                 filename = f"test_model_small_{unique_suffix}.bin"
@@ -144,7 +139,7 @@ class RepoIntegrationTest(unittest.TestCase):
             self.fail(f"Upload failed for {repo_type} {filename}: {e}")
         
         # 2. Download
-        print(f"Downloading {repo_type} {repo_id} file {filename} ({size_kb}KB)...")
+        print(f"Downloading {repo_type} {repo_id} file {remote_path} ({size_kb}KB)...")
         download_dir = self.test_dir / f"download_{filename}_{random.randint(0, 10000)}"
         
         try:

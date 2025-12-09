@@ -29,7 +29,7 @@ def get_session() -> requests.Session:
     return session
 
 
-def get_token_to_send(token) -> Optional[str]:
+def get_token_to_send(token: Optional[str] = None) -> Optional[str]:
     if token:
         return token
     else:
