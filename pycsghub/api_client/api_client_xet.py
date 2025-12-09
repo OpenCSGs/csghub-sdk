@@ -6,7 +6,7 @@ from huggingface_hub import constants, HfApi
 from pycsghub.utils import get_default_cache_dir, get_xnet_endpoint
 
 class CsgXnetApi(HfApi):
-    def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None):
+    def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None, user_name: Optional[str] = None):
         endpoint = get_xnet_endpoint(endpoint=endpoint)
         os.environ["HF_ENDPOINT"] = endpoint
         os.environ["HF_HOME"] = str(get_default_cache_dir())
@@ -15,4 +15,5 @@ class CsgXnetApi(HfApi):
         
         self._token = token
         self._endpoint = endpoint
+        self._user_name = user_name
         super().__init__(endpoint=endpoint, token=token)

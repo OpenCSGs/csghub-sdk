@@ -210,13 +210,13 @@ def upload(
     quiet: Annotated[bool, OPTIONS["quiet"]] = False,
 ):
     repo_type_str = repo_type.value
-    api = get_csghub_api(token=token, endpoint=endpoint)
+    api = get_csghub_api(token=token, endpoint=endpoint, user_name=user_name)
     
     resolved_local_path = local_path
     resolved_path_in_repo = path_in_repo
     resolved_include = include
     
-    def run_upload() -> str:
+    def run_upload() -> dict:
         if os.path.isfile(resolved_local_path):
             if resolved_include is not None and len(resolved_include) > 0:
                 warnings.warn("Ignoring --include since a single file is uploaded.")

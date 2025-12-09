@@ -1,10 +1,10 @@
-from pathlib import Path
-from typing import List, Optional, Union
-
-from pycsghub.api_client import get_csghub_api
-from pycsghub.constants import DEFAULT_REVISION
 from pycsghub.snapshot_download import snapshot_download
-
+from pycsghub.file_upload import http_upload_file
+from pathlib import Path
+from typing import Optional, Union, List
+from pycsghub.constants import DEFAULT_REVISION
+from pycsghub.repository import Repository
+from pycsghub.utils import get_token_to_send
 
 def download(
         repo_id: str,
@@ -17,28 +17,19 @@ def download(
         allow_patterns: Optional[Union[List[str], str]] = None,
         ignore_patterns: Optional[Union[List[str], str]] = None,
         source: str = None,
-        quiet: Optional[bool] = False,
-        dry_run: Optional[bool] = False,
-        force_download: Optional[bool] = False,
-        max_workers: Optional[int] = 8,
-):
-    return snapshot_download(
-            repo_id=repo_id,
-            repo_type=repo_type,
-            revision=revision,
-            cache_dir=cache_dir,
-            local_dir=local_dir,
-            endpoint=endpoint,
-            token=token,
-            allow_patterns=allow_patterns,
-            ignore_patterns=ignore_patterns,
-            source=source,
-            quiet=quiet,
-            dry_run=dry_run,
-            force_download=force_download,
-            max_workers=max_workers,
+    ):
+    snapshot_download(
+        repo_id=repo_id,
+        repo_type=repo_type,
+        revision=revision,
+        cache_dir=cache_dir,
+        local_dir=local_dir,
+        endpoint=endpoint, 
+        token=token,
+        allow_patterns=allow_patterns,
+        ignore_patterns=ignore_patterns,
+        source=source,
     )
-
 
 def upload_files(
         repo_id: str,
@@ -47,19 +38,17 @@ def upload_files(
         path_in_repo: Optional[str] = "",
         revision: Optional[str] = DEFAULT_REVISION,
         endpoint: Optional[str] = None,
-        token: Optional[str] = None,
-        commit_message: Optional[str] = None,
-):
-    api = get_csghub_api(token=token, endpoint=endpoint)
-    api.upload_file(
-            path_or_fileobj=repo_file,
-            path_in_repo=path_in_repo or Path(repo_file).name,
-            repo_id=repo_id,
-            repo_type=repo_type,
-            revision=revision,
-            commit_message=commit_message,
+        token: Optional[str] = None
+    ):
+    http_upload_file(
+        repo_id=repo_id,
+        repo_type=repo_type,
+        file_path=repo_file,
+        path_in_repo=path_in_repo,
+        revision=revision,
+        endpoint=endpoint,
+        token=token,
     )
-
 
 def upload_folder(
         repo_id: str,
@@ -75,27 +64,21 @@ def upload_folder(
         user_name: Optional[str] = "",
         token: Optional[str] = None,
         auto_create: Optional[bool] = True,
-        include: Optional[Union[List[str], str]] = None,
-        exclude: Optional[Union[List[str], str]] = None,
-        delete_patterns: Optional[Union[List[str], str]] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
-        create_pr: Optional[bool] = False,
-        private: Optional[bool] = False,
-        every: Optional[float] = None,
-):
-    api = get_csghub_api(token=token, endpoint=endpoint)
-    api.upload_folder(
-            repo_id=repo_id,
-            folder_path=local_path,
-            path_in_repo=path_in_repo,
-            repo_type=repo_type,
-            revision=revision,
-            allow_patterns=include,
-            ignore_patterns=exclude,
-            delete_patterns=delete_patterns,
-            commit_message=commit_message,
-            commit_description=commit_description,
-            create_pr=create_pr,
-            parent_commit=None,
+    ):
+    r = Repository(
+        repo_id=repo_id,
+        upload_path=local_path,
+        path_in_repo=path_in_repo,
+        work_dir=work_dir,
+        repo_type=repo_type,
+        nickname=nickname,
+        description=description,
+        license=license,
+        branch_name=revision,
+        endpoint=endpoint,
+        user_name=user_name,
+        token=get_token_to_send(token),
+        auto_create=auto_create,
     )
+    r.upload()
+    

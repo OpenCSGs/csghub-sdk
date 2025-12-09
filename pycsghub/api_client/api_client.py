@@ -2,21 +2,23 @@ from __future__ import annotations
 
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any
+from typing import Any, Dict, List, Optional, Union
 
 from huggingface_hub.utils import filter_repo_objects
 
 from pycsghub.commit_ops import build_payload, CommitOperationAdd, CommitOperationDelete
+from pycsghub.csghub_api import CsgHubApi
 from pycsghub.file_download import file_download as csghub_file_download
 from pycsghub.snapshot_download import snapshot_download as csghub_snapshot_download
 from pycsghub.utils import get_endpoint, get_repo_info
-from pycsghub.csghub_api import CsgHubApi
+from pycsghub.cmd import repo
 
 class CsghubApi:
-    def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None):
+    def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None, user_name: Optional[str] = None):
         self._api = CsgHubApi(token=token, endpoint=endpoint)
         self._token = token
         self._endpoint = endpoint
+        self._user_name = user_name
     
     def hf_hub_download(
         self,
@@ -188,19 +190,14 @@ class CsghubApi:
         create_pr: Optional[bool] = None,
         parent_commit: Optional[str] = None,
     ) -> dict:
-        message = commit_message or f"Upload {path_in_repo} with csghub"
-        operations = [CommitOperationAdd(path_in_repo=path_in_repo, path_or_fileobj=path_or_fileobj)]
-        payload = build_payload(operations, message)
-        return self._api.create_commit(
-            payload=payload,
+        return repo.upload_files(
             repo_id=repo_id,
-            repo_type=repo_type or 'model',
-            revision=revision or 'main',
+            repo_type=repo_type,
+            repo_file=path_or_fileobj,
+            path_in_repo=path_in_repo,
+            revision=revision,
             endpoint=self._endpoint,
             token=self._token,
-            commit_description=commit_description,
-            create_pr=create_pr,
-            parent_commit=parent_commit,
         )
     
     def upload_folder(
@@ -209,51 +206,23 @@ class CsghubApi:
         repo_id: str,
         folder_path: Union[str, Path],
         path_in_repo: Optional[str] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
         repo_type: Optional[str] = None,
         revision: Optional[str] = None,
+        commit_message: Optional[str] = None,
+        commit_description: Optional[str] = None,
         allow_patterns: Optional[Union[List[str], str]] = None,
         ignore_patterns: Optional[Union[List[str], str]] = None,
         delete_patterns: Optional[Union[List[str], str]] = None,
         create_pr: Optional[bool] = None,
         parent_commit: Optional[str] = None,
     ) -> dict:
-        base = Path(folder_path)
-        pi = path_in_repo or ''
-        # collect adds
-        paths = []
-        for p in base.rglob('*'):
-            if p.is_file():
-                paths.append(str(p.relative_to(base)))
-        includes = filter_repo_objects(items=paths, allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
-        operations: List[Union[CommitOperationAdd, CommitOperationDelete]] = []
-        for rel in includes:
-            local_fp = base / rel
-            remote_fp = f"{pi}/{rel}" if pi else rel
-            operations.append(CommitOperationAdd(path_in_repo=remote_fp, path_or_fileobj=str(local_fp)))
-        # collect deletes
-        if delete_patterns:
-            if isinstance(delete_patterns, str):
-                delete_patterns = [delete_patterns]
-            endpoint = get_endpoint(endpoint=self._endpoint)
-            repo_info = get_repo_info(repo_id=repo_id, repo_type=repo_type or 'model', revision=revision or 'main',
-                                      token=self._token, endpoint=endpoint)
-            remote_files = [f.rfilename for f in getattr(repo_info, 'siblings', []) or []]
-            for d in delete_patterns:
-                pattern = f"{pi}/{d}" if pi else d
-                for rf in remote_files:
-                    rp = f"{pi}/{rf}" if pi else rf
-                    if fnmatch(rp, pattern):
-                        operations.append(CommitOperationDelete(path_in_repo=rp))
-        
-        message = commit_message or "Upload folder using csghub"
-        payload = build_payload(operations, message)
-        return self._api.create_commit(
-            payload=payload,
-            repo_id=repo_id,
-            repo_type=repo_type or 'model',
-            revision=revision or 'main',
+        return repo.upload_folder(
+            repo_id=repo_id, 
+            repo_type=repo_type,
+            local_path=folder_path,
+            path_in_repo=path_in_repo,
+            revision=revision,
             endpoint=self._endpoint,
             token=self._token,
+            user_name=self._user_name,
         )
