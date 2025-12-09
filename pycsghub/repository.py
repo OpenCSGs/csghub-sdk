@@ -267,7 +267,8 @@ class Repository:
             "Content-Type": "application/json"
         })
         response = requests.post(url, json=data, headers=headers)
-        if response.status_code != 200:
+        exist_msg = "SYS-ERR-4: Duplicate entry for key"
+        if response.status_code != 200 and exist_msg not in response.text :
             logger.info(f"create repo on {url} response: {response.text}")
         response.raise_for_status()
         return response

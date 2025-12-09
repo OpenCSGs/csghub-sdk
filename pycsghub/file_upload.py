@@ -28,8 +28,13 @@ def http_upload_file(
     file_data = {'file': open(file_path, 'rb')}
     form_data = {'file_path': destination_path, 'branch': revision, 'message': (commit_message or ('upload ' + os.path.basename(file_path)))}
     response = requests.post(http_url, headers=post_headers, data=form_data, files=file_data)
+    exist_msg = "GIT-ERR-20"
     if response.status_code == 200:
         logger.info(f"file '{file_path}' upload successfully.")
+    elif response.status_code != 200 and exist_msg in response.text:
+        logger.info(f"file '{file_path}' already exists.")
     else:
-        logger.error(f"fail to upload {file_path} with response code: {response.status_code}, error: {response.content.decode()}")
+        msg = f"fail to upload {file_path} with response code: {response.status_code}, error: {response.content.decode()}"
+        logger.error(msg)
+        raise RuntimeError(msg)
     
