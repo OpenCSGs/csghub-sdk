@@ -95,9 +95,9 @@ class RepoIntegrationTest(unittest.TestCase):
             elif type_str == "dataset":
                 repo_type = RepoType.DATASET
                 filename = f"test_dataset_{unique_suffix}.txt"
-            elif type_str == "space":
-                repo_type = RepoType.SPACE
-                filename = f"test_space_{unique_suffix}.txt"
+            elif type_str == "code":
+                repo_type = RepoType.CODE
+                filename = f"test_code_{unique_suffix}.txt"
             else:
                 print(f"Unknown repo type: {type_str}")
                 continue
