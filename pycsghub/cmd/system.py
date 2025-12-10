@@ -46,19 +46,26 @@ for candidate_name, package_names in _CANDIDATES.items():
 def _get_version(package_name: str) -> str:
     return _package_versions.get(package_name, "N/A")
 
+def mask_token(token):
+    if not token:
+        return "None"
+    if len(token) < 8:
+        return "***"
+    return token[:4] + "*" * (len(token) - 8) + token[-4:]
+
 def env() -> None:
     """Print information about the environment."""
     # Generic machine info
-    info: dict[str, Any] = {"csghub_hub version": __version__,
-                            "Platform"               : platform.platform(),
-                            "Python version"         : _PY_VERSION,
-                            "hf_xet"                 : _get_version("hf_xet"),
-                            "hf_version"             : _get_version("hf_version"),
-                            "httpx"                  : _get_version("httpx"),
-                            "ENDPOINT"               : get_endpoint(),
-                            "ENDPOINT_HF"            : get_xnet_endpoint(get_endpoint()),
-                            "TOKEN"                  : get_token_to_send(),
-                            "CSGHUB_DISABLE_XNET"    : disable_xnet(),
+    info: dict[str, Any] = {"csghub_hub version" : __version__,
+                            "Platform"           : platform.platform(),
+                            "Python version"     : _PY_VERSION,
+                            "hf_xet"             : _get_version("hf_xet"),
+                            "hf_version"         : _get_version("hf_version"),
+                            "httpx"              : _get_version("httpx"),
+                            "ENDPOINT"           : get_endpoint(),
+                            "ENDPOINT_XNET"      : get_xnet_endpoint(get_endpoint()),
+                            "TOKEN"              : mask_token(get_token_to_send()),
+                            "CSGHUB_DISABLE_XNET": disable_xnet(),
                             "CSGHUB_CACHE"       : get_default_cache_dir()}
     
     print("\nCopy-and-paste the text below in your GitHub issue.\n")
