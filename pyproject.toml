@@ -46,6 +46,7 @@ train = [
 
 [project.scripts]
 csghub-cli = "pycsghub.cli:app"
+csg = "pycsghub.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/opencsg/csghub-sdk"

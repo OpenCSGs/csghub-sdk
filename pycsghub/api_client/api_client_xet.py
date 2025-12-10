@@ -3,17 +3,20 @@ from typing import Optional
 
 from huggingface_hub import constants, HfApi
 
-from pycsghub.utils import get_default_cache_dir, get_xnet_endpoint
+from pycsghub.utils import get_default_cache_dir, get_xnet_endpoint, get_cache_dir
 
 class CsgXnetApi(HfApi):
     def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None, user_name: Optional[str] = None):
         endpoint = get_xnet_endpoint(endpoint=endpoint)
         os.environ["HF_ENDPOINT"] = endpoint
         os.environ["HF_HOME"] = str(get_default_cache_dir())
+        cache_dir = get_cache_dir()
+        os.environ["HF_HUB_CACHE"] = cache_dir
         
         self._token = token
         self._endpoint = endpoint
         self._user_name = user_name
+        self._cache_dir = cache_dir
         
         # Force update huggingface_hub constants if they were already loaded
         try:
@@ -27,6 +30,10 @@ class CsgXnetApi(HfApi):
             if hasattr(huggingface_hub.constants, 'ENDPOINT'):
                 huggingface_hub.constants.ENDPOINT = endpoint
 
+            # Older versions or some contexts use ENDPOINT
+            if hasattr(huggingface_hub.constants, 'HF_HUB_CACHE'):
+                huggingface_hub.constants.HF_HUB_CACHE = cache_dir
+                
             template = endpoint + "/{repo_id}/resolve/{revision}/{filename}"
             if hasattr(huggingface_hub.constants, 'HUGGINGFACE_CO_URL_TEMPLATE'):
                  huggingface_hub.constants.HUGGINGFACE_CO_URL_TEMPLATE = template
@@ -55,7 +62,11 @@ class CsgXnetApi(HfApi):
         # Ensure token is passed
         if 'token' not in kwargs and self._token:
              kwargs['token'] = self._token
-
+             
+        # Ensure token is passed
+        if 'cache_dir' not in kwargs:
+            kwargs['cache_dir'] = self._cache_dir
+            
         try:
              # Try passing endpoint if HfApi accepts it
              if endpoint_arg:
@@ -70,10 +81,6 @@ class CsgXnetApi(HfApi):
         from huggingface_hub import hf_hub_download as origin_hf_hub_download
         if endpoint_arg:
              kwargs['endpoint'] = endpoint_arg
-        
-        # NOTE: hf_hub_download might default to HF_ENDPOINT constant if endpoint is not passed.
-        # Even if we pass it, if the underlying implementation ignores it (unlikely) or if 
-        # constants.HF_ENDPOINT is used somewhere else implicitly.
         
         # Force endpoint again just in case
         if 'endpoint' not in kwargs and self._endpoint:
@@ -91,5 +98,9 @@ class CsgXnetApi(HfApi):
         # Ensure token is passed
         if 'token' not in kwargs and self._token:
             kwargs['token'] = self._token
+            
+        # Ensure token is passed
+        if 'cache_dir' not in kwargs:
+            kwargs['cache_dir'] = self._cache_dir
             
         return origin_snapshot_download(*args, **kwargs)
