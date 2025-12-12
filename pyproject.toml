@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "csghub-sdk"
-dynamic = ["version"]
+version = "0.8.0"
 description = "CSGHub SDK for downloading and uploading models, datasets, and spaces"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -46,7 +46,6 @@ train = [
 
 [project.scripts]
 csghub-cli = "pycsghub.cli:app"
-csg = "pycsghub.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/opencsg/csghub-sdk"

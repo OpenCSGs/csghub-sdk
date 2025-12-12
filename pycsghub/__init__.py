@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from unittest import mock
 
-__version__ = "0.8.0"
 
 # This method is copied from huggingface_hub v0.27.0
 # Source: https://github.com/huggingface/huggingface_hub/blob/v0.27.0/src/huggingface_hub/utils/_datetime.py

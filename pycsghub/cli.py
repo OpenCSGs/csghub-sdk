@@ -341,10 +341,6 @@ def lfs_multipart_upload():
 def env():
     system.env()
 
-@app.command(name="version", help="Print information about the hf version.")
-def version():
-    system.version()
-
 inference_app = typer.Typer(
     no_args_is_help=True,
     help="Manage inference instances on OpenCSG Hub"

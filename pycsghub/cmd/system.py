@@ -6,6 +6,7 @@ Usage:
 """
 
 import importlib.metadata
+from importlib.metadata import version as get_version
 import platform
 import sys
 from typing import Any
@@ -58,7 +59,7 @@ def env() -> None:
     # Generic machine info
     info: dict[str, Any] = {"csghub_hub version" : __version__,
                             "Platform"           : platform.platform(),
-                            "Python version"     : _PY_VERSION,
+                            "Python version"     : get_version("csghub-sdk"),
                             "hf_xet"             : _get_version("hf_xet"),
                             "hf_version"         : _get_version("hf_version"),
                             "httpx"              : _get_version("httpx"),
@@ -72,6 +73,3 @@ def env() -> None:
     print("\n".join([f"- {prop}: {val}" for prop, val in info.items()]) + "\n")
     return info
 
-def version() -> None:
-    """Print CLI version."""
-    print(__version__)
