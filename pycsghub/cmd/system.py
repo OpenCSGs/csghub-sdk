@@ -11,7 +11,6 @@ import platform
 import sys
 from typing import Any
 
-from pycsghub import __version__
 from pycsghub.utils import disable_xnet, get_default_cache_dir, get_endpoint, get_token_to_send, get_xnet_endpoint
 
 _PY_VERSION: str = sys.version.split()[0].rstrip("+")
@@ -57,9 +56,9 @@ def mask_token(token):
 def env() -> None:
     """Print information about the environment."""
     # Generic machine info
-    info: dict[str, Any] = {"csghub_hub version" : __version__,
+    info: dict[str, Any] = {"csghub_hub version" : get_version("csghub-sdk"),
                             "Platform"           : platform.platform(),
-                            "Python version"     : get_version("csghub-sdk"),
+                            "Python version"     : _PY_VERSION,
                             "hf_xet"             : _get_version("hf_xet"),
                             "hf_version"         : _get_version("hf_version"),
                             "httpx"              : _get_version("httpx"),
