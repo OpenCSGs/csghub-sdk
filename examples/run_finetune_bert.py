@@ -35,7 +35,7 @@ def data_collator() -> Any:
 outputDir = "/Users/hhwang/temp/ff"
 args = TrainingArguments(
     outputDir,
-    evaluation_strategy="steps",
+    eval_strategy="steps",
     save_strategy="steps",
     logging_strategy="steps",
     logging_steps = 2,
@@ -57,7 +57,7 @@ trainer = Trainer(
     args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    tokenizer=tokenizer,
+    data_collator=data_collator(),
 )
 
 trainResult = trainer.train()
