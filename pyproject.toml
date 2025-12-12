@@ -39,7 +39,8 @@ dependencies = [
 train = [
     "torch",
     "transformers @ git+https://github.com/huggingface/transformers.git@v5.0.0rc0",
-    "datasets>=2.20.0"
+    "datasets>=2.20.0",
+    "accelerate>=1.1.0"
 ]
 
 [project.scripts]
