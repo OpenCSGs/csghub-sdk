@@ -48,10 +48,9 @@ train = [
 csghub-cli = "pycsghub.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/opencsg/csghub-sdk"
-Documentation = "https://github.com/opencsg/csghub-sdk"
-Repository = "https://github.com/opencsg/csghub-sdk"
-Issues = "https://github.com/opencsg/csghub-sdk/issues"
+Homepage = "https://github.com/OpenCSGs/csghub-sdk"
+Repository = "https://github.com/OpenCSGs/csghub-sdk"
+Issues = "https://github.com/OpenCSGs/csghub-sdk"
 
 [tool.setuptools.packages.find]
 include = ["pycsghub*"]
