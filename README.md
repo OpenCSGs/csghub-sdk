@@ -1,99 +1,116 @@
-<p align="left">
-    English ｜ <a href="https://github.com/OpenCSGs/csghub-sdk/blob/main/README_cn.md">中文</a>
+---
+language:
+- en
+pipeline_tag: text-generation
+tags:
+- code
+license: apache-2.0
+datasets:
+- happystar/document-writing-prompts
+- happystar/awesome-chatgpt-prompts
+---
+
+
+
+# **csg-wukong-1B**          [[中文]](#chinese)    [[English]](#english)
+
+<a id="english"></a>
+
+<p align="center">
+<img width="300px" alt="OpenCSG" src="https://cdn-uploads.huggingface.co/production/uploads/64c71b27d43e4dee51a8b31a/GwYXPKuEoGCGcMICeW-sb.jpeg">
 </p>
 
-# CSGHub SDK
-## Introduction
+<p align="center"><a href="https://portal.opencsg.com/models">[OpenCSG Community]</a>   <a href="https://github.com/opencsgs">[github]</a>  <a href="https://cdn-uploads.huggingface.co/production/uploads/64c71b27d43e4dee51a8b31a/HU6vz21qKTEmUBCWqCFh9.jpeg">[wechat]</a>  <a href="https://twitter.com/OpenCsg">[Twitter]</a> </p>
 
-The CSGHub SDK is a powerful Python client specifically designed to interact seamlessly with the CSGHub server. This toolkit is engineered to provide Python developers with an efficient and straightforward method to operate and manage remote CSGHub instances. Whether you're looking to automate tasks, manage data, or integrate CSGHub functionalities into your Python applications, the CSGHub SDK offers a comprehensive set of features to accomplish your goals with ease.
 
-## Key Features
+</div>
+OpenCSG stands for Converged resources, Software refinement, and Generative LM. The 'C' represents Converged resources, indicating the integration and full utilization of hybrid resources. The 'S' stands for Software refinement, signifying software that is refined by large models. The 'G' represents Generative LM, which denotes widespread, inclusive, and democratized generative large models.
 
-With just a few lines of code, you can seamlessly and quickly switch the model download URL to [OpenCSG](https://opencsg.com/), [enhancing the download speed of models](#quickly-switch-download-urls).
+The vision of OpenCSG is to empower every industry, every company, and every individual to own their models. We adhere to the principles of openness and open source, making the large model software stack of OpenCSG available to the community. We welcome everyone to use, send feedback, and contribute collaboratively.
 
-Effortlessly connect and interact with CSGHub server instances from your Python code.
 
-Comprehensive API Coverage: Full access to the wide array of functionalities provided by the CSGHub server, ensuring you can perform a broad spectrum of operations.
 
-User-Friendly: Designed with simplicity in mind, making it accessible for beginners while powerful enough for advanced users.
+## Model Description
 
-Efficient Data Management: Streamline the process of managing and manipulating data on your CSGHub server.
+**csg-wukong-1B** is a 1 billion-parameter small language model(SLM) pretrained on 1T tokens. 
+<br>
+we will introduce more information about csg-wukong-1B.
 
-Automation Ready: Automate repetitive tasks and processes, saving time and reducing the potential for human error.
+## Model Evaluation results
 
-Open Source: Dive into the source code, contribute, and customize the SDK to fit your specific needs.
+We submitted csg-wukong-1B on the [open_llm_leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard), and
+the results show our model ranked the 8th among the ~1.5B pretrained small language models.
 
-The main functions are:
 
-1. Repo downloading（model/dataset）
-2. Repo information query（Compatible with huggingface）
+![image/png](https://cdn-uploads.huggingface.co/production/uploads/661790397437201d78141856/_HRTxL6N0qnNPNt-P8k9k.png)
 
-## Get My Token
 
-Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.
 
-## Getting Started
+# Training
 
-To get started with the CSGHub SDK, ensure you have Python installed on your system. Then, you can install the SDK using pip:
+## Hardware
 
-```python
-pip install csghub-sdk
+- **GPUs:** 16 H800 
+- **Training time:** 43days 
 
-# install with train dependencies
-pip install "csghub-sdk[train]"
-```
+## Software
 
-After installation, you can begin using the SDK to connect to your CSGHub server by importing it into your Python script:
+- **Orchestration:** [Deepspeed](https://github.com/OpenCSGs)
+- **Neural networks:** [PyTorch](https://github.com/pytorch/pytorch)
+- **BP16 if applicable:** [apex](https://github.com/NVIDIA/apex)
 
-```python
-import os 
-from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
 
-os.environ['CSGHUB_TOKEN'] = 'your_access_token'
+<a id="chinese"></a>
 
-mid = 'OpenCSG/csg-wukong-1B'
-model = AutoModelForCausalLM.from_pretrained(mid)
-tokenizer = AutoTokenizer.from_pretrained(mid)
+<p>
 
-inputs = tokenizer.encode("Write a short story", return_tensors="pt")
-outputs = model.generate(inputs)
-print('result: ',tokenizer.batch_decode(outputs))
-```
+</p>
 
-### Quickly switch download URLs
+# OpenCSG介绍
 
-By simply changing the import package name from `transformers` to `pycsghub.repo_reader` and setting the download token, you can seamlessly and quickly switch the model download URL.
 
-```python
-os.environ['CSGHUB_TOKEN'] = 'your_access_token'
-from pycsghub.repo_reader import AutoModelForCausalLM, AutoTokenizer
-```
+<p align="center">
+<img width="300px" alt="OpenCSG" src="https://cdn-uploads.huggingface.co/production/uploads/64c71b27d43e4dee51a8b31a/GwYXPKuEoGCGcMICeW-sb.jpeg">
+</p>
 
-### Install from source code
+<p align="center"><a href="https://opencsg.com/models">[OpenCSG 社区]</a>   <a href="https://github.com/opencsgs">[github]</a>  <a href="https://cdn-uploads.huggingface.co/production/uploads/64c71b27d43e4dee51a8b31a/HU6vz21qKTEmUBCWqCFh9.jpeg">[微信]</a>  <a href="https://twitter.com/OpenCsg">[推特]</a> </p>
 
-```shell
-git clone https://github.com/OpenCSGs/csghub-sdk.git
-cd csghub-sdk
-pip install .
-```
 
-You can install the dependencies related to the model and dataset using `pip install '.[train]'`, for example:
 
-```shell
-pip install '.[train]'
-```
+</div>
+OpenCSG中 Open是开源开放；C 代表 Converged resources，整合和充分利用的混合异构资源优势，算力降本增效；S 代表 Software refined，重新定义软件的交付方式，通过大模型驱动软件开发，人力降本增效；G 代表 Generative LM，大众化、普惠化和民主化的可商用的开源生成式大模型。
 
-## Use cases of command line
+OpenCSG的愿景是让每个行业、每个公司、每个人都拥有自己的模型。 我们坚持开源开放的原则，将OpenCSG的大模型软件栈开源到社区，欢迎使用、反馈和参与共建，欢迎关注。
 
-For detailed command line usage examples, including downloading models/datasets, uploading files/folders, and managing inference/fine-tuning instances, please refer to our [CLI documentation](doc/cli.md).
 
-## Use cases of SDK
 
-For detailed SDK usage examples, including model/dataset downloading, file uploading, directory uploading, and Hugging Face compatible model loading, please refer to our [SDK documentation](doc/sdk.md).
+## 模型介绍
 
-## Roadmap
 
-1. Interacting with CSGHub via command-line tools
-2. Management operations such as creation and modification of CSGHub repositories
-3. Model deployment locally or online
-4. Model fine-tuning locally or online
+**csg-wukong-1B** 是一个1B参数量的小语言模型，该模型训练了1T tokens.
+<br>
+
+我们将在后面介绍更多关于这个模型的信息。
+
+
+## 模型评测结果
+
+我们把csg-wukong-1B模型提交到[open_llm_leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard)榜单上，结果显示我们的模型目前在~1.5B小语言模型中排名第8。
+
+
+![image/png](https://cdn-uploads.huggingface.co/production/uploads/661790397437201d78141856/ZfWZ1Fd7ccKrJVx0okV9z.png)
+
+
+
+# 训练
+
+## 硬件资源
+
+- **GPU数量：** 16 H800 
+- **训练时间：** 43天
+
+## 软件使用
+
+- **微调训练框架：** [Deepspeed](https://github.com/OpenCSGs)
+- **深度学习框架：** [PyTorch](https://github.com/pytorch/pytorch)
+- **BP16：** [apex](https://github.com/NVIDIA/apex)
