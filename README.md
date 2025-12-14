@@ -28,6 +28,11 @@ The main functions are:
 1. Repo downloading（model/dataset）
 2. Repo information query（Compatible with huggingface）
 
+**XNet Accelerated Transfer (New!)**: Next-generation storage and version control technology for large-scale AI/ML data.
+- **Storage Optimization**: Significantly reduces storage costs (tested savings > 50%) via intelligent Content-Defined Chunking and deduplication.
+- **High-Speed Transfer**: Incremental updates ensure only changed data chunks are transferred, boosting upload/download speeds by multiples.
+- **Enabled by Default**: Automatically optimizes upload, download, and storage for LFS large files. To disable, set the environment variable `CSGHUB_DISABLE_XNET=true` to fallback to standard LFS mode.
+
 ## Get My Token
 
 Visit [OpenCSG](https://opencsg.com/), click on Sign Up in the top right corner to complete the user registration process. Use the successfully registered username and password to log in to [OpenCSG](https://opencsg.com/). After logging in, find [Access Token](https://opencsg.com/settings/access-token) under Account Settings to obtain the token.

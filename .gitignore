@@ -11,4 +11,6 @@ dist/
 .idea
 .pypirc
 .vscode/
+.trae/
 .DS_Store
+/.env

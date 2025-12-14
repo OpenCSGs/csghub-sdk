@@ -17,6 +17,9 @@ $env:CSGHUB_TOKEN="your_access_token"
 # 模型下载
 csghub-cli download OpenCSG/csg-wukong-1B
 
+# 下载单个文件
+csghub-cli download OpenCSG/csg-wukong-1B config.json
+
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
@@ -67,6 +70,12 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 
 # 在当前工作目录启用大文件分片上传功能
 csghub-cli lfs-enable-largefiles ./
+
+# 查看csghub-sdk版本号
+csghub-cli version
+
+# 打印csghub-cli环境变量，如果需要提issue，请执行此命令，并且复制输出到issue中。
+csghub-cli env
 ```
 
 ### 示例命令使用在Window Powershell环境

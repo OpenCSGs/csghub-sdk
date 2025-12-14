@@ -22,6 +22,7 @@ from pycsghub.constants import (API_FILE_DOWNLOAD_RETRY_TIMES,
 from pycsghub.errors import FileDownloadError
 import os
 from pycsghub.errors import InvalidParameter
+from pycsghub.errors import NotSupportError
 
 
 def try_to_load_from_cache():
@@ -56,6 +57,9 @@ def file_download(
         token: Optional[str] = None,
         repo_type: Optional[str] = None,
         source: Optional[str] = None,
+        dry_run: Optional[bool] = False,
+        force_download: Optional[bool] = False,
+        quiet: Optional[bool] = False,
 ) -> str:
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
@@ -84,6 +88,14 @@ def file_download(
         return cache.get_root_location()
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
+        if source == 'xet':
+            try:
+                import xet_core  # type: ignore
+            except Exception:
+                raise NotSupportError("xet source requires xet-core library to be installed")
+            # Placeholder: use xet_core to download single file if available
+            # This branch can be extended once xet-core Python API is integrated
+            return os.path.join(cache_dir, group_or_owner, name, file_name)
         # make headers
         # todo need to add cookies？
         repo_info = utils.get_repo_info(repo_id=repo_id,
@@ -107,8 +119,7 @@ def file_download(
 
         with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
             repo_file_info = pack_repo_file_info(file_name, revision)
-            if not cache.exists(repo_file_info):
-                file_name = os.path.basename(repo_file_info['Path'])
+            if force_download or not cache.exists(repo_file_info):
                 # get download url
                 url = get_file_download_url(
                     model_id=repo_id,
@@ -124,7 +135,8 @@ def file_download(
                     file_name=file_name,
                     headers=headers,
                     cookies=cookies,
-                    token=token)
+                    token=token,
+                    quiet=quiet)
 
                 # todo using hash to check file integrity
                 temp_file = os.path.join(temp_cache_dir, file_name)
@@ -141,7 +153,8 @@ def http_get(*,
              file_name: str,
              headers: dict = None,
              cookies: CookieJar = None,
-             token: str = None) -> None:
+             token: str = None,
+             quiet: bool = False) -> None:
     '''
     download core API，using python request to download file to local cache dirs
     :param token: csghub token
@@ -177,26 +190,30 @@ def http_get(*,
                         downloaded_size = temp_file.tell()
                     total_content_length = int(content_length) if content_length is not None else None
 
-                progress = tqdm(
-                    unit='B',
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    total=total_content_length,
-                    initial=downloaded_size,
-                    desc="Downloading {}".format(file_name),
-                )
+                progress = None
+                if not quiet:
+                    progress = tqdm(
+                        unit='B',
+                        unit_scale=True,
+                        unit_divisor=1024,
+                        total=total_content_length,
+                        initial=downloaded_size,
+                        desc="Downloading {}".format(file_name),
+                    )
                 for chunk in r.iter_content(chunk_size=API_FILE_DOWNLOAD_CHUNK_SIZE):
                     if chunk:
-                        progress.update(len(chunk))
+                        if progress is not None:
+                            progress.update(len(chunk))
                         temp_file.write(chunk)
-                progress.close()
+                if progress is not None:
+                    progress.close()
                 break
             except Exception as e:
                 retry = retry.increment('GET', url, error=e)
                 retry.sleep()
 
     downloaded_length = os.path.getsize(temp_file.name)
-    if total_content_length != downloaded_length:
+    if total_content_length is not None and total_content_length != downloaded_length:
         os.remove(temp_file.name)
         msg = 'File %s download incomplete, content_length: %s but the file downloaded length: %s, please download again' % (
             file_name, total_content_length, downloaded_length)

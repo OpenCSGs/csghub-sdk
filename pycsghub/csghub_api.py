@@ -12,8 +12,9 @@ class CsgHubApi:
     csghub API wrapper class
     '''
 
-    def __init__(self):
-        pass
+    def __init__(self, token=None, endpoint=None):
+        self.token = token
+        self.endpoint = endpoint
 
     def fetch_upload_modes(
         self,
@@ -74,6 +75,9 @@ class CsgHubApi:
         revision: str,
         endpoint: str,
         token: str,
+        commit_description: str = None,
+        create_pr: bool = None,
+        parent_commit: str = None,
     ):
         """
         Creates a commit in the given repo, deleting & uploading files as needed.

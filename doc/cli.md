@@ -17,6 +17,9 @@ $env:CSGHUB_TOKEN="your_access_token"
 # download model
 csghub-cli download OpenCSG/csg-wukong-1B
 
+# download single file
+csghub-cli download OpenCSG/csg-wukong-1B config.json
+
 # download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "tokenizer.json"
 
@@ -67,6 +70,12 @@ csghub-cli upload wanghh2000/m01 /Users/hhwang/temp/jsonl test/files -k xxxxxx
 
 # auto upload large file in multi-part mode by 'git push' under working directory
 csghub-cli lfs-enable-largefiles ./
+
+# print csghub-cli version
+csghub-cli version
+
+# print csghub-cli environment for debug or report issue with `csghub-cli env`
+csghub-cli env
 ```
 
 ### Example for Window Powershell

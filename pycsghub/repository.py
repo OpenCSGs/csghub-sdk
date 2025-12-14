@@ -55,6 +55,8 @@ class Repository:
         secrets: Optional[dict] = {},
         variables: Optional[str] = "",
         cover_image_url: Optional[str] = "",
+        commit_message: Optional[str] = "commit files to CSGHub",
+        delete_patterns: Optional[Union[str, List[str]]] = None,
     ):
         self.repo_id = repo_id
         self.upload_path = upload_path
@@ -82,6 +84,8 @@ class Repository:
         self.secrets = secrets
         self.variables = variables
         self.cover_image_url = cover_image_url
+        self.commit_message = commit_message or "commit files to CSGHub"
+        self.delete_patterns = delete_patterns
 
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
@@ -110,10 +114,11 @@ class Repository:
         self.git_clone(branch_name=self.branch_name, repo_url=repo_url)
         
         git_cmd_workdir = self.copy_repo_files()
+        self.apply_deletions(work_dir=git_cmd_workdir)
         
         self.track_large_files(work_dir=git_cmd_workdir)
         self.git_add(work_dir=git_cmd_workdir)
-        self.git_commit(work_dir=git_cmd_workdir)
+        self.git_commit(work_dir=git_cmd_workdir, commit_message=self.commit_message)
         number_of_commits = self.commits_to_push(work_dir=git_cmd_workdir)
         if number_of_commits > 1:
             self.git_push(work_dir=git_cmd_workdir)
@@ -148,6 +153,29 @@ class Repository:
             shutil.copytree(from_path, destination_path, dirs_exist_ok=True, ignore=ignore_folders)
 
         return git_cmd_workdir
+
+    def apply_deletions(self, work_dir: str) -> None:
+        if not self.delete_patterns:
+            return
+        patterns = self.delete_patterns
+        if isinstance(patterns, str):
+            patterns = [patterns]
+        base_dir = work_dir
+        for pat in patterns:
+            import glob
+            for path in glob.glob(os.path.join(base_dir, pat), recursive=True):
+                rel = os.path.relpath(path, base_dir)
+                if os.path.isdir(path):
+                    shutil.rmtree(path, ignore_errors=True)
+                else:
+                    try:
+                        os.remove(path)
+                    except OSError:
+                        pass
+                try:
+                    self.run_subprocess("git rm -r --cached".split() + [rel], base_dir, check=False)
+                except subprocess.CalledProcessError:
+                    pass
 
     def auto_create_repo_and_branch(self):
         repoExist, branchExist = self.repo_exists()
@@ -239,7 +267,8 @@ class Repository:
             "Content-Type": "application/json"
         })
         response = requests.post(url, json=data, headers=headers)
-        if response.status_code != 200:
+        exist_msg = "SYS-ERR-4: Duplicate entry for key"
+        if response.status_code != 200 and exist_msg not in response.text :
             logger.info(f"create repo on {url} response: {response.text}")
         response.raise_for_status()
         return response

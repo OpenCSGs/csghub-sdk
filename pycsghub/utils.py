@@ -3,9 +3,9 @@ from typing import Optional, Union, Dict
 from pathlib import Path
 import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
-from pycsghub.constants import OPERATION_ACTION_API, OPERATION_ACTION_GIT
+from pycsghub.constants import OPERATION_ACTION_API, OPERATION_ACTION_GIT, XNET_API_PATH
 from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
-from pycsghub.constants import REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS
+from pycsghub.constants import REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS, REPO_SOURCE_XET
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
 import urllib
@@ -29,7 +29,7 @@ def get_session() -> requests.Session:
     return session
 
 
-def get_token_to_send(token) -> Optional[str]:
+def get_token_to_send(token: Optional[str] = None) -> Optional[str]:
     if token:
         return token
     else:
@@ -371,8 +371,8 @@ def get_repo_meta_path(
     if repo_type != REPO_TYPE_MODEL and repo_type != REPO_TYPE_DATASET and repo_type != REPO_TYPE_SPACE:
         raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
     
-    if source != REPO_SOURCE_CSG and source != REPO_SOURCE_HF and source != REPO_SOURCE_MS and source is not None:
-        raise ValueError("source must be one of 'csg', 'hf' or 'ms'")
+    if source not in (REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS, REPO_SOURCE_XET) and source is not None:
+        raise ValueError("source must be one of 'csg', 'hf', 'ms' or 'xet'")
     
     src_prefix = REPO_SOURCE_CSG if source is None else source
     path = (
@@ -445,6 +445,18 @@ def get_endpoint(endpoint: Optional[str] = None, operation: Optional[str] = OPER
     return correct_endpoint
 
 
+def get_xnet_endpoint(endpoint: str) -> str:
+    return os.path.join(endpoint, XNET_API_PATH)
+
+def disable_xnet() -> bool:
+    """Check if xnet is disabled.
+    Returns:
+        bool: True if xnet is disabled, False otherwise.
+    """
+
+    return os.getenv('CSGHUB_DISABLE_XNET', 'false').lower() == 'true'
+
+
 def file_integrity_validation(file_path,
                               expected_sha256) -> None:
     """Validate the file hash is expected, if not, delete the file
@@ -481,3 +493,24 @@ def pack_repo_file_info(repo_file_path,
     repo_file_info = {'Path': repo_file_path,
                       'Revision': revision}
     return repo_file_info
+
+def print_download_result(res):
+    if isinstance(res, str):
+        print(res)
+        return
+
+    from huggingface_hub.utils import _format_size, tabulate
+    from huggingface_hub.file_download import DryRunFileInfo
+    
+    if isinstance(res, DryRunFileInfo):
+        res = [res]
+    if isinstance(res, list) and len(res) > 0 and isinstance(res[0], DryRunFileInfo):
+        total = sum(r.file_size for r in res if getattr(r, 'will_download', True))
+        print(
+            f"[dry-run] Will download {len([r for r in res if getattr(r, 'will_download', True)])} files (out of {len(res)}) totalling {_format_size(total)}.")
+        columns = ["File", "Bytes to download"]
+        items = []
+        for info in sorted(res, key=lambda x: x.filename):
+            items.append(
+                [info.filename, _format_size(info.file_size) if getattr(info, 'will_download', True) else "-"])
+        print(tabulate(items, headers=columns))

@@ -12,6 +12,7 @@ REPO_TYPES = [None, REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE]
 REPO_SOURCE_CSG = "csg"
 REPO_SOURCE_HF = "hf"
 REPO_SOURCE_MS = "ms"
+REPO_SOURCE_XET = "xet"
 
 OPERATION_ACTION_API = "api"
 OPERATION_ACTION_GIT = "git"
@@ -29,6 +30,8 @@ DEFAULT_LICENCE = "apache-2.0"
 FILE_HASH = 'Sha256'
 
 DEFAULT_CSGHUB_DOMAIN = 'https://hub.opencsg.com'
+
+XNET_API_PATH = "hf"
 
 GIT_ATTRIBUTES_CONTENT = """
 *.duckdb filter=lfs diff=lfs merge=lfs -text
