@@ -28,6 +28,11 @@ CSGHub SDK 是一个强大的 Python 客户端，专门设计用于与 CSGHub �
 1. 仓库下载（模型/数据集）
 2. 仓库信息查询（与huggingface兼容）
 
+**XNet 加速传输（新！）**：面向大规模 AI/ML 数据的下一代存储与版本控制技术。
+- **存储优化**：通过智能分块（Content-Defined Chunking）与数据去重，大幅降低存储成本（实测节省 50% 以上）。
+- **极速传输**：增量更新机制，仅传输变化的数据块，上传/下载速度提升数倍。
+- **默认开启**：针对 LFS 大文件的上传、下载与存储自动优化。如需禁用，设置环境变量 `CSGHUB_DISABLE_XNET=true` 即可降级为普通 LFS 模式。
+
 ## 获取Token
 
 浏览器访问[OpenCSG](https://opencsg.com/)，点击右上角`注册`完成用户注册过程，使用已经注册成功的用户和密码登录[OpenCSG](https://opencsg.com/)，登录成功后在`账号设置`中找到[`Access Token`](https://opencsg.com/settings/access-token)来获取token。
