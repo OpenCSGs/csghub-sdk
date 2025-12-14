@@ -17,6 +17,9 @@ $env:CSGHUB_TOKEN="your_access_token"
 # 模型下载
 csghub-cli download OpenCSG/csg-wukong-1B
 
+# 下载单个文件
+csghub-cli download OpenCSG/csg-wukong-1B config.json
+
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 

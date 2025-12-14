@@ -17,6 +17,9 @@ $env:CSGHUB_TOKEN="your_access_token"
 # download model
 csghub-cli download OpenCSG/csg-wukong-1B
 
+# download single file
+csghub-cli download OpenCSG/csg-wukong-1B config.json
+
 # download model with allow patterns '*.json' and ignore '*_config.json' pattern of files
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "tokenizer.json"
 
