@@ -60,7 +60,7 @@ def snapshot_download(
     os.makedirs(temporary_cache_dir, exist_ok=True)
     
     if local_dir is None:
-        local_dir = os.getcwd()
+        local_dir = os.path.join(os.getcwd(), repo_id)
     if isinstance(local_dir, Path):
         local_dir = str(local_dir)
     
