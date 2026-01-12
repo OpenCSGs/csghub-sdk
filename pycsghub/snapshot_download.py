@@ -124,7 +124,7 @@ def snapshot_download(
                     logger.info(f"File {file_name} already in '{cache.get_root_location()}', skip downloading!")
                     return
                 url = get_file_download_url(
-                        model_id=repo_id,
+                        repo_id=repo_id,
                         file_path=repo_file,
                         repo_type=repo_type,
                         revision=revision,

@@ -6,7 +6,8 @@ from pathlib import Path
 from tqdm.auto import tqdm
 from typing import Optional, Union, List
 from pycsghub.cmd.repo_types import RepoType
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
+from pycsghub.utils import check_repo_type
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER
 from pycsghub.utils import get_endpoint
 from .path import filter_repo_objects
 from .local_folder import get_local_upload_paths, read_upload_metadata
@@ -40,8 +41,7 @@ def upload_large_folder_internal(
         if not folder_path.is_dir():
             raise ValueError(f"provided path '{local_path}' is not a directory")
         
-        if repo_type not in [REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE]:
-            raise ValueError(f"invalid repo type, must be one of {REPO_TYPE_MODEL} or {REPO_TYPE_DATASET} or {REPO_TYPE_SPACE}")
+        check_repo_type(repo_type=repo_type)
         
         api_endpoint = get_endpoint(endpoint=endpoint)
 

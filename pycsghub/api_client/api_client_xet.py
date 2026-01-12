@@ -1,9 +1,12 @@
 import os
+import logging
 from typing import Optional
 
 from huggingface_hub import constants, HfApi
 
 from pycsghub.utils import get_default_cache_dir, get_xnet_endpoint, get_cache_dir
+
+logger = logging.getLogger(__name__)
 
 class CsgXnetApi(HfApi):
     def __init__(self, token: Optional[str] = None, endpoint: Optional[str] = None, user_name: Optional[str] = None):
@@ -102,5 +105,6 @@ class CsgXnetApi(HfApi):
         # Ensure token is passed
         if 'cache_dir' not in kwargs:
             kwargs['cache_dir'] = self._cache_dir
-            
+
+        logging.debug(f"invoke origin_snapshot_download")
         return origin_snapshot_download(*args, **kwargs)

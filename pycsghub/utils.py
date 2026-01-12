@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 from pycsghub.constants import MODEL_ID_SEPARATOR, DEFAULT_CSG_GROUP, DEFAULT_CSGHUB_DOMAIN
 from pycsghub.constants import OPERATION_ACTION_API, OPERATION_ACTION_GIT, XNET_API_PATH
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER
 from pycsghub.constants import REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS, REPO_SOURCE_XET
 import requests
 from huggingface_hub.hf_api import ModelInfo, DatasetInfo, SpaceInfo
@@ -15,6 +15,8 @@ from pycsghub._token import _get_token_from_file, _get_token_from_environment
 from urllib.parse import quote, urlparse
 from pycsghub.constants import S3_INTERNAL
 import logging
+from huggingface_hub.hf_api import ModelInfo as CodeInfo
+from huggingface_hub.hf_api import ModelInfo as McpserverInfo
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +155,15 @@ def get_repo_info(
         method = dataset_info
     elif repo_type == REPO_TYPE_SPACE:
         method = space_info
+    elif repo_type == REPO_TYPE_CODE:
+        method = code_info
+    elif repo_type == REPO_TYPE_MCPSERVER:
+        method = mcpserver_info
     else:
-        raise ValueError("Unsupported repo type.")
+        raise ValueError(f"Unsupported repo type {repo_type}.")
+    
+    logger.debug(f"get repo info {repo_id} {revision} {repo_type} {token} {endpoint} {source}")
+
     return method(
         repo_id,
         revision=revision,
@@ -361,15 +370,72 @@ def model_info(
     data = r.json()
     return ModelInfo(**data)
 
+def code_info(
+    repo_id: str,
+    *,
+    revision: Optional[str] = None,
+    timeout: Optional[float] = None,
+    securityStatus: Optional[bool] = None,
+    files_metadata: bool = False,
+    token: Union[bool, str, None] = None,
+    endpoint: Optional[str] = None,
+    source: Optional[str] = None,
+) -> ModelInfo:
+    headers = build_csg_headers(token=token)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_CODE, 
+                              repo_id=repo_id, 
+                              revision=revision, 
+                              endpoint=endpoint,
+                              source=source)
+    params = {}
+    if securityStatus:
+        params["securityStatus"] = True
+    if files_metadata:
+        params["blobs"] = True
+    r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get code meta info from {path} response: {r.text}")
+    r.raise_for_status()
+    data = r.json()
+    return CodeInfo(**data)
+
+def mcpserver_info(
+    repo_id: str,
+    *,
+    revision: Optional[str] = None,
+    timeout: Optional[float] = None,
+    securityStatus: Optional[bool] = None,
+    files_metadata: bool = False,
+    token: Union[bool, str, None] = None,
+    endpoint: Optional[str] = None,
+    source: Optional[str] = None,
+) -> ModelInfo:
+    headers = build_csg_headers(token=token)
+    path = get_repo_meta_path(repo_type=REPO_TYPE_MCPSERVER,
+                              repo_id=repo_id, 
+                              revision=revision, 
+                              endpoint=endpoint,
+                              source=source)
+    params = {}
+    if securityStatus:
+        params["securityStatus"] = True
+    if files_metadata:
+        params["blobs"] = True
+    r = requests.get(path, headers=headers, timeout=timeout, params=params)
+    if r.status_code != 200:
+        logger.error(f"get mcpserver meta info from {path} response: {r.text}")
+    r.raise_for_status()
+    data = r.json()
+    return McpserverInfo(**data)
+
 def get_repo_meta_path(
     repo_type: str, 
     repo_id: str, 
-    revision: Optional[str] = None, 
+    revision: Optional[str] = None,
     endpoint: Optional[str] = None,
     source: Optional[str] = None,
 ) -> str:
-    if repo_type != REPO_TYPE_MODEL and repo_type != REPO_TYPE_DATASET and repo_type != REPO_TYPE_SPACE:
-        raise ValueError("repo_type must be one of 'model', 'dataset' or 'space'")
+    check_repo_type(repo_type=repo_type)
     
     if source not in (REPO_SOURCE_CSG, REPO_SOURCE_HF, REPO_SOURCE_MS, REPO_SOURCE_XET) and source is not None:
         raise ValueError("source must be one of 'csg', 'hf', 'ms' or 'xet'")
@@ -384,38 +450,39 @@ def get_repo_meta_path(
 
 
 def get_file_download_url(
-    model_id: str,
+    repo_id: str,
     file_path: str,
     revision: str,
     repo_type: Optional[str] = None,
     endpoint: Optional[str] = None,
     source: Optional[str] = None,
 ) -> str:
-    """Format file download url according to `model_id`, `revision` and `file_path`.
+    """Format file download url according to `repo_id`, `revision` and `file_path`.
     Args:
-        model_id (str): The model_id.
+        repo_id (str): The repo_id.
         file_path (str): File path
         revision (str): File revision.
 
     Returns:
         str: The file url.
     """
+    check_repo_type(repo_type=repo_type)
+
     file_path = urllib.parse.quote(file_path)
     revision = urllib.parse.quote(revision)
     src_prefix = REPO_SOURCE_CSG if source is None else source
     
-    download_url_template = '{endpoint}/{src_prefix}/{model_id}/resolve/{revision}/{file_path}'
-    if repo_type == REPO_TYPE_DATASET:
-        download_url_template = '{endpoint}/{src_prefix}/datasets/{model_id}/resolve/{revision}/{file_path}'
-    elif repo_type == REPO_TYPE_SPACE:
-        download_url_template = '{endpoint}/{src_prefix}/spaces/{model_id}/resolve/{revision}/{file_path}'
+    download_url_template = '{endpoint}/{src_prefix}/{repo_id}/resolve/{revision}/{file_path}'
+    if repo_type != REPO_TYPE_MODEL:
+        download_url_template = '{endpoint}/{src_prefix}/{repo_type_prefix}/{repo_id}/resolve/{revision}/{file_path}'
     
     return download_url_template.format(
         endpoint=endpoint,
         src_prefix=src_prefix,
-        model_id=model_id,
+        repo_id=repo_id,
         revision=revision,
         file_path=file_path,
+        repo_type_prefix=get_repo_url_prefix(repo_type=repo_type),
     )
 
 
@@ -496,7 +563,7 @@ def pack_repo_file_info(repo_file_path,
 
 def print_download_result(res):
     if isinstance(res, str):
-        print(res)
+        logger.info(res)
         return
 
     from huggingface_hub.utils import _format_size, tabulate
@@ -514,3 +581,21 @@ def print_download_result(res):
             items.append(
                 [info.filename, _format_size(info.file_size) if getattr(info, 'will_download', True) else "-"])
         print(tabulate(items, headers=columns))
+
+def check_repo_type(repo_type: str):
+    if repo_type not in [REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER]:
+        raise ValueError(f"invalid repo type, must be one of {REPO_TYPE_MODEL} or {REPO_TYPE_DATASET} or {REPO_TYPE_SPACE} or {REPO_TYPE_CODE} or {REPO_TYPE_MCPSERVER}")
+
+def get_repo_url_prefix(repo_type: Optional[str] = None):
+    if repo_type in [REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER]:
+        return f"{repo_type}s"
+    else:
+        return f"{REPO_TYPE_MODEL}s"
+
+def get_repo_git_prefix(repo_type: Optional[str] = None):
+    if repo_type in [REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE]:
+        return f"{repo_type}s"
+    elif repo_type in [REPO_TYPE_MCPSERVER]:
+        return f"mcpservers"
+    else:
+        return f"{REPO_TYPE_MODEL}s"

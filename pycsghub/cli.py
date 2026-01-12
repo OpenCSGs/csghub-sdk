@@ -21,7 +21,7 @@ from pycsghub.cmd import finetune, inference, system
 from pycsghub.cmd.repo_types import RepoType
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, REPO_SOURCE_CSG
 from pycsghub.api_client import get_csghub_api
-from .utils import print_download_result
+from .utils import print_download_result, disable_xnet
 from .lfs import LfsEnableCommand, LfsUploadCommand
 from .upload_large_folder.main import upload_large_folder_internal
 
@@ -89,7 +89,7 @@ OPTIONS = {
     "path"              : typer.Argument(help="Local path to repository you want to configure."),
 }
 
-@app.command(name="download", help="Download model/dataset/space from OpenCSG Hub", no_args_is_help=True)
+@app.command(name="download", help="Download model/dataset/space/code/mcp from OpenCSG Hub", no_args_is_help=True)
 def download(
     repo_id: Annotated[str, OPTIONS["repoID"]],
     filenames: Annotated[
@@ -112,7 +112,7 @@ def download(
     force_download: Annotated[Optional[bool], OPTIONS["force_download"]] = False,
     max_workers: Annotated[Optional[int], OPTIONS["max_workers"]] = 8,
 ):
-    api = get_csghub_api(token=token, endpoint=endpoint)
+    api = get_csghub_api(repo_type=repo_type, token=token, endpoint=endpoint)
     
     # Handle single/multiple file args similar to HF
     filenames_list = filenames if filenames is not None else []
@@ -186,7 +186,8 @@ def download(
     except Exception as e:
         if quiet:
             raise e
-        print(f"Download failed: {e}")
+        
+        logger.error(f"Download with xnet-disabled {disable_xnet()} failed: {e} ")
         raise typer.Exit(code=1)
     
     if quiet:
@@ -196,7 +197,7 @@ def download(
     else:
         print_download_result(result)
 
-@app.command(name="upload", help="Upload repository files to OpenCSG Hub", no_args_is_help=True)
+@app.command(name="upload", help="Upload model/dataset/space/code/mcp files to OpenCSG Hub", no_args_is_help=True)
 def upload(
     repo_id: Annotated[str, OPTIONS["repoID"]],
     local_path: Annotated[str, OPTIONS["localPath"]],
@@ -216,8 +217,9 @@ def upload(
     every: Annotated[Optional[float], OPTIONS["every"]] = None,
     quiet: Annotated[bool, OPTIONS["quiet"]] = False,
 ):
+    
     repo_type_str = repo_type.value
-    api = get_csghub_api(token=token, endpoint=endpoint, user_name=user_name)
+    api = get_csghub_api(repo_type=repo_type, token=token, endpoint=endpoint, user_name=user_name)
     
     resolved_local_path = local_path
     resolved_path_in_repo = path_in_repo
@@ -236,7 +238,7 @@ def upload(
             # Placeholder for Scheduler
             # Scheduler not implemented yet in csghub-sdk
             # Similar to HF CommitScheduler logic
-            print(f"Scheduling commits every {every} minutes... (Not fully implemented)")
+            logger.info(f"Scheduling commits every {every} minutes... (Not fully implemented)")
             try:
                 while True:
                     time.sleep(100)
@@ -246,6 +248,7 @@ def upload(
         if not os.path.isfile(resolved_local_path) and not os.path.isdir(resolved_local_path):
             raise FileNotFoundError(f"No such file or directory: '{resolved_local_path}'.")
         
+        logger.debug(f"Uploading {repo_type_str} {repo_id} from {resolved_local_path} to {resolved_path_in_repo}")
         # Create repo if needed
         api.create_repo(
             repo_id=repo_id,
@@ -259,7 +262,7 @@ def upload(
             try:
                 api.repo_info(repo_id=repo_id, repo_type=repo_type_str, revision=revision)
             except Exception:  # RevisionNotFoundError
-                logger.info(f"Branch '{revision}' not found. Creating it...")
+                logger.warning(f"Branch '{revision}' not found. Creating it...")
                 api.create_branch(repo_id=repo_id, repo_type=repo_type_str, branch=revision, exist_ok=True)
         
         if os.path.isfile(resolved_local_path):
@@ -292,10 +295,12 @@ def upload(
         disable_progress_bars()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            print(run_upload())
+            result = run_upload()
+            logger.debug(f"Upload result {result}")
         enable_progress_bars()
     else:
-        print(run_upload())
+        result = run_upload()
+        logger.debug(f"Upload result {result}")
 
 @app.command(name="upload-large-folder", help="Upload large folder to OpenCSG Hub using multiple workers",
              no_args_is_help=True)

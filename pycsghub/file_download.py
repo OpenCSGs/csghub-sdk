@@ -122,7 +122,7 @@ def file_download(
             if force_download or not cache.exists(repo_file_info):
                 # get download url
                 url = get_file_download_url(
-                    model_id=repo_id,
+                    repo_id=repo_id,
                     file_path=file_name,
                     revision=revision,
                     endpoint=download_endpoint,
