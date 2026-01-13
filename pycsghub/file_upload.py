@@ -2,7 +2,7 @@ import os
 import requests
 from typing import Optional
 from pycsghub.constants import (DEFAULT_REVISION)
-from pycsghub.utils import (build_csg_headers, get_endpoint)
+from pycsghub.utils import (build_csg_headers, get_endpoint, get_repo_url_prefix)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def http_upload_file(
     http_endpoint = endpoint if endpoint is not None else get_endpoint()
     if not http_endpoint.endswith("/"):
         http_endpoint += "/"
-    http_url = http_endpoint + "api/v1/" + repo_type + "s/" + repo_id + "/upload_file"
+    http_url = http_endpoint + "api/v1/" + get_repo_url_prefix(repo_type=repo_type) + "/" + repo_id + "/upload_file"
     post_headers = build_csg_headers(token=token)
     file_data = {'file': open(file_path, 'rb')}
     form_data = {'file_path': destination_path, 'branch': revision, 'message': (commit_message or ('upload ' + os.path.basename(file_path)))}
@@ -34,7 +34,7 @@ def http_upload_file(
     elif response.status_code != 200 and exist_msg in response.text:
         logger.info(f"file '{file_path}' already exists.")
     else:
-        msg = f"fail to upload {file_path} with response code: {response.status_code}, error: {response.content.decode()}"
+        msg = f"failed to upload {file_path} to branch {revision} on {http_url} with response code: {response.status_code}, error: {response.content.decode()}"
         logger.error(msg)
         raise RuntimeError(msg)
     

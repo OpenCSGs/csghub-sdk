@@ -17,7 +17,9 @@ from pycsghub.constants import (GIT_ATTRIBUTES_CONTENT,
 from pycsghub.constants import (GIT_HIDDEN_DIR, GIT_ATTRIBUTES_FILE)
 from pycsghub.utils import (build_csg_headers,
                             model_id_to_group_owner_name,
-                            get_endpoint)
+                            get_endpoint,
+                            get_repo_url_prefix,
+                            get_repo_git_prefix)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -88,14 +90,7 @@ class Repository:
         self.delete_patterns = delete_patterns
 
     def get_url_prefix(self):
-        if self.repo_type == REPO_TYPE_DATASET:
-            return "datasets"
-        if self.repo_type == REPO_TYPE_SPACE:
-            return "spaces"
-        if self.repo_type == REPO_TYPE_CODE:
-            return "codes"
-        else:
-            return "models"
+        return get_repo_url_prefix(repo_type=self.repo_type)
     
     def upload(self) -> None:
         if not os.path.exists(self.upload_path):
@@ -267,17 +262,18 @@ class Repository:
             "Content-Type": "application/json"
         })
         response = requests.post(url, json=data, headers=headers)
-        exist_msg = "SYS-ERR-4: Duplicate entry for key"
+        exist_msg = "duplicate key value violates unique constraint"
         if response.status_code != 200 and exist_msg not in response.text :
-            logger.info(f"create repo on {url} response: {response.text}")
+            logger.error(f"create repo on {url} response: {response.text}")
         response.raise_for_status()
         return response
 
     def generate_repo_clone_url(self) -> str:
         clone_endpoint = get_endpoint(endpoint=self.endpoint, operation=OPERATION_ACTION_GIT)
-        clone_url = f"{clone_endpoint}/{self.repo_url_prefix}/{self.repo_id}.git"
+        clone_url = f"{clone_endpoint}/{get_repo_git_prefix(repo_type=self.repo_type)}/{self.repo_id}.git"
         scheme = urlparse(clone_url).scheme
         clone_url = clone_url.replace(f"{scheme}://", f"{scheme}://{self.user_name}:{self.token}@")
+        logger.debug(f"generate clone url: {clone_url} on branch {self.branch_name}")
         return clone_url
 
     def git_clone(
