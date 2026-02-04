@@ -461,6 +461,9 @@ def main(
         datefmt='%Y-%m-%d %H:%M:%S',
         handlers=[logging.StreamHandler()]
     )
+    # Suppress httpx request logging only when log level is INFO (default)
+    if log_level.upper() == "INFO":
+        logging.getLogger("httpx").setLevel(logging.WARNING)
     pass
 
 if __name__ == "__main__":
