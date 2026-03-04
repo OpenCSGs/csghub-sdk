@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 from typing import Optional, Union, List
 from pycsghub.cmd.repo_types import RepoType
 from pycsghub.utils import check_repo_type
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER, REPO_TYPE_SKILL
 from pycsghub.utils import get_endpoint
 from .path import filter_repo_objects
 from .local_folder import get_local_upload_paths, read_upload_metadata

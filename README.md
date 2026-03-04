@@ -25,7 +25,7 @@ Open Source: Dive into the source code, contribute, and customize the SDK to fit
 
 The main functions are:
 
-1. Repo downloading（model/dataset）
+1. Repo downloading（model/dataset/space/code/mcp/skill）
 2. Repo information query（Compatible with huggingface）
 
 **XNet Accelerated Transfer (New!)**: Next-generation storage and version control technology for large-scale AI/ML data.

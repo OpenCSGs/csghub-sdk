@@ -98,6 +98,9 @@ class RepoIntegrationTest(unittest.TestCase):
             elif type_str == "code":
                 repo_type = RepoType.CODE
                 filename = f"test_code_{unique_suffix}.txt"
+            elif type_str == "skill":
+                repo_type = RepoType.SKILL
+                filename = f"test_skill_{unique_suffix}.txt"
             else:
                 print(f"Unknown repo type: {type_str}")
                 continue
