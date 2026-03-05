@@ -1,5 +1,5 @@
 from enum import Enum
-from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER
+from pycsghub.constants import REPO_TYPE_MODEL, REPO_TYPE_DATASET, REPO_TYPE_SPACE, REPO_TYPE_CODE, REPO_TYPE_MCPSERVER, REPO_TYPE_SKILL
 
 class RepoType(str, Enum):
     MODEL = REPO_TYPE_MODEL
@@ -7,3 +7,4 @@ class RepoType(str, Enum):
     SPACE = REPO_TYPE_SPACE
     CODE = REPO_TYPE_CODE
     MCP = REPO_TYPE_MCPSERVER
+    SKILL = REPO_TYPE_SKILL

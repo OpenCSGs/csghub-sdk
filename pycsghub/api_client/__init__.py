@@ -1,6 +1,6 @@
 from typing import Optional
 import logging
-from pycsghub.constants import REPO_TYPE_CODE, REPO_TYPE_MCPSERVER
+from pycsghub.constants import REPO_TYPE_CODE, REPO_TYPE_MCPSERVER, REPO_TYPE_SKILL
 from pycsghub.utils import disable_xnet, get_endpoint, get_token_to_send
 from .api_client import CsghubApi
 from .api_client_interface import HubApi
@@ -16,7 +16,7 @@ def get_csghub_api(repo_type: Optional[RepoType] = None,
     token = get_token_to_send(token)
     endpoint = get_endpoint(endpoint=endpoint)
 
-    if repo_type in [REPO_TYPE_CODE, REPO_TYPE_MCPSERVER]:
+    if repo_type in [REPO_TYPE_CODE, REPO_TYPE_MCPSERVER, REPO_TYPE_SKILL]:
         logger.debug(f"Use CsghubApi for repo_type {repo_type}")
         return CsghubApi(token=token, endpoint=endpoint, user_name=user_name)
 
