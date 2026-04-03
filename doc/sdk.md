@@ -165,3 +165,26 @@ This code:
 2. By generating batch classes dynamically and using class name reflection mechanism, a large number of classes with the same names as those automatically loaded by transformers are created in batches.
 
 3. Assign it with the from_pretrained method, so the model read out will be an hf-transformers model.
+
+### Sandbox (async HTTP client)
+
+The SDK includes `pycsghub.sandbox_client` for CSGHub sandbox lifecycle and runtime APIs (async). Default `base_url` matches the public Hub (`https://hub.opencsg.com`, see `DEFAULT_CSGHUB_DOMAIN`). Set `CsgHubSandboxConfig` if you use a self-hosted Hub or a separate AI Gateway (`aigateway_url`; empty string means runtime calls use the same host as `base_url`).
+
+Authentication uses the same token resolution as the rest of the SDK: optional `token=` on `CsgHubSandbox`, else `CSGHUB_TOKEN` / token file via `get_token_to_send`. HTTP failures raise `SandboxHttpError` or `SandboxTransportError`; `stream_execute_command` yields `ERROR: ...` lines on failure (it does not raise).
+
+```python
+import asyncio
+from pycsghub.sandbox_client import CsgHubSandbox, SandboxCreateRequest
+
+async def main() -> None:
+    client = CsgHubSandbox(token="your_access_token")
+    spec = SandboxCreateRequest(
+        image="your-runner-image:tag",
+        resource_id=77,
+        sandbox_name="my-sandbox",
+    )
+    resp = await client.create_sandbox(spec)
+    print(resp.spec.sandbox_name, resp.state.status)
+
+asyncio.run(main())
+```

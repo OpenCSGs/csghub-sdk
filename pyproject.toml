@@ -33,6 +33,8 @@ dependencies = [
     "typing-extensions",
     "huggingface_hub>=1.2.0",
     "python-dotenv",
+    "httpx",
+    "pydantic>=2",
 ]
 
 [project.optional-dependencies]
@@ -45,6 +47,7 @@ train = [
 dev = [
     "ruff>=0.4.0",
     "build>=1.0.0",
+    "pytest>=8.0.0",
 ]
 
 [project.scripts]

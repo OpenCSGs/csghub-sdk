@@ -167,3 +167,26 @@ model = AutoModelForCausalLM.from_pretrained('model/repoid')
 2. 通过动态批量类生成与类名反射机制，批量创建大量与transformers自动类加载的重名类。
 
 3. 为其赋予from_pretrained方法，这样读取出来的模型即为hf-transformers模型。
+
+### 沙箱（异步 HTTP 客户端）
+
+SDK 提供 `pycsghub.sandbox_client`，用于 CSGHub 沙箱生命周期与运行时接口（异步）。默认 `base_url` 与公网 Hub 一致（`https://hub.opencsg.com`，见 `DEFAULT_CSGHUB_DOMAIN`）。若使用自建 Hub 或独立 AI 网关，请配置 `CsgHubSandboxConfig`；`aigateway_url` 为空时，运行时请求与 `base_url` 同源。
+
+鉴权与全库一致：可在 `CsgHubSandbox(token=...)` 传入 token，否则使用 `CSGHUB_TOKEN` 或 token 文件（`get_token_to_send`）。一般 HTTP 错误抛出 `SandboxHttpError` 或 `SandboxTransportError`；`stream_execute_command` 在失败时 **仅 yield** `ERROR: ...` 行，不抛异常。
+
+```python
+import asyncio
+from pycsghub.sandbox_client import CsgHubSandbox, SandboxCreateRequest
+
+async def main() -> None:
+    client = CsgHubSandbox(token="your_access_token")
+    spec = SandboxCreateRequest(
+        image="your-runner-image:tag",
+        resource_id=77,
+        sandbox_name="my-sandbox",
+    )
+    resp = await client.create_sandbox(spec)
+    print(resp.spec.sandbox_name, resp.state.status)
+
+asyncio.run(main())
+```
