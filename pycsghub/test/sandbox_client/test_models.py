@@ -44,9 +44,11 @@ class TestSandboxCreateRequest:
         raw = {"image": "x:y", "sandbox_name": "sn-2"}
         spec = SandboxCreateRequest.model_validate(raw)
         assert spec.resource_id == 77
+        assert spec.port == 0
         data = spec.model_dump(mode="json", exclude_none=True, by_alias=True)
         assert data["resource_id"] == 77
         assert data["sandbox_name"] == "sn-2"
+        assert data["port"] == 0
 
     def test_when_dumped_then_volume_keys_match_sandbox_volume_json(self) -> None:
         spec = SandboxCreateRequest(
@@ -99,7 +101,7 @@ class TestSandboxResponse:
 
         assert resp.spec.sandbox_name == "sb-1"
         assert resp.spec.image == "img:latest"
-        assert resp.spec.port == 18789
+        assert resp.spec.port == 0
         assert resp.state.status == "Running"
         assert resp.state.exited_code == 0
 
@@ -115,7 +117,7 @@ class TestSandboxCreateResponse:
         spec = SandboxCreateResponse.model_validate(raw)
         assert spec.sandbox_name == "sb-2"
         assert spec.image == "img:v2"
-        assert spec.port == 18789
+        assert spec.port == 0
 
     def test_when_spec_includes_port_then_parsed(self) -> None:
         raw = {

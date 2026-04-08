@@ -190,3 +190,18 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
+
+### 沙箱（命令行）
+
+安装本包后，可使用 `csghub-cli sandbox` 子命令组，包含 `create`、`get`、`start`、`stop`、`delete`（与 `stop` 语义相同）、`exec`、`health`。公共参数：`-e` / `--endpoint`（Hub 的 `base_url`，默认 `https://hub.opencsg.com`）、`--aigateway-url`（运行时走独立 AI 网关时填写）、`-k` / `--token`（可选；不传则与全库一致使用 `CSGHUB_TOKEN` 或 token 文件）。
+
+示例：
+
+```bash
+csghub-cli sandbox create -i your-runner-image:tag -n my-sandbox -k YOUR_TOKEN
+csghub-cli sandbox get my-sandbox -k YOUR_TOKEN
+csghub-cli sandbox exec my-sandbox "echo hello" -k YOUR_TOKEN
+csghub-cli sandbox health my-sandbox -k YOUR_TOKEN
+```
+
+若需完整 `SandboxCreateRequest` JSON，可使用 `--spec path/to/spec.json` 代替 `--image` / `--name`。生命周期类命令输出 JSON；`exec` 将流式输出逐行打印到标准输出（任一行以 `ERROR:` 开头则进程退出码为 1）；`health` 成功时打印 `ok`。

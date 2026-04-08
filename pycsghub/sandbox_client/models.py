@@ -48,7 +48,10 @@ class SandboxCreateRequest(BaseModel):
     sandbox_name: str
     environments: dict[str, str] = Field(default_factory=dict)
     volumes: list[RunnerVolumeSpec] = Field(default_factory=list)
-    port: int = Field(default=18789)
+    port: int = Field(
+        default=0,
+        description="Service port; 0 means let the server choose a default.",
+    )
     timeout: int = Field(default=0)
 
 
@@ -61,7 +64,7 @@ class SandboxCreateResponse(BaseModel):
     image: str
     environments: dict[str, str] = Field(default_factory=dict)
     volumes: list[RunnerVolumeSpec] = Field(default_factory=list)
-    port: int = Field(default=18789)
+    port: int = Field(default=0)
 
 
 class SandboxState(BaseModel):
@@ -91,7 +94,10 @@ class SandboxUpdateConfigRequest(BaseModel):
     image: str
     environments: dict[str, str] = Field(default_factory=dict)
     volumes: list[RunnerVolumeSpec] = Field(default_factory=list)
-    port: int = Field(default=18789)
+    port: int = Field(
+        default=0,
+        description="Service port; 0 means let the server choose a default.",
+    )
     timeout: int = Field(
         default=0,
         description="EE sandbox reclaim/idle timeout in seconds (align with SandboxCreateRequest.timeout).",

@@ -49,7 +49,7 @@ class TestCsgHubSandboxCreate:
             assert body["sandbox_name"] == "sandbox-x"
             assert body["image"] == "sandbox:test"
             assert body["resource_id"] == 1001
-            assert body["port"] == 18789
+            assert body["port"] == 0
             return httpx.Response(
                 201,
                 json=sample_httpbase_envelope("Created", sample_runner_create_response(sandbox_id="sandbox-x")),

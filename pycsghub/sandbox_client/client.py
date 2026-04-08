@@ -485,8 +485,7 @@ class CsgHubSandbox:
         follow_redirects: bool = False,
     ) -> httpx.Response:
         """Internal JSON request helper: validates status, maps errors to SDK exceptions."""
-        log_url = url.split("?", 1)[0]
-        logger.info("[CsgHubSandbox] %s trace=%s url=%s", span_name, trace_label, log_url)
+        logger.info("[CsgHubSandbox] %s trace=%s url=%s", span_name, trace_label, url)
         try:
             async with httpx.AsyncClient(trust_env=False, timeout=timeout) as client:
                 resp = await client.request(
@@ -504,7 +503,7 @@ class CsgHubSandbox:
                         span_name,
                         resp.status_code,
                         trace_label,
-                        log_url,
+                        url,
                         detail[:2000],
                     )
                     resp.raise_for_status()

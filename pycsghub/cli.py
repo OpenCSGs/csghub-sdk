@@ -17,7 +17,7 @@ dotenv.load_dotenv()
 from huggingface_hub.utils import disable_progress_bars, enable_progress_bars
 from typing_extensions import Annotated
 
-from pycsghub.cmd import finetune, inference, system
+from pycsghub.cmd import finetune, inference, sandbox, system
 from pycsghub.cmd.repo_types import RepoType
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN, DEFAULT_REVISION, REPO_SOURCE_CSG
 from pycsghub.api_client import get_csghub_api
@@ -87,6 +87,10 @@ OPTIONS = {
     "source"            : typer.Option("--source",
                                        help="Specify the source of the repository (e.g. 'csg', 'hf', 'ms')."),
     "path"              : typer.Argument(help="Local path to repository you want to configure."),
+    "aigateway_url"     : typer.Option(
+        "--aigateway-url",
+        help="AI Gateway base URL for sandbox runtime routes; omit to use --endpoint.",
+    ),
 }
 
 @app.command(name="download", help="Download model/dataset/space/code/mcp from OpenCSG Hub", no_args_is_help=True)
@@ -441,6 +445,164 @@ def stop_finetune(
         token=token,
         endpoint=endpoint,
     )
+
+sandbox_app = typer.Typer(
+    no_args_is_help=True,
+    help="Manage CSGHub sandboxes (lifecycle and runtime)",
+)
+app.add_typer(sandbox_app, name="sandbox")
+
+
+@sandbox_app.command(name="create", help="Create a sandbox (POST /api/v1/sandboxes).", no_args_is_help=True)
+def sandbox_create(
+    image: Annotated[
+        Optional[str],
+        typer.Option("--image", "-i", help="Container image (required without --spec)."),
+    ] = None,
+    name: Annotated[
+        Optional[str],
+        typer.Option("--name", "-n", help="Sandbox name (required without --spec)."),
+    ] = None,
+    cluster_id: Annotated[
+        Optional[str],
+        typer.Option("--cluster-id", help="Kubernetes cluster id. (default: empty)"),
+    ] = None,
+    resource_id: Annotated[int, typer.Option("--resource-id", help="Resource pool id.")] = 77,
+    port: Annotated[
+        int,
+        typer.Option("--port", help="Service port (0 = server default, sent in JSON as 0)."),
+    ] = 0,
+    timeout: Annotated[
+        int,
+        typer.Option("--timeout", help="EE sandbox idle timeout in seconds (0 = server default)."),
+    ] = 0,
+    env: Annotated[
+        list[str],
+        typer.Option("--env", help="Environment KEY=VALUE (repeatable)."),
+    ] = [],
+    spec: Annotated[
+        Optional[str],
+        typer.Option("--spec", help="JSON file with full SandboxCreateRequest (overrides --image/--name)."),
+    ] = None,
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.create(
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+        image=image,
+        name=name,
+        cluster_id=cluster_id or "",
+        resource_id=resource_id,
+        port=port,
+        timeout=timeout,
+        env=env,
+        spec_path=spec,
+    )
+
+
+@sandbox_app.command(name="get", help="Get sandbox status (GET /api/v1/sandboxes/{id}).", no_args_is_help=True)
+def sandbox_get(
+    sandbox_id: Annotated[str, typer.Argument(help="Sandbox id (sandbox_name in API).")],
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.get_sandbox(
+        sandbox_id=sandbox_id,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+    )
+
+
+@sandbox_app.command(name="start", help="Start sandbox workload.", no_args_is_help=True)
+def sandbox_start(
+    sandbox_id: Annotated[str, typer.Argument(help="Sandbox id.")],
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.start(
+        sandbox_id=sandbox_id,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+    )
+
+
+@sandbox_app.command(name="stop", help="Stop sandbox workload.", no_args_is_help=True)
+def sandbox_stop(
+    sandbox_id: Annotated[str, typer.Argument(help="Sandbox id.")],
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.stop(
+        sandbox_id=sandbox_id,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+    )
+
+
+@sandbox_app.command(
+    name="delete",
+    help="Tear down sandbox resources (same as stop).",
+    no_args_is_help=True,
+)
+def sandbox_delete_cmd(
+    sandbox_id: Annotated[str, typer.Argument(help="Sandbox id.")],
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.delete_sandbox(
+        sandbox_id=sandbox_id,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+    )
+
+
+@sandbox_app.command(name="exec", help="Run a shell command in the sandbox (streamed output).", no_args_is_help=True)
+def sandbox_exec(
+    sandbox_name: Annotated[str, typer.Argument(help="Sandbox name.")],
+    command: Annotated[str, typer.Argument(help="Shell command to run.")],
+    exec_timeout: Annotated[
+        float,
+        typer.Option("--exec-timeout", help="HTTP/stream timeout in seconds."),
+    ] = 1800.0,
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.exec_command(
+        sandbox_name=sandbox_name,
+        command=command,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+        exec_timeout=exec_timeout,
+    )
+
+
+@sandbox_app.command(name="health", help="Probe sandbox runtime readiness via the gateway.", no_args_is_help=True)
+def sandbox_health(
+    sandbox_name: Annotated[str, typer.Argument(help="Sandbox name.")],
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.health(
+        sandbox_name=sandbox_name,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+    )
+
 
 @app.callback(
     invoke_without_command=True,
