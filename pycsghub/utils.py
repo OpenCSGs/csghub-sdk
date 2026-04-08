@@ -545,7 +545,8 @@ def get_endpoint(endpoint: Optional[str] = None, operation: Optional[str] = OPER
 
 
 def get_xnet_endpoint(endpoint: str) -> str:
-    return os.path.join(endpoint, XNET_API_PATH)
+    # Use forward slash for URLs instead of os.path.join which uses backslash on Windows
+    return f"{endpoint.rstrip('/')}/{XNET_API_PATH}"
 
 def disable_xnet() -> bool:
     """Check if xnet is disabled.
