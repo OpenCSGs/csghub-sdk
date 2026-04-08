@@ -165,3 +165,42 @@ This code:
 2. By generating batch classes dynamically and using class name reflection mechanism, a large number of classes with the same names as those automatically loaded by transformers are created in batches.
 
 3. Assign it with the from_pretrained method, so the model read out will be an hf-transformers model.
+
+### Sandbox (async HTTP client)
+
+The SDK includes `pycsghub.sandbox_client` for CSGHub sandbox lifecycle and runtime APIs (async). Default `base_url` matches the public Hub (`https://hub.opencsg.com`, see `DEFAULT_CSGHUB_DOMAIN`). Set `CsgHubSandboxConfig` if you use a self-hosted Hub or a separate AI Gateway (`aigateway_url`; empty string means runtime calls use the same host as `base_url`).
+
+Authentication uses the same token resolution as the rest of the SDK: optional `token=` on `CsgHubSandbox`, else `CSGHUB_TOKEN` / token file via `get_token_to_send`. HTTP failures raise `SandboxHttpError` or `SandboxTransportError`; `stream_execute_command` yields `ERROR: ...` lines on failure (it does not raise).
+
+```python
+import asyncio
+from pycsghub.sandbox_client import CsgHubSandbox, SandboxCreateRequest
+
+async def main() -> None:
+    client = CsgHubSandbox(token="your_access_token")
+    spec = SandboxCreateRequest(
+        image="your-runner-image:tag",
+        resource_id=77,
+        sandbox_name="my-sandbox",
+    )
+    resp = await client.create_sandbox(spec)
+    print(resp.spec.sandbox_name, resp.state.status)
+
+asyncio.run(main())
+```
+
+### Sandbox (CLI)
+
+After installing the package, use the `csghub-cli sandbox` command group. Subcommands include `create`, `get`, `start`, `stop`, `delete` (same semantics as `stop`), `exec`, `upload`, and `health`. Shared options: `-e` / `--endpoint` (Hub `base_url`, default `https://hub.opencsg.com`), `--aigateway-url` for runtime routes when the gateway differs from the Hub, and `-k` / `--token` (optional; otherwise uses `CSGHUB_TOKEN` / token file like the rest of the SDK).
+
+Examples:
+
+```bash
+csghub-cli sandbox create -i your-runner-image:tag -n my-sandbox -k YOUR_TOKEN
+csghub-cli sandbox get my-sandbox -k YOUR_TOKEN
+csghub-cli sandbox exec my-sandbox "echo hello" -k YOUR_TOKEN
+csghub-cli sandbox upload my-sandbox ./local-file.txt -k YOUR_TOKEN
+csghub-cli sandbox health my-sandbox -k YOUR_TOKEN
+```
+
+For a full `SandboxCreateRequest` body, pass `--spec path/to/spec.json` instead of `--image` / `--name` (`--spec` takes precedence and ignores `--image` / `--name`). Lifecycle commands print JSON; `exec` streams lines to stdout (exit code 1 if any line starts with `ERROR:`); `upload` prints the JSON response message; `health` prints `ok` on success.
