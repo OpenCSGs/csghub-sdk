@@ -477,12 +477,12 @@ def sandbox_create(
         typer.Option("--timeout", help="EE sandbox idle timeout in seconds (0 = server default)."),
     ] = 0,
     env: Annotated[
-        list[str],
+        Optional[list[str]],
         typer.Option("--env", help="Environment KEY=VALUE (repeatable)."),
-    ] = [],
+    ] = None,
     spec: Annotated[
         Optional[str],
-        typer.Option("--spec", help="JSON file with full SandboxCreateRequest (overrides --image/--name)."),
+        typer.Option("--spec", help="JSON file with full SandboxCreateRequest; if set, --image/--name are ignored."),
     ] = None,
     token: Annotated[Optional[str], OPTIONS["token"]] = None,
     endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
@@ -586,6 +586,28 @@ def sandbox_exec(
         endpoint=endpoint,
         aigateway_url=aigateway_url,
         exec_timeout=exec_timeout,
+    )
+
+
+@sandbox_app.command(name="upload", help="Upload a local file to sandbox runtime.", no_args_is_help=True)
+def sandbox_upload(
+    sandbox_name: Annotated[str, typer.Argument(help="Sandbox name.")],
+    local_path: Annotated[str, typer.Argument(help="Local file path to upload.")],
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="HTTP upload timeout in seconds."),
+    ] = 60.0,
+    token: Annotated[Optional[str], OPTIONS["token"]] = None,
+    endpoint: Annotated[Optional[str], OPTIONS["endpoint"]] = DEFAULT_CSGHUB_DOMAIN,
+    aigateway_url: Annotated[Optional[str], OPTIONS["aigateway_url"]] = None,
+):
+    sandbox.upload(
+        sandbox_name=sandbox_name,
+        local_path=local_path,
+        token=token,
+        endpoint=endpoint,
+        aigateway_url=aigateway_url,
+        timeout=timeout,
     )
 
 

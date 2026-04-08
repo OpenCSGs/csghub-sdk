@@ -15,7 +15,7 @@ from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN
 from pycsghub.errors import SandboxHttpError, SandboxResponseParseError, SandboxTransportError
 from pycsghub.sandbox_client.client import CsgHubSandbox
 from pycsghub.sandbox_client.config import CsgHubSandboxConfig
-from pycsghub.sandbox_client.models import SandboxCreateRequest, SandboxResponse
+from pycsghub.sandbox_client.models import SandboxCreateRequest, SandboxResponse, SandboxUploadFileResponse
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ def response_to_json(resp: SandboxResponse) -> str:
 
 
 def _print_sandbox_error(e: BaseException) -> None:
+    logger.error("sandbox command failed: %s", e)
     if isinstance(e, SandboxHttpError):
         print(f"{e}", file=sys.stderr)
         if e.detail:
@@ -229,13 +230,53 @@ def exec_command(
                 failed = True
         return failed
 
-    try:
-        failed = asyncio.run(_go())
-    except (SandboxHttpError, SandboxTransportError, SandboxResponseParseError) as e:
-        _print_sandbox_error(e)
-        raise SystemExit(1) from e
+    failed = run_lifecycle(_go())
     if failed:
         raise SystemExit(1)
+
+
+def upload(
+    *,
+    sandbox_name: str,
+    local_path: str,
+    token: Optional[str],
+    endpoint: Optional[str],
+    aigateway_url: Optional[str],
+    timeout: float,
+) -> None:
+    cfg = sandbox_config(endpoint, aigateway_url)
+    path_obj = Path(local_path)
+    if not path_obj.exists():
+        print(f"No such file: {local_path}", file=sys.stderr)
+        raise SystemExit(1)
+    if not path_obj.is_file():
+        print(f"Local path must be a file: {local_path}", file=sys.stderr)
+        raise SystemExit(1)
+    try:
+        file_bytes = path_obj.read_bytes()
+    except OSError as e:
+        print(str(e), file=sys.stderr)
+        raise SystemExit(1) from e
+
+    logger.info("sandbox upload sandbox_name=%s file=%s", sandbox_name, path_obj.name)
+
+    async def _go() -> SandboxUploadFileResponse:
+        client = CsgHubSandbox(csghub_sandbox_cfg=cfg, token=token)
+        return await client.upload_file(
+            sandbox_name=sandbox_name,
+            file_name=path_obj.name,
+            file_bytes=file_bytes,
+            timeout=timeout,
+        )
+
+    resp = run_lifecycle(_go())
+    print(
+        json.dumps(
+            resp.model_dump(mode="json"),
+            indent=2,
+            ensure_ascii=False,
+        ),
+    )
 
 
 def health(

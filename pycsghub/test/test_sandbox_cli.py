@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pycsghub.cmd import sandbox as sandbox_cmd
 from pycsghub.constants import DEFAULT_CSGHUB_DOMAIN
-from pycsghub.sandbox_client.models import SandboxCreateRequest, SandboxResponse
+from pycsghub.sandbox_client.models import SandboxCreateRequest, SandboxResponse, SandboxUploadFileResponse
 
 
 class TestSandboxCliHelpers(unittest.TestCase):
@@ -115,6 +115,73 @@ class TestSandboxCliCreateMocked(unittest.TestCase):
         with self.assertRaises(SystemExit) as ctx:
             sandbox_cmd.run_lifecycle(boom())
         self.assertEqual(ctx.exception.code, 1)
+
+
+class TestSandboxUploadMocked(unittest.TestCase):
+    def test_upload_calls_client_and_prints_json(self) -> None:
+        sample = SandboxUploadFileResponse(message="uploaded")
+        with tempfile.TemporaryDirectory() as tmp:
+            file_path = Path(tmp) / "demo.txt"
+            file_path.write_text("hello", encoding="utf-8")
+            with patch("pycsghub.cmd.sandbox.CsgHubSandbox") as mock_cls:
+                instance = MagicMock()
+                instance.upload_file = AsyncMock(return_value=sample)
+                mock_cls.return_value = instance
+                with patch("builtins.print") as mock_print:
+                    sandbox_cmd.upload(
+                        sandbox_name="sb1",
+                        local_path=str(file_path),
+                        token="t",
+                        endpoint="https://hub.example.com",
+                        aigateway_url="",
+                        timeout=10.0,
+                    )
+                mock_print.assert_called_once()
+                payload = json.loads(mock_print.call_args[0][0])
+                self.assertEqual(payload["message"], "uploaded")
+
+    def test_upload_missing_file_exits(self) -> None:
+        with self.assertRaises(SystemExit) as ctx:
+            sandbox_cmd.upload(
+                sandbox_name="sb1",
+                local_path="/tmp/does-not-exist-12345",
+                token=None,
+                endpoint=None,
+                aigateway_url=None,
+                timeout=10.0,
+            )
+        self.assertEqual(ctx.exception.code, 1)
+
+
+class TestSandboxTyperIntegration(unittest.TestCase):
+    def test_sandbox_get_help(self) -> None:
+        from pycsghub.cli import app
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(app, ["sandbox", "get", "--help"])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn("Get sandbox status", result.stdout)
+
+    def test_sandbox_upload_wires_arguments(self) -> None:
+        from pycsghub.cli import app
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        with patch("pycsghub.cli.sandbox.upload") as mock_upload:
+            result = runner.invoke(
+                app,
+                ["sandbox", "upload", "sb1", "/tmp/demo.txt", "--timeout", "8.5"],
+            )
+        self.assertEqual(result.exit_code, 0)
+        mock_upload.assert_called_once_with(
+            sandbox_name="sb1",
+            local_path="/tmp/demo.txt",
+            token=None,
+            endpoint=DEFAULT_CSGHUB_DOMAIN,
+            aigateway_url=None,
+            timeout=8.5,
+        )
 
 
 if __name__ == "__main__":

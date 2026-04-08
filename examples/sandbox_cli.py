@@ -1,4 +1,4 @@
-"""Use csghub-cli to manage sandboxes (create, get, start, stop, exec, health).
+"""Use csghub-cli to manage sandboxes (create, get, start, stop, exec, upload, health).
 
 Install the package so the ``csghub-cli`` entry point is available::
 
@@ -51,6 +51,7 @@ RUN_EXAMPLES = False
 # Runtime (if gateway differs from Hub, add --aigateway-url)
 #
 #   csghub-cli sandbox exec my-sandbox "echo hello" -e "$ENDPOINT" -k "$CSGHUB_TOKEN"
+#   csghub-cli sandbox upload my-sandbox ./local-file.txt -e "$ENDPOINT" -k "$CSGHUB_TOKEN"
 #   csghub-cli sandbox health my-sandbox -e "$ENDPOINT" -k "$CSGHUB_TOKEN"
 #
 

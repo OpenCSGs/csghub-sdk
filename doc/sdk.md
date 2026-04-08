@@ -191,7 +191,7 @@ asyncio.run(main())
 
 ### Sandbox (CLI)
 
-After installing the package, use the `csghub-cli sandbox` command group. Subcommands include `create`, `get`, `start`, `stop`, `delete` (same semantics as `stop`), `exec`, and `health`. Shared options: `-e` / `--endpoint` (Hub `base_url`, default `https://hub.opencsg.com`), `--aigateway-url` for runtime routes when the gateway differs from the Hub, and `-k` / `--token` (optional; otherwise uses `CSGHUB_TOKEN` / token file like the rest of the SDK).
+After installing the package, use the `csghub-cli sandbox` command group. Subcommands include `create`, `get`, `start`, `stop`, `delete` (same semantics as `stop`), `exec`, `upload`, and `health`. Shared options: `-e` / `--endpoint` (Hub `base_url`, default `https://hub.opencsg.com`), `--aigateway-url` for runtime routes when the gateway differs from the Hub, and `-k` / `--token` (optional; otherwise uses `CSGHUB_TOKEN` / token file like the rest of the SDK).
 
 Examples:
 
@@ -199,7 +199,8 @@ Examples:
 csghub-cli sandbox create -i your-runner-image:tag -n my-sandbox -k YOUR_TOKEN
 csghub-cli sandbox get my-sandbox -k YOUR_TOKEN
 csghub-cli sandbox exec my-sandbox "echo hello" -k YOUR_TOKEN
+csghub-cli sandbox upload my-sandbox ./local-file.txt -k YOUR_TOKEN
 csghub-cli sandbox health my-sandbox -k YOUR_TOKEN
 ```
 
-For a full `SandboxCreateRequest` body, pass `--spec path/to/spec.json` instead of `--image` / `--name`. Lifecycle commands print JSON; `exec` streams lines to stdout (exit code 1 if any line starts with `ERROR:`); `health` prints `ok` on success.
+For a full `SandboxCreateRequest` body, pass `--spec path/to/spec.json` instead of `--image` / `--name` (`--spec` takes precedence and ignores `--image` / `--name`). Lifecycle commands print JSON; `exec` streams lines to stdout (exit code 1 if any line starts with `ERROR:`); `upload` prints the JSON response message; `health` prints `ok` on success.
