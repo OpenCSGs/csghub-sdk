@@ -16,7 +16,12 @@ class CsgXnetApi(HfApi):
         cache_dir = get_cache_dir()
         os.environ["HF_HUB_CACHE"] = cache_dir
         
-        self._token = token
+        # Convert None to False to prevent HuggingFace's implicit token fallback.
+        # In HF's semantics, token=None means "use cached token" (falls back to
+        # HF_TOKEN env or ~/.cache/huggingface/token), while token=False means
+        # "explicitly do NOT send any auth token". When CSGHub has no token,
+        # we must use False to avoid sending an unrelated HF token to CSGHub.
+        self._token = token if token is not None else False
         self._endpoint = endpoint
         self._user_name = user_name
         self._cache_dir = cache_dir
@@ -51,7 +56,7 @@ class CsgXnetApi(HfApi):
         # Note: calling super().__init__ (HfApi) might use the default HF_ENDPOINT from huggingface_hub.constants
         # if it was imported before we set os.environ["HF_ENDPOINT"].
         # Explicitly passing endpoint ensures the instance uses our custom endpoint.
-        super().__init__(endpoint=endpoint, token=token)
+        super().__init__(endpoint=endpoint, token=self._token)
         
         # Also ensure instance .endpoint is set correctly (just in case super() didn't set it or overwrote it)
         self.endpoint = endpoint
@@ -62,14 +67,16 @@ class CsgXnetApi(HfApi):
         if not endpoint_arg:
             endpoint_arg = self._endpoint
             
-        # Ensure token is passed
-        if 'token' not in kwargs and self._token:
+        # Always explicitly set token when caller did not provide one or
+        # provided None. Use self._token (which is False when CSGHub has no
+        # token) to prevent HuggingFace's implicit token fallback.
+        if 'token' not in kwargs or kwargs['token'] is None:
              kwargs['token'] = self._token
              
-        # Ensure token is passed
+        # Ensure cache_dir is passed
         if 'cache_dir' not in kwargs:
             kwargs['cache_dir'] = self._cache_dir
-            
+
         try:
              # Try passing endpoint if HfApi accepts it
              if endpoint_arg:
@@ -98,11 +105,13 @@ class CsgXnetApi(HfApi):
         if 'endpoint' not in kwargs:
             kwargs['endpoint'] = self._endpoint
             
-        # Ensure token is passed
-        if 'token' not in kwargs and self._token:
+        # Always explicitly set token when caller did not provide one or
+        # provided None. Use self._token (which is False when CSGHub has no
+        # token) to prevent HuggingFace's implicit token fallback.
+        if 'token' not in kwargs or kwargs['token'] is None:
             kwargs['token'] = self._token
             
-        # Ensure token is passed
+        # Ensure cache_dir is passed
         if 'cache_dir' not in kwargs:
             kwargs['cache_dir'] = self._cache_dir
 
