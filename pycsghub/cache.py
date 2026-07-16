@@ -1,9 +1,12 @@
 import hashlib
+import json
+import logging
 import os
-import pickle
 import tempfile
 from shutil import move, rmtree
 from typing import Dict, Union
+
+logger = logging.getLogger(__name__)
 
 class FileSystemCache(object):
     KEY_FILE_NAME = '.msc'
@@ -36,18 +39,22 @@ class FileSystemCache(object):
         cache_keys_file_path = os.path.join(self.cache_root_location,
                                             FileSystemCache.KEY_FILE_NAME)
         if os.path.exists(cache_keys_file_path):
-            with open(cache_keys_file_path, 'rb') as f:
-                self.cached_files = pickle.load(f)
+            try:
+                with open(cache_keys_file_path, 'r', encoding='utf-8') as f:
+                    self.cached_files = json.load(f)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                logger.warning(
+                    "Failed to load cache file %s, it may be in an old format. "
+                    "Resetting cache index.", cache_keys_file_path)
+                self.cached_files = []
 
     def save_cached_files(self):
         """Save cache metadata."""
-        # save new meta to tmp and move to KEY_FILE_NAME
         cache_keys_file_path = os.path.join(self.cache_root_location,
                                             FileSystemCache.KEY_FILE_NAME)
-        # TODO: Sync file write
         fd, fn = tempfile.mkstemp()
-        with open(fd, 'wb') as f:
-            pickle.dump(self.cached_files, f)
+        with open(fd, 'w', encoding='utf-8') as f:
+            json.dump(self.cached_files, f, ensure_ascii=False)
         move(fn, cache_keys_file_path)
 
     def get_file(self, key):
@@ -144,8 +151,14 @@ class ModelFileSystemCache(FileSystemCache):
         meta_file_path = os.path.join(self.cache_root_location,
                                       FileSystemCache.MODEL_META_FILE_NAME)
         if os.path.exists(meta_file_path):
-            with open(meta_file_path, 'rb') as f:
-                self.model_meta = pickle.load(f)
+            try:
+                with open(meta_file_path, 'r', encoding='utf-8') as f:
+                    self.model_meta = json.load(f)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                logger.warning(
+                    "Failed to load model meta file %s, it may be in an old format. "
+                    "Resetting model meta.", meta_file_path)
+                self.model_meta = {FileSystemCache.MODEL_META_MODEL_ID: 'unknown'}
         else:
             self.model_meta = {FileSystemCache.MODEL_META_MODEL_ID: 'unknown'}
 
@@ -172,8 +185,8 @@ class ModelFileSystemCache(FileSystemCache):
     def save_model_meta(self):
         meta_file_path = os.path.join(self.cache_root_location,
                                       FileSystemCache.MODEL_META_FILE_NAME)
-        with open(meta_file_path, 'wb') as f:
-            pickle.dump(self.model_meta, f)
+        with open(meta_file_path, 'w', encoding='utf-8') as f:
+            json.dump(self.model_meta, f, ensure_ascii=False)
 
     def get_file_by_path(self, file_path):
         """Retrieve the cache if there is file match the path.
