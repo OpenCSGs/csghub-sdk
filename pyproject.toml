@@ -7,15 +7,13 @@ name = "csghub-sdk"
 version = "0.9.3"
 description = "CSGHub SDK for downloading and uploading models, datasets, and spaces"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [
     { name = "opencsg", email = "contact@opencsg.com" }
 ]
 keywords = ["ai", "machine-learning", "models", "datasets", "huggingface"]
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
