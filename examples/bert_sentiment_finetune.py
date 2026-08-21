@@ -114,7 +114,7 @@ upload_large_folder_internal(
     token=None,
     allow_patterns=None,
     ignore_patterns=None,
-    num_workers=1,
+    num_workers=4,
     print_report=False,
     print_report_every=1,
 )
