@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict
 from pycsghub.utils import (build_csg_headers, get_endpoint, model_id_to_group_owner_name)
@@ -101,6 +102,7 @@ class CsgHubApi:
         """
         Check if repo and branch exists
         """
+        self.default_branch = ""
         action_endpoint = get_endpoint(endpoint=endpoint)
         req_headers = build_csg_headers(token=token, headers={
             "Content-Type": "application/json"
@@ -117,11 +119,41 @@ class CsgHubApi:
 
         branches = jsonRes["data"]
         for b in branches:
+            if b["is_default"] == True:
+                self.default_branch = b["name"]
+                break
+
+        for b in branches:
             if b["name"] == revision:
                 return True, True
         
         return True, False
+
+    def get_default_branch_gitattributes(
+        self,
+        repo_id: str,
+        repo_type: str,
+        revision: str,
+        endpoint: str,
+        token: str,
+    ):
+        action_endpoint = get_endpoint(endpoint=endpoint)
+        req_headers = build_csg_headers(token=token, headers={
+            "Content-Type": "application/json"
+        })
+        url = f"{action_endpoint}/api/v1/{repo_type}s/{repo_id}/blob/.gitattributes?ref={self.default_branch}"
+        response = requests.get(url, headers=req_headers)
+        if response.status_code != 200:
+            return ""
         
+        response.raise_for_status()
+        jsonRes = response.json()
+        if jsonRes["msg"] != "OK":
+            return ""
+
+        git_content_base64 = jsonRes["data"]["content"]
+        return git_content_base64
+
     def create_new_branch(
         self,
         repo_id: str,
@@ -139,7 +171,18 @@ class CsgHubApi:
         })
         action_url = f"{action_endpoint}/api/v1/{repo_type}s/{repo_id}/raw/.gitattributes"
         
-        GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
+        GIT_ATTRIBUTES_CONTENT_BASE64 = ""
+        if os.environ.get("CSGHUB_USE_DEFAULT_BRANCH_GITATTRIBUTES"):
+            GIT_ATTRIBUTES_CONTENT_BASE64 = self.get_default_branch_gitattributes(
+                repo_id=repo_id,
+                repo_type=repo_type,
+                revision=revision,
+                endpoint=endpoint,
+                token=token,
+            )
+
+        if GIT_ATTRIBUTES_CONTENT_BASE64 is None or GIT_ATTRIBUTES_CONTENT_BASE64 == "":
+            GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
             "message": f"create new branch {revision}",
