@@ -82,6 +82,7 @@ class Repository:
         self.secrets = secrets
         self.variables = variables
         self.cover_image_url = cover_image_url
+        self.default_branch = ""
 
     def get_url_prefix(self):
         if self.repo_type == REPO_TYPE_DATASET:
@@ -185,16 +186,44 @@ class Repository:
 
         branches = jsonRes["data"]
         for b in branches:
+            if b["is_default"] == True:
+                self.default_branch = b["name"]
+                break
+        
+        for b in branches:
             if b["name"] == self.branch_name:
                 return True, True
         
         return True, False
+
+    def get_default_branch_gitattributes(self):
+        action_endpoint = get_endpoint(endpoint=self.endpoint)
+        url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}/{self.repo_id}/blob/.gitattributes?ref={self.default_branch}"
+        headers = build_csg_headers(token=self.token, headers={
+            "Content-Type": "application/json"
+        })
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return ""
         
+        response.raise_for_status()
+        jsonRes = response.json()
+        if jsonRes["msg"] != "OK":
+            return ""
+
+        git_content_base64 = jsonRes["data"]["content"]
+        return git_content_base64
+
     def create_new_branch(self):
         action_endpoint = get_endpoint(endpoint=self.endpoint)
         url = f"{action_endpoint}/api/v1/{self.repo_url_prefix}/{self.repo_id}/raw/.gitattributes"
-        
-        GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
+
+        GIT_ATTRIBUTES_CONTENT_BASE64 = ""
+        if os.environ.get("CSGHUB_USE_DEFAULT_BRANCH_GITATTRIBUTES"):
+            GIT_ATTRIBUTES_CONTENT_BASE64 = self.get_default_branch_gitattributes()
+
+        if GIT_ATTRIBUTES_CONTENT_BASE64 is None or GIT_ATTRIBUTES_CONTENT_BASE64 == "":
+            GIT_ATTRIBUTES_CONTENT_BASE64 = base64.b64encode(GIT_ATTRIBUTES_CONTENT.encode()).decode()
 
         data = {
             "message": f"create new branch {self.branch_name}",
