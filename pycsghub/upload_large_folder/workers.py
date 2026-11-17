@@ -1,24 +1,27 @@
-import logging
-import traceback
-import time
 import copy
-from typing import Optional, List, Tuple, Dict
-from .status import LargeUploadStatus, WorkerJob, JOB_ITEM_T
-from .consts import WAITING_TIME_IF_NO_TASKS
+import logging
+import time
+import traceback
+from typing import Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
+
+from pycsghub.csghub_api import CsgHubApi
+
+from .consts import (
+    COMMIT_ACTION_CREATE,
+    COMMIT_ACTION_UPDATE,
+    KEY_MSG,
+    KEY_UPLOADID,
+    MSG_OK,
+    REPO_LFS_TYPE,
+    REPO_REGULAR_TYPE,
+    WAITING_TIME_IF_NO_TASKS,
+)
 from .jobs import _determine_next_job
 from .sha import sha_fileobj
-from pycsghub.csghub_api import CsgHubApi
-from .utils import unquote
-from .consts import (
-    REPO_REGULAR_TYPE, 
-    REPO_LFS_TYPE, 
-    COMMIT_ACTION_CREATE, 
-    COMMIT_ACTION_UPDATE,
-    KEY_MSG, MSG_OK,
-    KEY_UPLOADID
-)
-from urllib.parse import urlparse, parse_qs
 from .slices import slice_upload, slices_upload_complete, slices_upload_verify
+from .status import JOB_ITEM_T, LargeUploadStatus, WorkerJob
+from .utils import unquote
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +165,14 @@ def _execute_job_pre_upload_lfs(
     try:
         if status.is_lfs_upload_completed(item):
             action = f"{action} check complete"
-            _preupload_lfs_done(item=item, status=status)
+            try:
+                _preupload_lfs_done(item=item, status=status)
+            except Exception as e:
+                response = getattr(e, "response", None)
+                status_code = getattr(response, "status_code", None)
+                fatal = isinstance(status_code, int) and 400 <= status_code < 500
+                status.record_lfs_complete_failure(item, fatal=fatal)
+                raise
             status.queue_commit.put(item)
         else:
             action = f"{action} fetch batch info"
@@ -314,6 +324,7 @@ def _preupload_lfs_done(
     logger.debug(f"LFS file {paths.file_path} merge {metadata.lfs_upload_part_count} uploaded slices complete response: {complete_resp}")
     verify_resp = slices_upload_verify(item=item)
     logger.debug(f"LFS file {paths.file_path} uploaded verify response: {verify_resp}")
+    status.reset_lfs_complete_failures(paths.file_path)
     metadata.is_uploaded = True
     metadata.save(paths)
     logger.debug(f"LFS file {paths.file_path} - all {metadata.lfs_upload_part_count} slices uploaded successfully")

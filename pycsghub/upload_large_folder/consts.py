@@ -31,5 +31,9 @@ WAITING_TIME_IF_NO_TASKS = 3  # seconds
 MAX_NB_REGULAR_FILES_PER_COMMIT = 75
 MAX_NB_LFS_FILES_PER_COMMIT = 150
 
+# After this many consecutive multipart completion failures, the cached part
+# list is considered stale and the LFS upload is restarted from scratch.
+LFS_COMPLETE_MAX_FAILURES = 10
+
 META_FILE_IDENTIFIER = "version https://git-lfs.github.com/spec/v1"
 META_FILE_OID_PREFIX = "oid sha256:"

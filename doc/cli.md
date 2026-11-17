@@ -99,4 +99,6 @@ Notes:
 
 When using the `upload-large-folder` command to upload a folder, the upload progress will be recorded in the `.cache` folder within the upload directory to support resumable uploads. Do not delete the `.cache` folder before the upload is complete.
 
+If a multipart upload expires on the server or its parts are lost, completing the upload will keep failing. After 10 consecutive completion failures, or immediately when the server rejects the request with a 4xx response, the SDK clears the cached part list for that file and re-uploads it from scratch.
+
 Download location is `~/.cache/csg/` by default.
