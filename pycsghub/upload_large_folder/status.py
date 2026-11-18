@@ -1,15 +1,23 @@
-import enum
-import queue
-import logging
-from threading import Lock
-from datetime import datetime
-from typing import List, Optional, Tuple
-from .local_folder import LocalUploadFileMetadata, LocalUploadFilePaths
-from .consts import REPO_LFS_TYPE, REPO_REGULAR_TYPE
 import base64
+import enum
+import logging
+import queue
+from datetime import datetime
 from io import BytesIO
+from pathlib import Path
+from threading import Lock
+from typing import List, Optional, Tuple
+
 from tqdm import tqdm
-from .consts import META_FILE_IDENTIFIER, META_FILE_OID_PREFIX
+
+from .consts import (
+    LFS_COMPLETE_MAX_FAILURES,
+    META_FILE_IDENTIFIER,
+    META_FILE_OID_PREFIX,
+    REPO_LFS_TYPE,
+    REPO_REGULAR_TYPE,
+)
+from .local_folder import LocalUploadFileMetadata, LocalUploadFilePaths
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +64,7 @@ class LargeUploadStatus:
 
         self._started_at = datetime.now()
         self._lfs_uploaded_ids = dict()
+        self._lfs_complete_failures: dict[Path, int] = {}
 
         # Setup queues
         num_uploaded_and_commited = 0
@@ -203,6 +212,64 @@ class LargeUploadStatus:
                     metadata.lfs_uploaded_ids = uploaded_ids
                     return True
         return False
+
+    def reset_lfs_complete_failures(self, file_path: Path) -> None:
+        """Forget previous completion failures after a successful merge."""
+        with self.lock:
+            self._lfs_complete_failures.pop(file_path, None)
+
+    def record_lfs_complete_failure(
+        self,
+        item: JOB_ITEM_T,
+        *,
+        fatal: bool = False,
+    ) -> bool:
+        """Record a failed multipart completion and invalidate stale cache when needed.
+
+        ``fatal`` is used for server responses that prove the multipart session
+        or the merged object is no longer usable (typically a 4xx response).
+        Those responses invalidate the cache immediately; other failures need
+        ``LFS_COMPLETE_MAX_FAILURES`` attempts before a full restart.
+
+        Returns True when the cached multipart state was cleared.
+        """
+        paths, metadata = item
+        with self.lock:
+            failures = self._lfs_complete_failures.get(paths.file_path, 0) + 1
+            self._lfs_complete_failures[paths.file_path] = failures
+            should_restart = fatal or failures >= LFS_COMPLETE_MAX_FAILURES
+            if not should_restart:
+                logger.warning(
+                    "LFS %s complete failed %d/%d times, keeping cached slices for now",
+                    paths.file_path,
+                    failures,
+                    LFS_COMPLETE_MAX_FAILURES,
+                )
+                return False
+
+            reason = "server rejected the multipart upload" if fatal else f"{failures} consecutive failures"
+            logger.warning(
+                "LFS %s complete failed (%s): clearing cached upload id and %d cached slice ids, "
+                "the file will be re-uploaded from scratch",
+                paths.file_path,
+                reason,
+                len(self.convert_uploaded_ids_to_map(self._lfs_uploaded_ids.get(paths.file_path))),
+            )
+            self._lfs_uploaded_ids.pop(paths.file_path, None)
+            self._lfs_complete_failures.pop(paths.file_path, None)
+
+            metadata.lfs_upload_id = None
+            metadata.lfs_uploaded_ids = None
+            metadata.lfs_upload_part_count = None
+            metadata.lfs_upload_part_index = None
+            metadata.lfs_upload_part_url = None
+            metadata.lfs_upload_chunk_size = None
+            metadata.lfs_upload_complete_url = None
+            metadata.lfs_upload_verify = None
+            metadata.is_uploaded = False
+
+        metadata.save(paths)
+        return True
 
     def compute_file_base64(self, item: JOB_ITEM_T):
         _, meta = item

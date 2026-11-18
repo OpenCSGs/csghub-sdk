@@ -100,4 +100,6 @@ csghub-cli download wanghh2000/data-refine2 -t dataset
 
 当使用`upload-large-folder`命令上传文件夹时，上传进度会在记录在上传目录`.cache`文件夹中用于支持断点续传，在上传完成前勿删除`.cache`文件夹。
 
+如果服务端分片上传已过期或分片丢失，合并请求会持续失败。连续 10 次合并失败后，或服务端明确返回 4xx 拒绝请求时，SDK 会清除该文件的分片缓存并从头重新上传该文件。
+
 文件默认下载路径为`~/.cache/csg/`

@@ -1,9 +1,11 @@
 import io
+import logging
+from typing import Dict
+
 import requests
 from tqdm import tqdm
-import logging
+
 from .status import JOB_ITEM_T
-from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,17 @@ class UploadTracker(io.BytesIO):
         chunk = super().read(size)
         self._progress_bar.update(len(chunk))
         return chunk
+
+def _ensure_success(response, action: str, url: str) -> None:
+    """Log and raise for any non-2xx response, including 4xx errors."""
+    if 200 <= response.status_code < 300:
+        return
+    logger.error(f"{action} on {url} response: {response.text}")
+    response.raise_for_status()
+    raise requests.HTTPError(
+        f"{action} on {url} failed with status {response.status_code}",
+        response=response,
+    )
 
 def slice_upload(item: JOB_ITEM_T):
     paths, metadata = item
@@ -58,10 +71,11 @@ def slices_upload_complete(item: JOB_ITEM_T, uploaded_ids_map: Dict):
         ]
     }
     response = requests.post(metadata.lfs_upload_complete_url, json=payload)
-    if response.status_code != 200 and (response.status_code < 400 or response.status_code >= 500):
-        logger.error(f"LFS {paths.file_path} merge all uploaded slices complete on {metadata.lfs_upload_complete_url} response: {response.text}")
-    if response.status_code < 400 or response.status_code >= 500:
-        response.raise_for_status()
+    _ensure_success(
+        response,
+        f"LFS {paths.file_path} merge all uploaded slices complete",
+        metadata.lfs_upload_complete_url,
+    )
     return response.text
 
 def slices_upload_verify(item: JOB_ITEM_T):
@@ -73,7 +87,9 @@ def slices_upload_verify(item: JOB_ITEM_T):
     verify_url = metadata.lfs_upload_verify.get("href")
     verify_header = metadata.lfs_upload_verify.get("header")
     response = requests.post(verify_url, headers=verify_header, json=payload)
-    if response.status_code != 200:
-        logger.error(f"LFS {paths.file_path} slices uploaded verify on {verify_url} response: {response.text}, delete file {paths.metadata_path} and retry")
-    response.raise_for_status()
+    _ensure_success(
+        response,
+        f"LFS {paths.file_path} slices uploaded verify",
+        verify_url,
+    )
     return response.text
