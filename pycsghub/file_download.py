@@ -80,12 +80,15 @@ def file_download(
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
     if local_files_only:
-        if len(cache.cached_files) == 0:
+        # Verify the requested file is actually cached (cache.exists also
+        # drops stale index entries whose file was removed from disk).
+        if not cache.exists(pack_repo_file_info(file_name, revision)):
             raise ValueError(
-                'Cannot find the requested files in the cached path and outgoing'
-                ' traffic has been disabled. To enable model look-ups and downloads'
-                " online, set 'local_files_only' to False.")
-        return cache.get_root_location()
+                f"Cannot find file '{file_name}' (revision '{revision}') of repo "
+                f"'{repo_id}' in the local cache and outgoing traffic has been "
+                "disabled. To enable model look-ups and downloads online, set "
+                "'local_files_only' to False.")
+        return os.path.join(cache.get_root_location(), file_name)
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
         if source == 'xet':
