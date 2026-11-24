@@ -84,3 +84,28 @@ def test_local_files_only_raises_on_empty_cache(tmp_path):
             cache_dir=str(cache_dir),
             local_files_only=True,
         )
+
+
+def test_repo_type_defaults_to_model_when_omitted(tmp_path, monkeypatch):
+    """file_download() without repo_type must not fail with 'invalid repo type'."""
+    from pycsghub import file_download as fd_module
+
+    seen = {}
+
+    class _Stop(Exception):
+        pass
+
+    def fake_get_repo_info(**kwargs):
+        seen.update(kwargs)
+        raise _Stop()
+
+    monkeypatch.setattr(fd_module.utils, "get_repo_info", fake_get_repo_info)
+
+    with pytest.raises(_Stop):
+        file_download(
+            repo_id=REPO_ID,
+            file_name=FILE_NAME,
+            cache_dir=str(tmp_path / "cache"),
+            endpoint="http://localhost",
+        )
+    assert seen["repo_type"] == "model"
