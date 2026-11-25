@@ -57,3 +57,14 @@ def test_restart_without_range_support_has_no_hole(tmp_path):
     with mock.patch.object(file_download.requests, "get", side_effect=responses):
         file_download.http_get(url="http://x/f", local_dir=str(tmp_path), file_name="f", quiet=True)
     assert (tmp_path / "f").read_bytes() == b"ABCDEF"
+
+
+def test_client_error_survives_temp_file_removal_failure(tmp_path):
+    response = FakeResponse(401)
+    with mock.patch.object(file_download.requests, "get", return_value=response) as get:
+        with mock.patch.object(file_download.os, "remove", side_effect=PermissionError) as remove:
+            with pytest.raises(requests.HTTPError) as error:
+                file_download.http_get(url="http://x/f", local_dir=str(tmp_path), file_name="f", quiet=True)
+    assert error.value.response is response
+    remove.assert_called_once()
+    get.assert_called_once()

@@ -1,3 +1,4 @@
+import contextlib
 import tempfile
 from functools import partial
 from http.cookiejar import CookieJar
@@ -217,7 +218,8 @@ def http_get(*,
                 if status is not None and 400 <= status < 500 and status not in (408, 429):
                     # client errors (401/403/404...) will not succeed on retry
                     temp_file.close()  # Windows cannot remove an open file
-                    os.remove(temp_file.name)
+                    with contextlib.suppress(OSError):
+                        os.remove(temp_file.name)
                     raise
                 retry = retry.increment('GET', url, error=e)
                 retry.sleep()
