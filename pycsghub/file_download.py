@@ -16,6 +16,7 @@ from pycsghub.utils import (build_csg_headers,
                             get_file_download_url,
                             get_endpoint)
 from pycsghub.constants import (API_FILE_DOWNLOAD_RETRY_TIMES,
+                                REPO_TYPE_MODEL,
                                 API_FILE_DOWNLOAD_TIMEOUT,
                                 API_FILE_DOWNLOAD_CHUNK_SIZE,
                                 DEFAULT_REVISION)
@@ -61,6 +62,8 @@ def file_download(
         force_download: Optional[bool] = False,
         quiet: Optional[bool] = False,
 ) -> str:
+    if repo_type is None:
+        repo_type = REPO_TYPE_MODEL
     if cache_dir is None:
         cache_dir = get_cache_dir(repo_type=repo_type)
     if isinstance(cache_dir, Path):
