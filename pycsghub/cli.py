@@ -134,6 +134,7 @@ def download(
                 "force_download": force_download,
                 "token"         : token,
                 "local_dir"     : local_dir,
+                "dry_run"       : dry_run,
             }
             
             # Explicitly pass endpoint for CsgXnetApi if available
@@ -149,7 +150,6 @@ def download(
             if api.__class__.__name__ == "CsghubApi":
                 download_kwargs["quiet"] = quiet
                 download_kwargs["source"] = source
-                download_kwargs["dry_run"] = dry_run
             
             try:
                 result = api.hf_hub_download(**download_kwargs)

@@ -1,48 +1,60 @@
 import os
 import unittest
-from contextlib import redirect_stdout
-from io import StringIO
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from pycsghub.cli import download
+from huggingface_hub.file_download import DryRunFileInfo
+from typer.testing import CliRunner
+
+from pycsghub.cli import app
 
 
-class TestSnapshotDryRun(unittest.TestCase):
-    @patch("pycsghub.snapshot_download.http_get", side_effect=AssertionError("dry-run downloaded a file"))
-    @patch("pycsghub.snapshot_download.utils.get_repo_info")
-    def test_csg_snapshot_reports_metadata_without_downloading(self, repo_info, http_get):
+class TestDownloadDryRun(unittest.TestCase):
+    def run_dry_run(self, disable_xnet, filenames):
+        with TemporaryDirectory() as root, patch.dict(
+            os.environ, {"CSGHUB_DISABLE_XNET": str(disable_xnet).lower()}
+        ):
+            result = CliRunner().invoke(
+                app,
+                ["download", "test/repo", *filenames, "--dry-run", "--token", "test-token",
+                 "--cache-dir", root, "--local-dir", os.path.join(root, "out")],
+            )
+            self.assertFalse(os.path.exists(os.path.join(root, "out")))
+        return result
+
+    @patch("pycsghub.snapshot_download.http_get", side_effect=AssertionError("unexpected transfer"))
+    @patch("pycsghub.file_download.http_get", side_effect=AssertionError("unexpected transfer"))
+    @patch("pycsghub.utils.get_repo_info")
+    def test_csg_routes_report_metadata_without_transferring(self, repo_info, file_get, snapshot_get):
         repo_info.return_value = SimpleNamespace(
             sha="abc123",
-            siblings=[
-                SimpleNamespace(rfilename="config.json", size=120),
-                SimpleNamespace(rfilename="weights.bin", size=1000),
-            ],
+            siblings=[SimpleNamespace(rfilename="config.json", size=120)],
         )
-        output = StringIO()
-        with TemporaryDirectory() as root, redirect_stdout(output), patch.dict(
-            os.environ, {"CSGHUB_DISABLE_XNET": "true"}
-        ):
-            download(
-                "test/repo",
-                dry_run=True,
-                quiet=True,
-                token="test-token",
-                cache_dir=root,
-                local_dir=os.path.join(root, "out"),
-                allow_patterns=["*.json"],
-            )
+        for filenames in ([], ["config.json"]):
+            with self.subTest(filenames=filenames):
+                result = self.run_dry_run(True, filenames)
+                self.assertEqual(result.exit_code, 0, result.output)
+                self.assertIn("config.json", result.output)
+                self.assertIn("120", result.output)
+                self.assertTrue(repo_info.call_args.kwargs["files_metadata"])
+        file_get.assert_not_called()
+        snapshot_get.assert_not_called()
 
-        http_get.assert_not_called()
-        self.assertTrue(repo_info.call_args.kwargs["files_metadata"])
-        self.assertIn("config.json", output.getvalue())
-        self.assertIn("120", output.getvalue())
-        self.assertNotIn("weights.bin", output.getvalue())
+    @patch("huggingface_hub.snapshot_download")
+    @patch("huggingface_hub.hf_hub_download")
+    @patch("huggingface_hub.HfApi.hf_hub_download")
+    def test_xnet_routes_report_metadata_without_transferring(self, hf_api_download, hf_download, snapshot_download):
+        def dry_run_result(**kwargs):
+            self.assertIs(kwargs.get("dry_run"), True)
+            return DryRunFileInfo("abc123", 120, "config.json", "", False, True)
 
-    @patch("huggingface_hub.snapshot_download", return_value=[])
-    def test_xnet_snapshot_forwards_dry_run(self, snapshot_download):
-        with patch.dict(os.environ, {"CSGHUB_DISABLE_XNET": "false"}):
-            download("test/repo", dry_run=True, token="test-token")
-
-        self.assertIs(snapshot_download.call_args.kwargs.get("dry_run"), True)
+        hf_api_download.side_effect = dry_run_result
+        hf_download.side_effect = dry_run_result
+        snapshot_download.side_effect = lambda **kwargs: [dry_run_result(**kwargs)]
+        for filenames in ([], ["config.json"]):
+            with self.subTest(filenames=filenames):
+                result = self.run_dry_run(False, filenames)
+                self.assertEqual(result.exit_code, 0, result.output)
+                self.assertIn("config.json", result.output)
+                self.assertIn("120", result.output)
