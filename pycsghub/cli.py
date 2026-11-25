@@ -184,6 +184,7 @@ def download(
     if api.__class__.__name__ == "CsghubApi":
         snapshot_kwargs["source"] = source
         snapshot_kwargs["quiet"] = quiet
+        snapshot_kwargs["dry_run"] = dry_run
     
     try:
         result = api.snapshot_download(**snapshot_kwargs)
