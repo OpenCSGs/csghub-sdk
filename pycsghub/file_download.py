@@ -1,3 +1,4 @@
+import contextlib
 import tempfile
 from functools import partial
 from http.cookiejar import CookieJar
@@ -218,6 +219,7 @@ def http_get(*,
                 else:
                     if downloaded_size > 0:
                         temp_file.truncate(0)
+                        temp_file.seek(0)
                         downloaded_size = temp_file.tell()
                     total_content_length = int(content_length) if content_length is not None else None
 
@@ -240,6 +242,13 @@ def http_get(*,
                     progress.close()
                 break
             except Exception as e:
+                status = e.response.status_code if isinstance(e, requests.HTTPError) and e.response is not None else None
+                if status is not None and 400 <= status < 500 and status not in (408, 429):
+                    # client errors (401/403/404...) will not succeed on retry
+                    temp_file.close()  # Windows cannot remove an open file
+                    with contextlib.suppress(OSError):
+                        os.remove(temp_file.name)
+                    raise
                 retry = retry.increment('GET', url, error=e)
                 retry.sleep()
 
