@@ -7,11 +7,6 @@ from typing import List, Optional
 
 import dotenv
 import typer
-try:
-    from huggingface_hub.file_download import DryRunFileInfo
-except ImportError:
-    from collections import namedtuple
-    DryRunFileInfo = namedtuple('DryRunFileInfo', ['path', 'size', 'hash'])
 
 dotenv.load_dotenv()
 from huggingface_hub.utils import disable_progress_bars, enable_progress_bars
@@ -180,11 +175,11 @@ def download(
         "ignore_patterns": ignore_patterns,
         "force_download" : force_download,
         "max_workers"    : max_workers,
+        "dry_run"        : dry_run,
     }
     if api.__class__.__name__ == "CsghubApi":
         snapshot_kwargs["source"] = source
         snapshot_kwargs["quiet"] = quiet
-        snapshot_kwargs["dry_run"] = dry_run
     
     try:
         result = api.snapshot_download(**snapshot_kwargs)

@@ -5,14 +5,7 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-try:
-    from huggingface_hub.file_download import DryRunFileInfo
-except ImportError:
-    # Fallback for newer huggingface_hub versions where DryRunFileInfo might be moved or removed
-    # Or define a dummy if it's just for type hinting or simple usage
-    from collections import namedtuple
-    DryRunFileInfo = namedtuple('DryRunFileInfo', ['path', 'size', 'hash'])
-
+from huggingface_hub.file_download import DryRunFileInfo
 from huggingface_hub.utils import filter_repo_objects
 
 from pycsghub import utils
@@ -45,7 +38,7 @@ def snapshot_download(
         force_download: Optional[bool] = False,
         max_workers: Optional[int] = 8,
         quiet: Optional[bool] = False,
-) -> str:
+) -> Union[str, List[DryRunFileInfo]]:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
     if repo_type not in REPO_TYPES:
@@ -91,7 +84,8 @@ def snapshot_download(
                                         revision=revision,
                                         token=token,
                                         endpoint=download_endpoint,
-                                        source=source)
+                                        source=source,
+                                        files_metadata=bool(dry_run))
         
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
@@ -105,15 +99,17 @@ def snapshot_download(
         
         if dry_run:
             infos = []
-            sizes = {}
-            try:
-                for s in getattr(repo_info, 'siblings', []) or []:
-                    if hasattr(s, 'rfilename') and hasattr(s, 'size'):
-                        sizes[s.rfilename] = getattr(s, 'size') or 0
-            except Exception:
-                pass
-            for f in repo_files:
-                infos.append(DryRunFileInfo(filename=f, file_size=sizes.get(f, 0), will_download=True))
+            sizes = {sibling.rfilename: sibling.size or 0 for sibling in repo_info.siblings}
+            for filename in repo_files:
+                cached = cache.exists(pack_repo_file_info(filename, revision))
+                infos.append(DryRunFileInfo(
+                    commit_hash=repo_info.sha,
+                    file_size=sizes[filename],
+                    filename=filename,
+                    local_path=os.path.join(cache.get_root_location(), filename) if cached else "",
+                    is_cached=cached,
+                    will_download=bool(force_download) or not cached,
+                ))
             return infos
         
         with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
