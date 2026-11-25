@@ -604,7 +604,7 @@ def print_download_result(res):
     
     if isinstance(res, DryRunFileInfo):
         res = [res]
-    if isinstance(res, list) and len(res) > 0 and isinstance(res[0], DryRunFileInfo):
+    if isinstance(res, list) and (not res or isinstance(res[0], DryRunFileInfo)):
         total = sum(r.file_size for r in res if getattr(r, 'will_download', True))
         print(
             f"[dry-run] Will download {len([r for r in res if getattr(r, 'will_download', True)])} files (out of {len(res)}) totalling {_format_size(total)}.")

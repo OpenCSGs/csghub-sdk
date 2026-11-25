@@ -4,6 +4,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from huggingface_hub.file_download import DryRunFileInfo
 from huggingface_hub.utils import filter_repo_objects
 
 from pycsghub.commit_ops import build_payload, CommitOperationAdd, CommitOperationDelete
@@ -42,7 +43,7 @@ class CsghubApi:
         headers: Optional[Dict[str, str]] = None,
         endpoint: Optional[str] = None,
         **kwargs
-    ) -> Union[str, Path]:
+    ) -> Union[str, Path, DryRunFileInfo]:
         # Adapt to csghub_file_download signature
         # Note: subfolder handling in csghub might be different, usually path in filename
         final_filename = f"{subfolder}/{filename}" if subfolder else filename

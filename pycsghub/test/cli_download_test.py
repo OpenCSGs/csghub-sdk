@@ -81,6 +81,21 @@ class TestCliDownload(unittest.TestCase):
 
     @patch('pycsghub.cli.get_csghub_api')
     @patch('pycsghub.cli.print_download_result')
+    def test_download_snapshot_csg_dry_run(self, mock_print, mock_get_api):
+        for filenames in (None, ["file1.txt", "file2.txt"]):
+            with self.subTest(filenames=filenames):
+                mock_api = MagicMock(spec=CsghubApi)
+                mock_get_api.return_value = mock_api
+
+                download(repo_id="test/repo", filenames=filenames, dry_run=True)
+
+                mock_api.snapshot_download.assert_called_once()
+                call_kwargs = mock_api.snapshot_download.call_args.kwargs
+                self.assertIs(call_kwargs.get("dry_run"), True)
+                self.assertEqual(call_kwargs["allow_patterns"], filenames)
+
+    @patch('pycsghub.cli.get_csghub_api')
+    @patch('pycsghub.cli.print_download_result')
     def test_download_multiple_files(self, mock_print, mock_get_api):
         mock_api = MagicMock(spec=HfApi)
         mock_get_api.return_value = mock_api

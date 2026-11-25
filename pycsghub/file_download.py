@@ -4,6 +4,7 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Optional, Union, List, Dict
 import requests
+from huggingface_hub.file_download import DryRunFileInfo
 from huggingface_hub.utils import filter_repo_objects
 from requests.adapters import Retry
 from tqdm import tqdm
@@ -61,7 +62,7 @@ def file_download(
         dry_run: Optional[bool] = False,
         force_download: Optional[bool] = False,
         quiet: Optional[bool] = False,
-) -> str:
+) -> Union[str, DryRunFileInfo]:
     if repo_type is None:
         repo_type = REPO_TYPE_MODEL
     if cache_dir is None:
@@ -69,7 +70,8 @@ def file_download(
     if isinstance(cache_dir, Path):
         cache_dir = str(cache_dir)
     temporary_cache_dir = os.path.join(cache_dir, 'temp')
-    os.makedirs(temporary_cache_dir, exist_ok=True)
+    if not dry_run:
+        os.makedirs(temporary_cache_dir, exist_ok=True)
     
     if local_dir is not None and isinstance(local_dir, Path):
         local_dir = str(local_dir)
@@ -91,10 +93,20 @@ def file_download(
                 f"'{repo_id}' in the local cache and outgoing traffic has been "
                 "disabled. To enable model look-ups and downloads online, set "
                 "'local_files_only' to False.")
-        return os.path.join(cache.get_root_location(), file_name)
+        local_path = os.path.join(cache.get_root_location(), file_name)
+        if dry_run:
+            return DryRunFileInfo(
+                commit_hash=revision or DEFAULT_REVISION,
+                file_size=os.path.getsize(local_path),
+                filename=file_name,
+                local_path=local_path,
+                is_cached=True,
+                will_download=False,
+            )
+        return local_path
     else:
         download_endpoint = get_endpoint(endpoint=endpoint)
-        if source == 'xet':
+        if source == 'xet' and not dry_run:
             try:
                 import xet_core  # type: ignore
             except Exception:
@@ -109,7 +121,8 @@ def file_download(
                                         token=token,
                                         endpoint=download_endpoint,
                                         repo_type=repo_type,
-                                        source=source)
+                                        source=source,
+                                        files_metadata=bool(dry_run))
 
         assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
         assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
@@ -123,8 +136,20 @@ def file_download(
         if file_name not in model_files:
             raise InvalidParameter('file {} not in repo {}'.format(file_name, repo_id))
 
+        repo_file_info = pack_repo_file_info(file_name, revision)
+        if dry_run:
+            cached = cache.exists(repo_file_info)
+            sibling = next(sibling for sibling in repo_info.siblings if sibling.rfilename == file_name)
+            return DryRunFileInfo(
+                commit_hash=repo_info.sha,
+                file_size=sibling.size or 0,
+                filename=file_name,
+                local_path=os.path.join(cache.get_root_location(), file_name) if cached else "",
+                is_cached=cached,
+                will_download=bool(force_download) or not cached,
+            )
+
         with tempfile.TemporaryDirectory(dir=temporary_cache_dir) as temp_cache_dir:
-            repo_file_info = pack_repo_file_info(file_name, revision)
             if force_download or not cache.exists(repo_file_info):
                 # get download url
                 url = get_file_download_url(

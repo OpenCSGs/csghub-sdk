@@ -20,6 +20,9 @@ csghub-cli download OpenCSG/csg-wukong-1B
 # 下载单个文件
 csghub-cli download OpenCSG/csg-wukong-1B config.json
 
+# 预览下载内容（也可省略文件名以预览整个仓库）
+csghub-cli download OpenCSG/csg-wukong-1B config.json --dry-run
+
 # 模型下载时允许'*.json'模式的文件并忽略'*_config.json'模式的文件
 csghub-cli download OpenCSG/csg-wukong-1B --allow-patterns "*.json" --ignore-patterns "*_config.json"
 
