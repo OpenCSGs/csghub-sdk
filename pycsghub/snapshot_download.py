@@ -58,7 +58,6 @@ def snapshot_download(
         local_dir = str(local_dir)
     
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
-    # name = name.replace('.', '___')
     
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
     

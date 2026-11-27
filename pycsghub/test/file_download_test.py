@@ -4,6 +4,7 @@ import pytest
 
 from pycsghub.cache import ModelFileSystemCache
 from pycsghub.file_download import file_download
+from pycsghub.snapshot_download import snapshot_download
 from pycsghub.utils import pack_repo_file_info
 
 REPO_ID = "owner/repo"
@@ -36,6 +37,38 @@ def test_local_files_only_returns_file_path(tmp_path):
     expected = os.path.join(str(cache_dir), "owner", "repo", FILE_NAME)
     assert result == expected
     assert os.path.isfile(result)
+
+
+def test_download_apis_share_cache_for_repo_name_containing_dot(tmp_path):
+    cache_dir = tmp_path / "cache"
+    local_dir = tmp_path / "local"
+    repo_id = "owner/model.v2"
+
+    cache = ModelFileSystemCache(
+        str(cache_dir), "owner", "model.v2", local_dir=str(local_dir)
+    )
+    source = tmp_path / "src" / FILE_NAME
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("hello")
+    cache.put_file(pack_repo_file_info(FILE_NAME, "main"), str(source))
+
+    file_path = file_download(
+        repo_id=repo_id,
+        file_name=FILE_NAME,
+        cache_dir=str(cache_dir),
+        local_dir=str(local_dir),
+        local_files_only=True,
+    )
+    snapshot_path = snapshot_download(
+        repo_id=repo_id,
+        cache_dir=str(cache_dir),
+        local_dir=str(local_dir),
+        local_files_only=True,
+    )
+
+    assert file_path == os.path.join(str(local_dir), FILE_NAME)
+    assert snapshot_path == str(local_dir)
+    assert os.path.isfile(file_path)
 
 
 def test_local_files_only_raises_when_file_not_cached(tmp_path):

@@ -81,7 +81,6 @@ def file_download(
         raise InvalidParameter('file_name cannot be None, if you want to load single file from repo {}'.format(repo_id))
 
     group_or_owner, name = model_id_to_group_owner_name(repo_id)
-    name = name.replace('.', '___')
 
     cache = ModelFileSystemCache(cache_dir, group_or_owner, name, local_dir=local_dir)
 
